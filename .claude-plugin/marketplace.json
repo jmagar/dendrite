@@ -13,7 +13,7 @@
         "source": "github",
         "repo": "jmagar/lumen"
       },
-      "description": "Precise local semantic code search via MCP. Indexes your codebase with Go AST parsing and vector embeddings — Ollama, LM Studio, or HuggingFace TEI."
+      "description": "Precise local semantic code search via MCP. Indexes your codebase with Go AST parsing and vector embeddings \u2014 Ollama, LM Studio, or HuggingFace TEI."
     },
     {
       "name": "adguard",
@@ -81,7 +81,7 @@
     {
       "name": "agent-os",
       "source": "./plugins/agent-os",
-      "description": "Drive the agent-os Windows 11 sandbox VM through its Windows-MCP server — desktop automation, Windows app testing, screenshots, shell commands, and VM health checks."
+      "description": "Drive the agent-os Windows 11 sandbox VM through its Windows-MCP server \u2014 desktop automation, Windows app testing, screenshots, shell commands, and VM health checks."
     },
     {
       "name": "axon",
@@ -126,7 +126,7 @@
         "url": "https://github.com/jmagar/rtemplate-mcp.git",
         "path": "plugins/rtemplate"
       },
-      "description": "Reference rmcp template/example MCP server — scaffold for building new Rust MCP servers."
+      "description": "Reference rmcp template/example MCP server \u2014 scaffold for building new Rust MCP servers."
     },
     {
       "name": "tailscale",
@@ -135,7 +135,7 @@
         "url": "https://github.com/jmagar/rustscale.git",
         "path": "plugins/tailscale"
       },
-      "description": "Tailscale network management via the rustscale MCP server — query devices, ACL, DNS, users, and API keys."
+      "description": "Tailscale network management via the rustscale MCP server \u2014 query devices, ACL, DNS, users, and API keys."
     },
     {
       "name": "gotify",
@@ -153,7 +153,7 @@
         "url": "https://github.com/jmagar/rustifi.git",
         "path": "plugins/unifi"
       },
-      "description": "UniFi network management via the rustifi MCP server — monitor devices, clients, health, alarms, events, and WLANs."
+      "description": "UniFi network management via the rustifi MCP server \u2014 monitor devices, clients, health, alarms, events, and WLANs."
     },
     {
       "name": "unifi-network",
@@ -162,7 +162,7 @@
         "url": "https://github.com/sirkirby/unifi-mcp.git",
         "path": "plugins/unifi-network"
       },
-      "description": "UniFi Network MCP server (sirkirby/unifi-mcp) — manage network devices, clients, firewall, VPN, and more."
+      "description": "UniFi Network MCP server (sirkirby/unifi-mcp) \u2014 manage network devices, clients, firewall, VPN, and more."
     },
     {
       "name": "apprise",
@@ -171,12 +171,7 @@
         "url": "https://github.com/jmagar/apprise-mcp.git",
         "path": "plugins/apprise"
       },
-      "description": "Send push notifications via apprise-mcp — a Rust MCP bridge to the Apprise universal notification library."
-    },
-    {
-      "name": "bitwarden",
-      "source": "./plugins/bitwarden",
-      "description": "Bitwarden and secrets-management workflows for homelab operations."
+      "description": "Send push notifications via apprise-mcp \u2014 a Rust MCP bridge to the Apprise universal notification library."
     },
     {
       "name": "bytestash",
@@ -209,7 +204,7 @@
     {
       "name": "plexus",
       "source": "./plugins/plexus",
-      "description": "Remote-device memory and live operating context for host-specific work — a CLAUDE.md-style memory file per host combined with live SSH, Tailscale, Docker, systemd, and log context."
+      "description": "Remote-device memory and live operating context for host-specific work \u2014 a CLAUDE.md-style memory file per host combined with live SSH, Tailscale, Docker, systemd, and log context."
     },
     {
       "name": "radicale",
@@ -229,7 +224,7 @@
     {
       "name": "arrs",
       "source": "./plugins/arrs",
-      "description": "The *arr / media-automation stack — Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr — each via its own REST API."
+      "description": "The *arr / media-automation stack \u2014 Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr \u2014 each via its own REST API."
     },
     {
       "name": "testing",
@@ -387,7 +382,7 @@
         "url": "https://github.com/anthropics/claude-plugins-official.git",
         "path": "plugins/playground"
       },
-      "description": "Creates interactive HTML playgrounds — self-contained single-file explorers with visual controls, live preview, and prompt output with copy button. Includes templates for design playgrounds, data explorers, concept maps, and document critique."
+      "description": "Creates interactive HTML playgrounds \u2014 self-contained single-file explorers with visual controls, live preview, and prompt output with copy button. Includes templates for design playgrounds, data explorers, concept maps, and document critique."
     },
     {
       "name": "plugin-dev",
@@ -450,7 +445,7 @@
         "url": "https://github.com/anthropics/claude-plugins-official.git",
         "path": "plugins/session-report"
       },
-      "description": "Generate an explorable HTML report of Claude Code session usage — tokens, cache efficiency, subagents, skills, and the most expensive prompts — from local ~/.claude/projects transcripts."
+      "description": "Generate an explorable HTML report of Claude Code session usage \u2014 tokens, cache efficiency, subagents, skills, and the most expensive prompts \u2014 from local ~/.claude/projects transcripts."
     },
     {
       "name": "skill-creator",
@@ -524,7 +519,7 @@
         "ref": "main",
         "sha": "e695a8397463bbb64d787b3cd88d3c58889be633"
       },
-      "description": "NVIDIA agent skills for accelerated-computing workflows — starting with cuOpt vehicle-routing optimization (VRP, TSP, PDP) via the cuOpt Python API."
+      "description": "NVIDIA agent skills for accelerated-computing workflows \u2014 starting with cuOpt vehicle-routing optimization (VRP, TSP, PDP) via the cuOpt Python API."
     },
     {
       "name": "qdrant-skills",
@@ -544,7 +539,7 @@
         "ref": "main",
         "sha": "5ca2e1a2d82a768221e8f71a02e3ca095a37d38e"
       },
-      "description": "Redis development best practices — data structures, query engine, vector search, caching, and performance optimization"
+      "description": "Redis development best practices \u2014 data structures, query engine, vector search, caching, and performance optimization"
     },
     {
       "name": "mcp-tunnels",
@@ -571,6 +566,15 @@
         "path": "plugins/labby"
       },
       "description": "Skills and MCP configuration for the Lab homelab control plane."
+    },
+    {
+      "name": "aurora",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/jmagar/aurora-design-system.git",
+        "path": "plugin"
+      },
+      "description": "Aurora design system — dark-first navy/cyan/rose/violet operator and agent control-plane UI across web (the @aurora shadcn registry, var(--aurora-*) tokens), Android (the tv.tootie.aurora Jetpack Compose library), and CLI/editor themes."
     }
   ]
 }
