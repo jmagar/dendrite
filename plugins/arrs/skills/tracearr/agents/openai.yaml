@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tracearr"
+  short_description: "Use when working with Tracearr media-server monitoring for Plex, Jellyfin, or Emby, including real-time sessions, stream analytics, account-sharing detection, trust scores, alerts, imports from Tautulli/Jellystat, Docker deployment, configuration, or Tracearr's public API"
+  default_prompt: "Use $tracearr for use when working with Tracearr media-server monitoring for Plex, Jellyfin, or Emby, including real-time sessions, stream analytics, account-sharing detection, trust scores, alerts, imports from Tautulli/Jellystat, Docker deployment, configuration, or Tracearr's public API."

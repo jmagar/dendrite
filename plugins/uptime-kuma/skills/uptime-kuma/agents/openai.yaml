@@ -1,0 +1,4 @@
+interface:
+  display_name: "Uptime Kuma"
+  short_description: "This skill should be used when the user asks whether a service or monitor is up or down, wants to view uptime percentages, check response times, inspect a public status page, or see which monitors are currently failing. Triggers include: \\\"is my site down\\\", \\\"check uptime\\\", \\\"show monitor status\\\", \\\"which monitors are failing\\\", \\\"Uptime Kuma status\\\", or any question about service availability monitoring"
+  default_prompt: "Use $uptime-kuma for this skill should be used when the user asks whether a service or monitor is up or down, wants to view uptime percentages, check response times, inspect a public status page, or see which monitors are currently failing. Triggers include: \\\"is my site down\\\", \\\"check uptime\\\", \\\"show monitor status\\\", \\\"which monitors are failing\\\", \\\"Uptime Kuma status\\\", or any question about service availability monitoring."

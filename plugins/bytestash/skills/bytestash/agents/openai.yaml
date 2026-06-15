@@ -1,0 +1,4 @@
+interface:
+  display_name: "ByteStash"
+  short_description: "This skill should be used when the user asks to save a snippet, store code, create a snippet, search snippets, find a snippet, share a snippet, list snippets, delete a snippet, add to ByteStash, or mentions ByteStash or snippet management"
+  default_prompt: "Use $bytestash for this skill should be used when the user asks to save a snippet, store code, create a snippet, search snippets, find a snippet, share a snippet, list snippets, delete a snippet, add to ByteStash, or mentions ByteStash or snippet management."
