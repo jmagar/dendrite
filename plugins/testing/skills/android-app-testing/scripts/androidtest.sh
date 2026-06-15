@@ -3,9 +3,9 @@
 #
 # Wraps the verified-working adb drive loop so the agent doesn't re-derive it
 # each run. PRIMARY path is direct local adb (no gateway dependency) — this is
-# what was live-validated 2026-05-29. The claude-in-mobile gateway path (richer
-# semantic locators) is optional and currently blocked by a container adb gap;
-# see references/claude-in-mobile-path.md.
+# what was live-validated 2026-05-29. The claude-in-mobile gateway path adds
+# richer semantic locators when the gateway can see ADB/device targets; see
+# references/claude-in-mobile-path.md.
 #
 # Usage:
 #   androidtest.sh boot   [<avd>]            # launch emulator headless, wait for boot_completed
@@ -16,6 +16,7 @@
 #   androidtest.sh stop   <pkg>              # am force-stop
 #   androidtest.sh install <apk>             # adb install -r -g
 #   androidtest.sh tapxy  <x> <y>            # input tap
+#   androidtest.sh swipe <x1> <y1> <x2> <y2> [ms] # input swipe
 #   androidtest.sh taptext <run_dir> <text>  # find <text> in a fresh uiautomator dump, tap its center
 #   androidtest.sh text   "<string>"         # input text (focused field)
 #   androidtest.sh key    <KEYCODE|name>     # input keyevent (e.g. BACK, HOME, ENTER)
@@ -79,6 +80,7 @@ launch)
 stop)    adb shell am force-stop "$1"; echo "force-stopped $1" ;;
 install) adb install -r -g "$1" ;;
 tapxy)   adb shell input tap "$1" "$2" ;;
+swipe)   adb shell input swipe "$1" "$2" "$3" "$4" "${5:-300}" ;;
 text)    adb shell input text "${1// /%s}" ;;
 key)     adb shell input keyevent "$1" ;;
 logclear) adb logcat -c; echo "logcat cleared" ;;
@@ -113,7 +115,8 @@ for m in re.finditer(r'<node[^>]*>', xml):
 PY
 )
   if [ -z "$coords" ]; then echo "text not found: $want" >&2; exit 1; fi
-  adb shell input tap $coords
+  read -r x y <<<"$coords"
+  adb shell input tap "$x" "$y"
   echo "tapped \"$want\" at $coords"
   ;;
 *)

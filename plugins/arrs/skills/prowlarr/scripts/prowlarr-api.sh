@@ -4,15 +4,14 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Credentials come from the arrs plugin userConfig (written by its SessionStart hook).
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env"
 [[ -f "$CONFIG_FILE" ]] || { echo "ERROR: $CONFIG_FILE not found — set this service's URL/key in the arrs plugin settings (userConfig)." >&2; exit 1; }
-set -a; source "$CONFIG_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+set +a
 
-# Load credentials from .env
 : "${PROWLARR_URL:?set it in the arrs plugin settings}"
 : "${PROWLARR_API_KEY:?set it in the arrs plugin settings}"
 
@@ -114,7 +113,8 @@ cmd_search() {
         exit 1
     fi
     
-    local params="query=$(jq -rn --arg q "$query" '$q | @uri')"
+    local params
+    params="query=$(jq -rn --arg q "$query" '$q | @uri')"
     params+="&type=$type"
     [[ -n "$indexer_ids" ]] && params+="&indexerIds=$indexer_ids"
     [[ -n "$categories" ]] && params+="&categories=$categories"

@@ -4,22 +4,11 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
-[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
+[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/load-env.sh"
 # shellcheck source=/dev/null
-source "$_LOAD_ENV" || { echo "ERROR: load-env.sh not found. Run /homelab-core:setup" >&2; exit 1; }
-
-if [[ -z "${LINKDING_URL:-}" || ( -z "${LINKDING_API_KEY:-}" && -z "${LINKDING_TOKEN:-}" ) ]]; then
-    load_env_file || exit 1
-fi
-LINKDING_API_KEY="${LINKDING_API_KEY:-${LINKDING_TOKEN:-}}"
-validate_env_vars "LINKDING_URL" "LINKDING_API_KEY"
-
-# Remove trailing slash
-LINKDING_URL="${LINKDING_URL%/}"
+source "$_LOAD_ENV" || { echo "ERROR: load-env.sh not found. Reinstall or reconfigure the Linkding plugin." >&2; exit 1; }
 
 api_call() {
     local method="$1"
@@ -68,6 +57,19 @@ Examples:
 EOF
 }
 
+case "${1:-}" in
+    -h|--help|help|"") usage; exit 0 ;;
+esac
+
+if [[ -z "${LINKDING_URL:-}" || ( -z "${LINKDING_API_KEY:-}" && -z "${LINKDING_TOKEN:-}" ) ]]; then
+    load_env_file || exit 1
+fi
+LINKDING_API_KEY="${LINKDING_API_KEY:-${LINKDING_TOKEN:-}}"
+validate_env_vars "LINKDING_URL" "LINKDING_API_KEY"
+
+# Remove trailing slash
+LINKDING_URL="${LINKDING_URL%/}"
+
 cmd_bookmarks() {
     local query="" limit="" offset="" archived="" modified_since="" added_since="" bundle=""
     
@@ -109,7 +111,8 @@ cmd_get() {
 
 cmd_check() {
     local url="$1"
-    local encoded=$(jq -rn --arg v "$url" '$v | @uri')
+    local encoded
+    encoded=$(jq -rn --arg v "$url" '$v | @uri')
     api_call GET "/api/bookmarks/check/?url=${encoded}"
 }
 
@@ -136,7 +139,8 @@ cmd_create() {
         tag_array=$(echo "$tags" | tr ',' '\n' | jq -R . | jq -s .)
     fi
     
-    local payload=$(jq -n \
+    local payload
+    payload=$(jq -n \
         --arg url "$url" \
         --arg title "$title" \
         --arg description "$description" \
@@ -185,7 +189,8 @@ cmd_update() {
     [[ -n "$shared" ]] && payload=$(echo "$payload" | jq --argjson v "$shared" '. + {shared: $v}')
     
     if [[ -n "$tags" ]]; then
-        local tag_array=$(echo "$tags" | tr ',' '\n' | jq -R . | jq -s .)
+        local tag_array
+        tag_array=$(echo "$tags" | tr ',' '\n' | jq -R . | jq -s .)
         payload=$(echo "$payload" | jq --argjson v "$tag_array" '. + {tag_names: $v}')
     fi
     
@@ -276,7 +281,8 @@ cmd_bundle_create() {
         esac
     done
     
-    local payload=$(jq -n \
+    local payload
+    payload=$(jq -n \
         --arg name "$name" \
         --arg search "$search" \
         --arg any_tags "$any_tags" \
@@ -348,6 +354,5 @@ case "${1:-}" in
     bundle-update) shift; cmd_bundle_update "$@" ;;
     bundle-delete) shift; cmd_bundle_delete "$@" ;;
     profile) shift; cmd_profile "$@" ;;
-    -h|--help|help|"") usage ;;
     *) echo "Unknown command: $1" >&2; usage; exit 1 ;;
 esac

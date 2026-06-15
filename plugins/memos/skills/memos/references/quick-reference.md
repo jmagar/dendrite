@@ -5,8 +5,8 @@ Common operations and copy-paste examples.
 ## Quick Start
 
 ```bash
-# All scripts source credentials from ~/.lab/.env
-# No additional configuration needed
+# Scripts source credentials from the generated Memos plugin config:
+# ${XDG_CONFIG_HOME:-~/.config}/lab-memos/config.env
 ```
 
 ## Memo Operations
@@ -148,7 +148,7 @@ bash scripts/tag-api.sh rename old-tag new-tag
 bash scripts/tag-api.sh rename "#old-project" "#new-project"
 ```
 
-## Resource (Attachment) Operations
+## Attachment Operations
 
 ### Upload
 
@@ -163,28 +163,28 @@ bash scripts/resource-api.sh upload screenshot.png --memo-id abc123
 ### List
 
 ```bash
-# List all resources
+# List all attachments
 bash scripts/resource-api.sh list
 
-# List resources for specific memo
+# List attachments for specific memo
 bash scripts/resource-api.sh list --memo-id abc123
 ```
 
 ### Delete
 
 ```bash
-# Delete resource (use full name from list)
-bash scripts/resource-api.sh delete resources/abc123
+# Delete attachment (use full name from list)
+bash scripts/resource-api.sh delete attachments/abc123
 ```
 
 ### Download
 
 ```bash
-# Download resource
-bash scripts/resource-api.sh download resources/abc123
+# Download attachment
+bash scripts/resource-api.sh download attachments/abc123
 
 # Download to specific path
-bash scripts/resource-api.sh download resources/abc123 --output /tmp/file.pdf
+bash scripts/resource-api.sh download attachments/abc123 --output /tmp/file.pdf
 ```
 
 ## User Operations
@@ -205,8 +205,8 @@ bash scripts/user-api.sh tokens
 # Create new access token
 bash scripts/user-api.sh create-token "Automation Token"
 
-# Delete access token
-bash scripts/user-api.sh delete-token users/1/accessTokens/abc123
+# Delete personal access token
+bash scripts/user-api.sh delete-token <personal-access-token-id>
 ```
 
 ### Profile

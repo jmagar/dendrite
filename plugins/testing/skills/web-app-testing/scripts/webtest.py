@@ -14,9 +14,9 @@ check:
 
 One-time venv setup (no API keys needed):
     uv venv /tmp/pw_venv --python 3.12
-    uv pip install --python /tmp/pw_venv/bin/python "playwright>=1.59,<1.60"
+    uv pip install --python /tmp/pw_venv/bin/python "playwright>=1.59"
 
-Notes baked in from live validation (2026-05-29):
+Notes baked in from live validation:
   - `playwright.__version__` does NOT exist; never version-check that way.
   - Screenshots over connect_over_cdp can come out near-blank on a fresh
     headless target — settle with wait_for_load_state + a short timeout, and

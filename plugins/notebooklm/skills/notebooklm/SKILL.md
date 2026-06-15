@@ -5,7 +5,7 @@ description: "This skill should be used when the user mentions NotebookLM, says 
 
 # NotebookLM Automation
 
-Complete programmatic access to Google NotebookLM—including capabilities not exposed in the web UI. Create notebooks, add sources (URLs, YouTube, PDFs, audio, video, images), chat with content, generate all artifact types, and download results in multiple formats.
+Complete programmatic access to Google NotebookLM, including capabilities not exposed in the web UI. Create notebooks, add sources (URLs, YouTube, PDFs, audio, video, images), chat with content, generate artifact types, and download results in multiple formats.
 
 ## Installation
 
@@ -75,10 +75,10 @@ Before starting workflows, verify the CLI is ready:
 - `notebooklm language list` - list supported languages
 - `notebooklm language get` - get current language
 - `notebooklm language set` - set language (global setting)
-- `notebooklm artifact wait` - wait for artifact completion (in subagent context)
-- `notebooklm source wait` - wait for source processing (in subagent context)
+- `notebooklm artifact wait` - wait for artifact completion (in background/automation context)
+- `notebooklm source wait` - wait for source processing (in background/automation context)
 - `notebooklm research status` - check research status
-- `notebooklm research wait` - wait for research (in subagent context)
+- `notebooklm research wait` - wait for research (in background/automation context)
 - `notebooklm use <id>` - set context (⚠️ SINGLE-AGENT ONLY - use `-n` flag in parallel workflows)
 - `notebooklm create` - create notebook
 - `notebooklm ask "..."` - chat queries (without `--save-as-note`)
@@ -158,7 +158,8 @@ All generate commands support:
 | Type | Command | Options | Download |
 |------|---------|---------|----------|
 | Podcast | `generate audio` | `--format [deep-dive\|brief\|critique\|debate]`, `--length [short\|default\|long]` | .mp3 |
-| Video | `generate video` | `--format [explainer\|brief]`, `--style [auto\|classic\|whiteboard\|kawaii\|anime\|watercolor\|retro-print\|heritage\|paper-craft]` | .mp4 |
+| Video | `generate video` | `--format [explainer\|brief\|cinematic]`, `--style [auto\|classic\|whiteboard\|kawaii\|anime\|watercolor\|retro-print\|heritage\|paper-craft]`; cinematic requires Google AI Ultra and ignores `--style` | .mp4 |
+| Cinematic Video | `generate cinematic-video` | Alias for `generate video --format cinematic`; requires Google AI Ultra | .mp4 |
 | Slide Deck | `generate slide-deck` | `--format [detailed\|presenter]`, `--length [default\|short]` | .pdf / .pptx |
 | Slide Revision | `generate revise-slide "prompt" --artifact <id> --slide N` | `--wait`, `--notebook` | *(re-downloads parent deck)* |
 | Infographic | `generate infographic` | `--orientation [landscape\|portrait\|square]`, `--detail [concise\|standard\|detailed]`, `--style [auto\|sketch-note\|professional\|bento-grid\|editorial\|instructional\|bricks\|clay\|anime\|kawaii\|scientific]` | .png |
@@ -198,26 +199,22 @@ These capabilities are available via CLI but not in NotebookLM's web interface:
 6. Check `notebooklm artifact list` later for status
 7. `notebooklm download audio ./podcast.mp3` when complete (confirm when asked)
 
-### Research to Podcast (Automated with Subagent)
+### Research to Podcast (Automated Wait)
 **Time:** 5-10 minutes, but continues in background
 
 When user wants full automation (generate and download when ready):
 
 1. Create notebook and add sources as usual
 2. Wait for sources to be ready (use `source wait` or check `source list --json`)
-3. Run `notebooklm generate audio "..." --json` → parse `artifact_id` from output
-4. **Spawn a background agent** using Task tool:
+3. Run `notebooklm generate audio "..." --json` and parse `task_id`; this value is also the artifact ID used by `artifact wait` and `download -a`
+4. If the runtime supports background agents or jobs, delegate the wait/download step:
+   ```bash
+   notebooklm artifact wait <task_id> -n <notebook_id> --timeout 1200
+   notebooklm download audio ./podcast.mp3 -a <task_id> -n <notebook_id>
    ```
-   Task(
-     prompt="Wait for artifact {artifact_id} in notebook {notebook_id} to complete, then download.
-             Use: notebooklm artifact wait {artifact_id} -n {notebook_id} --timeout 600
-             Then: notebooklm download audio ./podcast.mp3 -a {artifact_id} -n {notebook_id}",
-     subagent_type="general-purpose"
-   )
-   ```
-5. Main conversation continues while agent waits
+5. If no background execution is available, return the `task_id` and exact wait/download commands to the user instead of blocking the main conversation for the full generation window
 
-**Error handling in subagent:**
+**Error handling in background waits:**
 - If `artifact wait` returns exit code 2 (timeout): Report timeout, suggest checking `artifact list`
 - If download fails: Check if artifact status is COMPLETED first
 
@@ -247,7 +244,7 @@ When user wants full automation (generate and download when ready):
 **Source limits:** Varies by plan—Standard: 50, Plus: 100, Pro: 300, Ultra: 600 sources per notebook. See [NotebookLM plans](https://support.google.com/notebooklm/answer/16213268) for details. The CLI does not enforce these limits; they are applied by your NotebookLM account.
 **Supported types:** PDFs, YouTube URLs, web URLs, Google Docs, text files, Markdown, Word docs, audio files, video files, images
 
-### Bulk Import with Source Waiting (Subagent Pattern)
+### Bulk Import with Source Waiting
 **Time:** Varies by source count
 
 When adding multiple sources and needing to wait for processing before chat/generation:
@@ -257,21 +254,16 @@ When adding multiple sources and needing to wait for processing before chat/gene
    notebooklm source add "https://url1.com" --json  # → {"source_id": "abc..."}
    notebooklm source add "https://url2.com" --json  # → {"source_id": "def..."}
    ```
-2. **Spawn a background agent** to wait for all sources:
+2. If the runtime supports background agents or jobs, delegate one wait per source:
+   ```bash
+   notebooklm source wait <source_id> -n <notebook_id> --timeout 600
    ```
-   Task(
-     prompt="Wait for sources {source_ids} in notebook {notebook_id} to be ready.
-             For each: notebooklm source wait {id} -n {notebook_id} --timeout 120
-             Report when all ready or if any fail.",
-     subagent_type="general-purpose"
-   )
-   ```
-3. Main conversation continues while agent waits
+3. Otherwise, wait inline only when the user asked for a blocking workflow; for interactive work, return the source IDs and wait commands
 4. Once sources are ready, proceed with chat or generation
 
 **Why wait for sources?** Sources must be indexed before chat or generation. Takes 10-60 seconds per source.
 
-### Deep Web Research (Subagent Pattern)
+### Deep Web Research
 **Time:** 2-5 minutes, runs in background
 
 Deep research finds and analyzes web sources on a topic:
@@ -281,16 +273,11 @@ Deep research finds and analyzes web sources on a topic:
    ```bash
    notebooklm source add-research "topic query" --mode deep --no-wait
    ```
-3. **Spawn a background agent** to wait and import:
+3. If background execution is available, delegate the wait/import step:
+   ```bash
+   notebooklm research wait -n <notebook_id> --import-all --timeout 1800
    ```
-   Task(
-     prompt="Wait for research in notebook {notebook_id} to complete and import sources.
-             Use: notebooklm research wait -n {notebook_id} --import-all --timeout 300
-             Report how many sources were imported.",
-     subagent_type="general-purpose"
-   )
-   ```
-4. Main conversation continues while agent waits
+4. If no background execution is available, return the notebook ID and wait/import command instead of occupying the main conversation for the full research window
 5. When agent completes, sources are imported automatically
 
 **Alternative (blocking):** For simple cases, omit `--no-wait`:
@@ -317,7 +304,7 @@ notebooklm source add-research "topic" --mode deep --import-all
 **Fire-and-forget for long operations:**
 - Start generation, return artifact ID immediately
 - Do NOT poll or wait in main conversation - generation takes 5-45 minutes (see timing table)
-- User checks status manually, OR use subagent with `artifact wait`
+- User checks status manually, OR use a background worker with `artifact wait`
 
 **JSON output:** Use `--json` flag for machine-readable output:
 ```bash
@@ -408,7 +395,7 @@ All commands use consistent exit codes:
 2. Retry after 5-10 minutes
 3. Use the NotebookLM web UI as fallback
 
-**Processing times vary significantly.** Use the subagent pattern for long operations:
+**Processing times vary significantly.** Use background execution for long operations when the runtime supports it:
 
 | Operation | Typical time | Suggested timeout |
 |-----------|--------------|-------------------|

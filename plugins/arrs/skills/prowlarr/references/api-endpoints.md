@@ -15,7 +15,7 @@ Prowlarr uses API key authentication. Find your API key in Settings → General 
 
 ## Quick Start
 
-Add to `~/.config/lab-arrs/config.env`:
+Credentials are configured in the arrs plugin settings. The plugin `SessionStart` hook writes `~/.config/lab-arrs/config.env` for helper scripts and manual curl sessions:
 
 ```bash
 PROWLARR_URL="http://localhost:9696"
@@ -25,7 +25,7 @@ PROWLARR_API_KEY="your-api-key"
 Then test the connection:
 
 ```bash
-# Source .env (or restart your shell)
+# Source the generated config for manual curl commands.
 source ~/.config/lab-arrs/config.env
 
 # Test connection - get system status
@@ -485,7 +485,7 @@ curl -X POST "$PROWLARR_URL/api/v1/downloadclient" \
       {"name": "host", "value": "localhost"},
       {"name": "port", "value": "8080"},
       {"name": "username", "value": "admin"},
-      {"name": "password", "value": "adminpass"}
+      {"name": "password", "value": "QBITTORRENT_PASSWORD"}
     ],
     "enable": true,
     "protocol": "torrent",

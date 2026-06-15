@@ -9,7 +9,7 @@ description: "Use when a user asks to debug or fix failing GitHub PR checks / Gi
 
 Use `gh` to locate failing PR checks, fetch GitHub Actions logs for actionable failures, summarize the failure, then implement when the user has asked for a fix. If the user only asked what failed, stop after the summary. If a plan-oriented skill (e.g. `create-plan`) is available and the fix is broad or risky, use it; otherwise keep the plan inline.
 
-**Scope:** GitHub Actions only. For external providers (Buildkite, CircleCI, etc.), report the `detailsUrl` and stop — don't attempt to inspect them.
+**Scope:** GitHub Actions only. For external providers (Buildkite, CircleCI, etc.), report the `link` URL and stop — don't attempt to inspect them.
 
 **Prereq:** authenticate the GitHub CLI once (`gh auth login`), confirm with `gh auth status`. Typically needs `repo` + `workflow` scopes.
 
@@ -29,14 +29,14 @@ Operates on the current branch's PR by default. Accepts an explicit PR number or
    - Filter for `state == "failure"` or `bucket == "fail"`.
 
 4. **For each failing GitHub Actions check, fetch logs.**
-   - Extract the run id from `detailsUrl` (e.g. `.../actions/runs/<run_id>/...`).
+   - Extract the run id from `link` (e.g. `.../actions/runs/<run_id>/...`).
    - `gh run view <run_id> --json name,workflowName,conclusion,status,url,event,headBranch,headSha`
    - `gh run view <run_id> --log` (full log)
    - If the log indicates the run is still in progress or a job log is needed directly:
      - Get failing job ids: `gh run view <run_id> --json jobs -q '.jobs[] | select(.conclusion=="failure") | .databaseId'`
      - Then: `gh api "/repos/<owner>/<repo>/actions/jobs/<job_id>/logs" > <path>`
 
-5. **Scope non-Actions checks.** If `detailsUrl` is not a GitHub Actions URL, label external and report only the URL.
+5. **Scope non-Actions checks.** If `link` is not a GitHub Actions URL, label external and report only the URL.
 
 6. **Summarize for the user.** Failing check name, run URL, concise log snippet, and explicit callouts for missing logs.
 

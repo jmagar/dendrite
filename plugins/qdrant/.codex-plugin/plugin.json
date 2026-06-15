@@ -1,6 +1,6 @@
 {
   "name": "qdrant",
-  "description": "Skill for operating qdrant via the lab MCP server / CLI.",
+  "description": "Vector database collections and semantic search via direct calls to the Qdrant REST API.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"

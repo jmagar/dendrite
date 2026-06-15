@@ -1,11 +1,13 @@
 ---
 name: tracearr
-description: Use when working with Tracearr media-server monitoring for Plex, Jellyfin, or Emby, including real-time sessions, stream analytics, account-sharing detection, trust scores, alerts, imports from Tautulli/Jellystat, Docker deployment, configuration, or Tracearr's public API.
+description: This skill should be used when working with Tracearr media-server monitoring for Plex, Jellyfin, or Emby, including active streams, stream analytics, account-sharing detection, trust scores, alerts, Tautulli/Jellystat imports, Docker deployment, arrs plugin configuration, or Tracearr's public API.
 ---
 
 # Tracearr
 
-Use this skill for Tracearr media-server monitoring workflows.
+Use this skill for Tracearr media-server monitoring workflows. Tracearr is part
+of the `arrs` plugin, so prefer the plugin settings and generated config over
+ad hoc credential files.
 
 ## What Tracearr Is
 
@@ -16,6 +18,10 @@ library metrics, trust scores, and account-sharing signals.
 
 ## Common Tasks
 
+- Use `scripts/tracearr-api.sh` for repeatable Tracearr base/API checks. It
+  loads `TRACEARR_URL` from the arrs plugin config or `~/.lab/.env`, sends
+  `TRACEARR_API_KEY` as a bearer token when present, and exposes `health`,
+  `api-docs`, `get`, `streams`, `servers`, and `alerts`.
 - Deploy Tracearr with Docker, TimescaleDB/PostgreSQL, and Redis.
 - Connect Plex through Plex sign-in, or connect Jellyfin/Emby with server URL,
   friendly name, and API key.
@@ -29,8 +35,29 @@ library metrics, trust scores, and account-sharing signals.
 - Use Tracearr's read-only public REST API once an API key is generated in
   settings; Swagger UI is available at `/api-docs`.
 
-## Configuration Notes
+## Plugin Configuration
 
+Configure the Tracearr base URL through the `arrs` plugin setting
+`tracearr_url`. The plugin `SessionStart`/`ConfigChange` hook writes configured
+values to:
+
+```bash
+${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env
+```
+
+For shell or curl checks, source that generated file and use `TRACEARR_URL`.
+Do not create committed env files, paste API keys into examples, or hardcode
+local service URLs in the skill.
+
+If a Tracearr API key is needed, generate it in Tracearr settings and keep it in
+a local secret store or runtime-only environment variable until the plugin adds
+a dedicated sensitive setting for it. Treat API keys, webhook URLs, user IP
+addresses, and account-sharing evidence as sensitive.
+
+## Deployment Notes
+
+- These notes are for deploying the Tracearr application itself, not configuring
+  the `arrs` plugin.
 - Required runtime services: TimescaleDB/PostgreSQL and Redis.
 - Common Docker tags: `supervised` for all-in-one, `latest` for app with
   external DB/Redis, plus `next` and `nightly` variants.
@@ -43,6 +70,19 @@ library metrics, trust scores, and account-sharing signals.
 
 ## Fallbacks
 
-This plugin is currently scaffolded without an MCP server. Prefer a future
-Tracearr MCP tool when available. Until then, use Tracearr's public API for
+This skill is currently scaffolded without a dedicated Tracearr MCP server.
+Before saying no tool is available, search the current tool or gateway catalog
+for Docker, logs, HTTP, or media-stack tools that can inspect the running
+service. Until a Tracearr MCP tool exists, use Tracearr's public API for
 read-only integrations and Docker/log inspection for operational diagnostics.
+Confirm with the user before taking destructive or privacy-sensitive actions,
+such as deleting imports, changing alert rules, or exposing account-sharing
+details.
+
+## Focused Validation
+
+- Confirm `plugins/arrs/skills/tracearr/agents/openai.yaml` exists.
+- Confirm the arrs plugin hook generated `~/.config/lab-arrs/config.env` when
+  plugin settings are present.
+- For live checks, source the generated config and verify the base URL or
+  `/api-docs` endpoint before assuming Tracearr is reachable.

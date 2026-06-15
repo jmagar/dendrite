@@ -40,16 +40,16 @@ The `search-json` command returns raw JSON; all other commands return formatted 
 ### Search for Shows
 
 ```bash
-bash scripts/sonarr.sh search "Breaking Bad"
-bash scripts/sonarr.sh search "The Office"
+./scripts/sonarr.sh search "Breaking Bad"
+./scripts/sonarr.sh search "The Office"
 ```
 
-**Output:** Numbered list with TVDB IDs, titles, years, and overview.
+**Output:** Numbered list with TVDB IDs, titles, years, and TVDB links.
 
 ### Check if Show Exists
 
 ```bash
-bash scripts/sonarr.sh exists <tvdbId>
+./scripts/sonarr.sh exists <tvdbId>
 ```
 
 **Output:** Boolean indicating if show is in library.
@@ -57,16 +57,16 @@ bash scripts/sonarr.sh exists <tvdbId>
 ### Add a Show
 
 ```bash
-bash scripts/sonarr.sh add <tvdbId>                          # Searches immediately (default)
-bash scripts/sonarr.sh add <tvdbId> [profileId]              # Use a specific quality profile
-bash scripts/sonarr.sh add <tvdbId> [profileId] --no-search  # Add without searching
+./scripts/sonarr.sh add <tvdbId>                          # Searches immediately (default)
+./scripts/sonarr.sh add <tvdbId> [profileId]              # Use a specific quality profile
+./scripts/sonarr.sh add <tvdbId> [profileId] --no-search  # Add without searching
 ```
 
 ### Remove a Show
 
 ```bash
-bash scripts/sonarr.sh remove <tvdbId>                # Keep files
-bash scripts/sonarr.sh remove <tvdbId> --delete-files # Delete files too
+./scripts/sonarr.sh remove <tvdbId>                # Keep files
+./scripts/sonarr.sh remove <tvdbId> --delete-files # Delete files too
 ```
 
 **Important:** Always ask the user if they want to delete files when removing!
@@ -74,7 +74,7 @@ bash scripts/sonarr.sh remove <tvdbId> --delete-files # Delete files too
 ### Get Configuration
 
 ```bash
-bash scripts/sonarr.sh config
+./scripts/sonarr.sh config
 ```
 
 **Output:** Available root folders and quality profiles with their IDs.
@@ -83,17 +83,17 @@ bash scripts/sonarr.sh config
 
 When the user asks about TV shows:
 
-1. **"Add Breaking Bad to Sonarr"** → Run `search "Breaking Bad"`, present results with TVDB links, then `add <tvdbId>`
-2. **"Is The Office in my library?"** → Run `exists <tvdbId>`
+1. **"Add Breaking Bad to Sonarr"** → Run `search "Breaking Bad"`, present results with TVDB IDs and links, run `exists <tvdbId>`, then `add <tvdbId>` if absent
+2. **"Is The Office in my library?"** → Run `search "The Office"` to identify the TVDB ID, then `exists <tvdbId>`
 3. **"Remove Game of Thrones"** → Ask about file deletion, then run `remove <tvdbId>` with appropriate flag
 4. **"What quality profiles do I have?"** → Run `config`
 
 ### Presenting Search Results
 
 Always include TVDB links when presenting search results:
-- Format: `[Title (Year)](https://thetvdb.com/series/SLUG)`
+- Format: `[Title (Year)](https://thetvdb.com/dereferrer/series/TVDB_ID)`
 - Show numbered list for user selection
-- Include year and brief overview
+- Include year, TVDB ID, and a brief overview when using `search-json`
 
 ### Adding Shows
 

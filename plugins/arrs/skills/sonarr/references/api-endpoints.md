@@ -15,17 +15,17 @@ Sonarr uses API key authentication. Find your API key in Settings â†’ General â†
 
 ## Quick Start
 
-Add credentials to `~/.config/lab-arrs/config.env`:
+Credentials are written to `~/.config/lab-arrs/config.env` from the arrs plugin settings:
 
 ```bash
 SONARR_URL="http://localhost:8989"
 SONARR_API_KEY="<your_api_key>"
 ```
 
-Then use in scripts:
+For direct API calls, load the generated file in your shell:
 
 ```bash
-# Load credentials from .env
+# Load generated credentials
 source ~/.config/lab-arrs/config.env
 
 # Test connection - get system status

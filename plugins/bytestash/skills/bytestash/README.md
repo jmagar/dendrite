@@ -46,7 +46,7 @@ chmod 600 ~/.lab/.env
 Test the connection:
 
 ```bash
-cd ~/workspace/lab/plugins/bytestash/skills/bytestash
+cd ~/workspace/dendrite/plugins/bytestash/skills/bytestash
 ./scripts/bytestash-api.sh list
 ```
 
@@ -70,7 +70,7 @@ You should see a JSON array of your snippets (or empty array `[]` if you have no
 ./scripts/bytestash-api.sh get 123
 ```
 
-### Creating Snippets
+### Adding ByteStash Records
 
 **Single file snippet:**
 
@@ -241,7 +241,7 @@ All commands return JSON, making them easy to process with `jq`:
 
 **Solutions:**
 1. Verify login credentials are present without printing secrets:
-   `grep '^BYTESTASH_\\(URL\\|USERNAME\\|PASSWORD\\|TOKEN\\)=' ~/.lab/.env`
+   `for v in BYTESTASH_URL BYTESTASH_USERNAME BYTESTASH_PASSWORD BYTESTASH_TOKEN; do [ -n "${!v:-}" ] && echo "$v=set" || echo "$v=missing"; done`
 2. Prefer `BYTESTASH_USERNAME` + `BYTESTASH_PASSWORD`; the wrapper logs in for
    a fresh JWT.
 3. If using `BYTESTASH_TOKEN`, make sure it is an unexpired JWT.
@@ -263,7 +263,7 @@ All commands return JSON, making them easy to process with `jq`:
 
 **Solutions:**
 1. Ensure you're in the right directory:
-   `cd ~/workspace/lab/plugins/bytestash/skills/bytestash`
+   `cd ~/workspace/dendrite/plugins/bytestash/skills/bytestash`
 2. Make script executable: `chmod +x scripts/bytestash-api.sh`
 3. Use relative path: `./scripts/bytestash-api.sh list`
 

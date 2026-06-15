@@ -1,4 +1,4 @@
 interface:
-  display_name: "Qbittorrent"
+  display_name: "qBittorrent"
   short_description: "Manage torrents with qBittorrent"
   default_prompt: "Use $qbittorrent to manage torrents with qBittorrent."

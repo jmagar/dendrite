@@ -4,22 +4,14 @@ Common operations for quick copy-paste usage.
 
 ## Setup
 
-### Environment Variables (for raw curl)
+### Plugin Settings
 
 ```bash
-export PLEX_URL="http://localhost:32400"
-export PLEX_TOKEN="your-plex-token"
-```
-
-### Using Helper Script (Recommended)
-
-Add to `~/.config/lab-arrs/config.env`:
-```bash
-PLEX_URL="http://192.168.1.100:32400"
+PLEX_URL="http://localhost:32400"
 PLEX_TOKEN="your-plex-token"
 ```
 
-The helper script `skills/plex/scripts/plex-api.sh` simplifies API access and handles authentication automatically.
+Configure these values in the arrs plugin settings (`userConfig`). The plugin hook writes `~/.config/lab-arrs/config.env` automatically. The helper script `skills/plex/scripts/plex-api.sh` loads that generated file and sends the token in the `X-Plex-Token` header.
 
 ## Getting Your Plex Token
 
@@ -127,7 +119,9 @@ curl -s "$PLEX_URL/library/recentlyAdded" \
   -H "Accept: application/json" | jq
 ```
 
-### Refresh Library
+### Refresh Library (Admin-Only)
+
+Confirm with the user before triggering a library scan.
 
 ```bash
 # Using helper script
@@ -138,7 +132,9 @@ curl -s "$PLEX_URL/library/sections/LIBRARY_KEY/refresh" \
   -H "X-Plex-Token: $PLEX_TOKEN"
 ```
 
-### Scan for New Files (Force)
+### Scan for New Files (Force, Admin-Only)
+
+Confirm with the user before forcing a scan.
 
 ```bash
 # Use raw curl (force refresh not in helper script)
@@ -232,7 +228,9 @@ curl -s "$PLEX_URL/status/sessions/history/all" \
   -H "Accept: application/json" | jq
 ```
 
-### Stop Playback Session
+### Stop Playback Session (Admin-Only)
+
+Confirm with the user before stopping playback.
 
 ```bash
 # Get session ID from active sessions first
@@ -262,7 +260,9 @@ curl -s "$PLEX_URL/playlists/PLAYLIST_ID/items" \
   -H "Accept: application/json" | jq
 ```
 
-### Create Playlist
+### Create Playlist (Admin-Only)
+
+Confirm with the user before creating playlists.
 
 ```bash
 curl -X POST "$PLEX_URL/playlists?type=video&title=My%20Playlist&smart=0&uri=server://MACHINE_ID/com.plexapp.plugins.library/library/metadata/RATING_KEY" \
@@ -302,21 +302,27 @@ curl -s "$PLEX_URL/:/prefs" \
 
 ## Maintenance
 
-### Empty Trash for Library
+### Empty Trash for Library (Admin-Only)
+
+Confirm with the user before emptying trash.
 
 ```bash
 curl -X PUT "$PLEX_URL/library/sections/LIBRARY_KEY/emptyTrash" \
   -H "X-Plex-Token: $PLEX_TOKEN"
 ```
 
-### Clean Bundles
+### Clean Bundles (Admin-Only)
+
+Confirm with the user before maintenance actions.
 
 ```bash
 curl -X PUT "$PLEX_URL/library/clean/bundles" \
   -H "X-Plex-Token: $PLEX_TOKEN"
 ```
 
-### Optimize Database
+### Optimize Database (Admin-Only)
+
+Confirm with the user before maintenance actions.
 
 ```bash
 curl -X PUT "$PLEX_URL/library/optimize" \
@@ -333,7 +339,9 @@ curl -s "$PLEX_URL/transcode/sessions" \
   -H "Accept: application/json" | jq
 ```
 
-### Kill Transcode Session
+### Kill Transcode Session (Admin-Only)
+
+Confirm with the user before killing sessions.
 
 ```bash
 curl -X DELETE "$PLEX_URL/transcode/sessions/TRANSCODE_SESSION_KEY" \

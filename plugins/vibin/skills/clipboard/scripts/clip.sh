@@ -29,12 +29,16 @@ is_simple=1
 LC_ALL=C grep -qP '[^\x00-\x7F]' <<<"$text" 2>/dev/null && is_simple=0
 [[ "$text" == *$'\n'* ]] && is_simple=0
 # Fail closed on shell-active chars — they'd be interpreted by the remote shell before NirCmd sees them
-[[ "$text" == *['$`\"\\']* ]] && is_simple=0
+case "$text" in
+  *[\$\"\`\\]*) is_simple=0 ;;
+esac
 
 if [[ "$is_simple" == "1" ]]; then
   have_nircmd=0
+  # shellcheck disable=SC2029 # Intentional local expansion into the remote test command.
   ssh "$HOST" "test -f '$NIRCMD'" 2>/dev/null && have_nircmd=1
   if [[ "$have_nircmd" == "1" ]]; then
+    # shellcheck disable=SC2029 # Intentional local expansion into the remote NirCmd command.
     ssh "$HOST" "$NIRCMD clipboard set \"$(printf '%s' "$text" | sed 's/"/\\"/g')\""
     echo "pushed $(printf '%s' "$text" | wc -c) bytes (ascii via nircmd)"
     exit 0
@@ -44,7 +48,12 @@ fi
 remote_posix="$TMP_DIR/clip-$$-$(date +%s).txt"
 # /mnt/<drive> → <drive>:; works for any mounted drive letter, not just C
 remote_win=$(printf '%s' "$remote_posix" | sed -E 's|^/mnt/([a-z])|\U\1:|; s|/|\\\\|g')
+# shellcheck disable=SC2029 # Intentional local expansion into the remote temp-file path.
 printf '%s' "$text" | ssh "$HOST" "cat > '$remote_posix'"
+trap 'ssh "$HOST" "rm -f '\''$remote_posix'\''" >/dev/null 2>&1 || true' EXIT
+# shellcheck disable=SC2029 # Intentional local expansion into the remote PowerShell command.
 ssh "$HOST" "$PS -NoProfile -Command \"Set-Clipboard -Value (Get-Content -Raw -Encoding UTF8 '$remote_win')\""
+trap - EXIT
+# shellcheck disable=SC2029 # Intentional local expansion into the remote cleanup command.
 ssh "$HOST" "rm -f '$remote_posix'"
 echo "pushed $(printf '%s' "$text" | wc -c) bytes (unicode via powershell)"

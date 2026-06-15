@@ -11,7 +11,8 @@
 # Case row format:
 #   "label|args|assertion"
 #     label     — tool name (e.g. search) or resource URI (e.g. ui://srv/x)
-#     args      — appended to `mcporter call`; key=value or --args '{...}'
+#     args      — appended to `mcporter call`; key=value or --args '{...}'.
+#                 Leave empty for resources.
 #     assertion — one of:
 #                   (empty)            liveness only (call must not error)
 #                   contains: TEXT     response text must include TEXT
@@ -30,7 +31,7 @@ MODE="run"
 case "${1:-}" in
   --init)        MODE="init";       shift ;;
   --list-tools)  MODE="list-tools"; shift ;;
-  --help|-h)     sed -n '2,30p' "$0"; exit 0 ;;
+  --help|-h)     sed -n '2,26p' "$0"; exit 0 ;;
 esac
 
 SERVER=${1:?usage: smoke.sh [--init|--list-tools] <server>}
@@ -60,14 +61,16 @@ load_schema() {
   }
 }
 
+TOOLS_JQ='.tools // ((.servers // []) | map(.tools // []) | add) // []'
+
 # ----- init mode ------------------------------------------------------------
 if [[ "$MODE" == "init" ]]; then
   load_schema
   echo "# Generated from $SERVER's inputSchema on $(date -Iseconds)"
   echo "# Required args are pre-filled with TODO placeholders. Edit before running."
   echo "declare -a CASES=("
-  echo "$SCHEMA_JSON" | jq -r '
-    .tools // [] | .[] |
+  echo "$SCHEMA_JSON" | jq -r "$TOOLS_JQ"'
+    | .[] |
     .name as $name |
     (.inputSchema.required // []) as $req |
     (.inputSchema.properties // {}) as $props |
@@ -83,7 +86,7 @@ fi
 # ----- list-tools mode ------------------------------------------------------
 if [[ "$MODE" == "list-tools" ]]; then
   load_schema
-  echo "$SCHEMA_JSON" | jq -r '.tools // [] | .[].name'
+  echo "$SCHEMA_JSON" | jq -r "$TOOLS_JQ"' | .[].name'
   exit 0
 fi
 
@@ -114,8 +117,8 @@ preflight_args() {
   [[ -z "$SCHEMA_JSON" || "$SCHEMA_JSON" == "{}" ]] && return 0
 
   local required
-  required=$(echo "$SCHEMA_JSON" | jq -r --arg t "$tool" '
-    .tools // [] | map(select(.name == $t)) | .[0] // empty
+  required=$(echo "$SCHEMA_JSON" | jq -r --arg t "$tool" "$TOOLS_JQ"'
+    | map(select(.name == $t)) | .[0] // empty
     | .inputSchema.required // [] | .[]
   ' 2>/dev/null)
   [[ -z "$required" ]] && return 0
@@ -138,6 +141,8 @@ preflight_args() {
 run_one() {
   local label="$1" args="$2" assertion="$3"
   local selector="$SERVER.$label"
+  local is_resource=0
+  [[ "$label" == *"://"* ]] && is_resource=1
   printf "→ %-50s " "$selector"
 
   # Preflight
@@ -149,7 +154,11 @@ run_one() {
 
   # Call (text output — --output json is broken in current mcporter)
   local out rc=0 raw
-  out=$(eval "mcporter call '$selector' $args --output text --timeout $TIMEOUT_MS" 2>&1) || rc=$?
+  if (( is_resource )); then
+    out=$(mcporter resource "$SERVER" "$label" --output text 2>&1) || rc=$?
+  else
+    out=$(eval "mcporter call '$selector' $args --output text --timeout $TIMEOUT_MS" 2>&1) || rc=$?
+  fi
 
   # Detect errors. Three flavors:
   #   (a) transport failure   — mcporter exits non-zero
@@ -157,7 +166,11 @@ run_one() {
   #   (c) tool-level isError  — response has isError:true; text typically starts "Error:"
   # We always fetch --output raw to inspect the envelope (isError + kind extraction).
   local is_error=0 error_kind="" error_msg=""
-  raw=$(eval "mcporter call '$selector' $args --output raw --timeout $TIMEOUT_MS" 2>&1 || true)
+  if (( is_resource )); then
+    raw=$(mcporter resource "$SERVER" "$label" --output raw 2>&1 || true)
+  else
+    raw=$(eval "mcporter call '$selector' $args --output raw --timeout $TIMEOUT_MS" 2>&1 || true)
+  fi
   if (( rc != 0 )) \
      || [[ "$out" == *"MCP error"* ]] \
      || [[ "$out" == *"forbidden:"* ]] \
@@ -244,7 +257,7 @@ run_one() {
 
   if (( fail > 0 )) && [[ "$VERBOSE" == "1" ]]; then
     echo "    --- raw output ---"
-    echo "$out" | sed 's/^/    /'
+    printf '    %s\n' "$out"
   fi
 }
 

@@ -10,7 +10,7 @@ mcporter list linear --schema                    # tool docs for one server
 mcporter list linear --all-parameters            # show optional params too
 mcporter list https://mcp.example.com/mcp        # ad-hoc by URL
 mcporter list --http-url https://localhost:3333/mcp --schema
-mcporter list --stdio "bun run ./local-server.ts" --env TOKEN=xyz
+mcporter list --stdio "bun run ./local-server.ts" --env TOKEN=PLACEHOLDER_TOKEN
 mcporter list --json                             # machine-readable summary
 ```
 
@@ -76,6 +76,34 @@ mcporter auth linear --json                      # JSON envelope on failure
 ```
 
 `mcporter auth <url>` accepts the same ad-hoc flags as `list`/`call`. Hosted MCPs that require browser login (Supabase, Vercel, Notion, etc.) are auto-detected and promoted to OAuth without editing config.
+
+## `resource`
+
+```bash
+mcporter resource docs
+mcporter resource docs file:///repo/README.md
+mcporter resource docs greeting://Peter --output text
+mcporter resource docs file:///repo/data.json --json
+```
+
+Without a URI, `resource` lists resources exposed by the server. With a URI, it reads that resource and renders text, markdown, JSON, or raw content.
+
+Flags:
+
+- `--output auto|text|markdown|json|raw` — choose output rendering.
+- `--json` — shortcut for `--output json`.
+- `--raw` — shortcut for `--output raw`.
+
+Use `resource` for MCP resource reads; keep `call` for tools.
+
+## `vault`
+
+```bash
+mcporter vault set linear --tokens-file /path/to/oauth-tokens.json
+mcporter vault clear linear
+```
+
+Use `vault` only for non-interactive credential seeding or clearing. Do not commit token files or paste token contents into examples.
 
 ## Ad-hoc server flags (shared by `list`, `call`, `auth`)
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Linkding"
-  short_description: "This skill should be used when the user asks to save a bookmark, add or save a link, search bookmarks, list bookmarks, find saved links, tag a bookmark, archive a bookmark, check if a URL is already saved, list tags, or create a bundle. It also applies when the user mentions Linkding by name or asks about their bookmark library"
-  default_prompt: "Use $linkding for this skill should be used when the user asks to save a bookmark, add or save a link, search bookmarks, list bookmarks, find saved links, tag a bookmark, archive a bookmark, check if a URL is already saved, list tags, or create a bundle. It also applies when the user mentions Linkding by name or asks about their bookmark library."
+  short_description: "Use when the user asks to save, search, list, tag, archive, update, delete, or check Linkding bookmarks, or when they mention their Linkding bookmark library."
+  default_prompt: "Use $linkding to save links, search and list bookmarks, manage tags or bundles, archive bookmarks, and check whether URLs already exist in Linkding."

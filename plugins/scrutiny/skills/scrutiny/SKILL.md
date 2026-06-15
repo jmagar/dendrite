@@ -1,23 +1,31 @@
 ---
 name: scrutiny
-description: "This skill should be used when the user asks about hard drive or SSD health, SMART data, disk failures, drive temperatures, or storage device status. Triggers include: \"check my drives\", \"are any disks failing\", \"show SMART errors\", \"what's the temperature on my drives\", \"is drive X healthy\", \"check Scrutiny\", or any question about disk health monitoring."
+description: "Use when inspecting Scrutiny SMART monitoring data for hard drive or SSD health, disk failures, SMART attributes, drive temperatures, and storage device status. Trigger on requests such as \"check my drives\", \"are any disks failing\", \"show SMART errors\", \"what's the temperature on my drives\", \"is drive X healthy\", or \"check Scrutiny\"."
 ---
 
 # Scrutiny
 
-SMART hard-drive health monitoring. Talk to it directly over the Scrutiny web API (served under `/api`).
+SMART drive-health monitoring. Talk to Scrutiny directly over its web API,
+served under `/api`.
 
 ## How to call it
 
-Read the base URL from `~/.lab/.env`:
+Use an existing `SCRUTINY_URL` environment variable, or load it from the legacy
+Lab env file if present:
 
 ```bash
-SCRUTINY_URL=$(grep -E '^SCRUTINY_URL=' ~/.lab/.env | cut -d= -f2-)
+if [ -z "${SCRUTINY_URL:-}" ] && [ -f "$HOME/.lab/.env" ]; then
+  set -a
+  . "$HOME/.lab/.env"
+  set +a
+fi
+
+: "${SCRUTINY_URL:?Set SCRUTINY_URL to the Scrutiny base URL}"
 ```
 
 Scrutiny's web API is unauthenticated by default.
 
-> `SCRUTINY_URL` may be unset in `~/.lab/.env` — populate it before use.
+Use the base URL without a trailing `/api`; the examples below append `/api`.
 
 ## Common operations
 
@@ -33,7 +41,7 @@ The device list comes from the `summary` payload — `GET /api/summary` returns 
 
 ## Configuration
 
-`SCRUTINY_URL` lives in `~/.lab/.env`. Verify connectivity:
+Verify connectivity before interpreting health output:
 
 ```bash
 curl -sS "$SCRUTINY_URL/api/health" -w '\nHTTP %{http_code}\n'

@@ -9,6 +9,7 @@ Invoke this skill when the user request matches the trigger conditions in `SKILL
 ## Files
 
 - `SKILL.md` - agent workflow and trigger guidance
+- `scripts/jellyfin-api.sh` - repeatable Jellyfin REST helper
 - `agents/` - OpenAI runtime metadata
 - `README.md` - packaging overview
 - `CHANGELOG.md` - packaging change history

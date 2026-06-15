@@ -28,7 +28,9 @@ ByteStash is a self-hosted code snippet management service with multi-file suppo
 
 ## Setup
 
-**Required credentials in `~/.lab/.env`:**
+Configure credentials through the plugin userConfig when possible. The plugin
+hook writes `${XDG_CONFIG_HOME:-~/.config}/lab-bytestash/config.env` with mode
+`600`; `~/.lab/.env` is only a migration fallback.
 
 ```bash
 BYTESTASH_URL="https://bytestash.example.com"
@@ -49,7 +51,7 @@ The wrapper resolves auth in this order: `BYTESTASH_TOKEN` → `BYTESTASH_USERNA
   from your browser's cookies/localStorage. Note JWTs expire (default 24h).
 
 **Security:**
-- Set permissions: `chmod 600 ~/.lab/.env`
+- Set fallback env permissions with `chmod 600 ~/.lab/.env` if you use it
 - NEVER commit `.env` to version control
 - A stored `BYTESTASH_TOKEN` is a standing credential — revoke by rotating the
   server's `JWT_SECRET`. Prefer username/password where possible.
@@ -60,7 +62,7 @@ All commands use the bash script wrapper in `scripts/bytestash-api.sh`.
 
 ### List Snippets
 ```bash
-cd skills/bytestash
+cd plugins/bytestash/skills/bytestash
 ./scripts/bytestash-api.sh list
 ```
 

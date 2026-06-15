@@ -4,7 +4,7 @@ Common operations for quick copy-paste usage.
 
 ## Setup
 
-Add credentials to `~/.config/lab-arrs/config.env`:
+Credentials are configured in the arrs plugin settings. The plugin `SessionStart` hook writes `~/.config/lab-arrs/config.env` for helper scripts and manual curl sessions:
 
 ```bash
 QBITTORRENT_URL="http://localhost:8080"
@@ -12,7 +12,7 @@ QBITTORRENT_USERNAME="admin"
 QBITTORRENT_PASSWORD="yourpassword"
 ```
 
-For manual curl commands, source the .env file:
+For manual curl commands, source the generated env file:
 ```bash
 source ~/.config/lab-arrs/config.env
 ```
@@ -23,7 +23,8 @@ source ~/.config/lab-arrs/config.env
 
 ```bash
 curl -X POST "$QBITTORRENT_URL/api/v2/auth/login" \
-  -d "username=$QBITTORRENT_USERNAME&password=$QBITTORRENT_PASSWORD" \
+  --data-urlencode "username=$QBITTORRENT_USERNAME" \
+  --data-urlencode "password=$QBITTORRENT_PASSWORD" \
   -c /tmp/qb-cookie.txt
 ```
 
@@ -108,18 +109,18 @@ curl -X POST "$QBITTORRENT_URL/api/v2/torrents/add" \
   -F "savepath=/downloads"
 ```
 
-### Pause Torrent
+### Stop Torrent
 
 ```bash
-curl -X POST "$QBITTORRENT_URL/api/v2/torrents/pause" \
+curl -X POST "$QBITTORRENT_URL/api/v2/torrents/stop" \
   -b /tmp/qb-cookie.txt \
   -d "hashes=TORRENT_HASH"
 ```
 
-### Resume Torrent
+### Start Torrent
 
 ```bash
-curl -X POST "$QBITTORRENT_URL/api/v2/torrents/resume" \
+curl -X POST "$QBITTORRENT_URL/api/v2/torrents/start" \
   -b /tmp/qb-cookie.txt \
   -d "hashes=TORRENT_HASH"
 ```
@@ -329,8 +330,8 @@ curl -s "$QBITTORRENT_URL/api/v2/torrents/info?filter=active" \
 hashes=$(curl -s "$QBITTORRENT_URL/api/v2/torrents/info?filter=active" \
   -b /tmp/qb-cookie.txt | jq -r '.[].hash' | tr '\n' '|')
 
-# Pause all (remove trailing |)
-curl -X POST "$QBITTORRENT_URL/api/v2/torrents/pause" \
+# Stop all on qBittorrent 5.x; use /torrents/pause on qBittorrent 4.x.
+curl -X POST "$QBITTORRENT_URL/api/v2/torrents/stop" \
   -b /tmp/qb-cookie.txt \
   -d "hashes=${hashes%|}"
 ```

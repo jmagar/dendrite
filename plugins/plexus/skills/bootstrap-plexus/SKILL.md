@@ -12,14 +12,16 @@ the user asks to repair missing host profiles.
 ## Dynamic Bootstrap
 
 This initializes missing persistent profiles from bundled templates. It never
-overwrites existing `REMOTE.md` files.
+overwrites existing `REMOTE.md` files. In Claude Code, the dynamic command below
+is executable skill syntax. In Codex/OpenAI contexts, run the same shell command
+with `exec_command`.
 
-!`python3 "${CLAUDE_PLUGIN_ROOT:-plugins/plexus}/scripts/remote-context.py" --init $ARGUMENTS`
+!`python3 "${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-plugins/plexus}}/scripts/remote-context.py" --init $ARGUMENTS`
 
 ## Persistent Data Contract
 
 Plexus must not store mutable host memory in the plugin source tree. Bundled
-files under `${CLAUDE_PLUGIN_ROOT:-plugins/plexus}/templates/remotes/` are
+files under `${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-plugins/plexus}}/templates/remotes/` are
 defaults only.
 
 Persistent host profiles live at:
@@ -44,5 +46,5 @@ leave it untouched and tell the user it was preserved.
 To inspect a seeded profile:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT:-plugins/plexus}/scripts/remote-context.py" <host> --no-probe
+python3 "${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:-plugins/plexus}}/scripts/remote-context.py" <host> --no-probe
 ```

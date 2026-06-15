@@ -4,14 +4,14 @@ Common operations for quick copy-paste usage.
 
 ## Setup
 
-Add credentials to `~/.config/lab-arrs/config.env`:
+Credentials are written to `~/.config/lab-arrs/config.env` from the arrs plugin settings:
 
 ```bash
 SONARR_URL="http://localhost:8989"
 SONARR_API_KEY="<your_api_key>"
 ```
 
-Load in scripts:
+For direct API calls, load the generated file in your shell:
 
 ```bash
 source ~/.config/lab-arrs/config.env

@@ -27,7 +27,7 @@ CHROME_PORT="${CHROME_PORT:-9222}"
 POWERSHELL="${CHROME_POWERSHELL:-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe}"
 REMOTE_DIR="${CHROME_REMOTE_DIR:-/mnt/c/screens}"
 NATIVE_DIR="${CHROME_NATIVE_DIR:-C:\\screens}"
-SKILL_DIR=/home/jmagar/.agents/src/skills/chrome
+CHROME_SKILL_DIR="${CHROME_SKILL_DIR:?set to this installed skill directory}"
 ```
 
 The host needs a Chrome started like:
@@ -63,8 +63,8 @@ Pick a tab by title or URL substring — every helper below takes a `-Pattern` t
 `scripts/cdp-call.ps1` opens a WebSocket to a tab (or to the browser endpoint), sends one JSON-RPC call, and prints the raw response. Stage it once per session:
 
 ```bash
-scp -q "$SKILL_DIR/scripts/cdp-call.ps1" "$SSH_TARGET:$REMOTE_DIR/cdp-call.ps1"
-scp -q "$SKILL_DIR/scripts/cdp-shot.ps1" "$SSH_TARGET:$REMOTE_DIR/cdp-shot.ps1"
+scp -q "$CHROME_SKILL_DIR/scripts/cdp-call.ps1" "$SSH_TARGET:$REMOTE_DIR/cdp-call.ps1"
+scp -q "$CHROME_SKILL_DIR/scripts/cdp-shot.ps1" "$SSH_TARGET:$REMOTE_DIR/cdp-shot.ps1"
 
 cdp() {
   local pat="$1" method="$2" params="${3:-{\}}"
@@ -143,10 +143,12 @@ cdp github 'Network.getResponseBody' '{"requestId":"..."}'   # need the requestI
 ## Cookies
 
 ```bash
-cdp '' 'Network.getCookies' '{}' | jq '.result.cookies[] | {name, domain, value: (.value[0:20])}'
+cdp '' 'Network.getCookies' '{}' | jq '.result.cookies[] | {name, domain, path, expires, size, httpOnly, secure, sameSite}'
 # Storage.getCookies is browser-context scoped; pass a browserContextId to target incognito.
 cdp '' 'Storage.getCookies' '{}' | jq '.result.cookies | length'
 ```
+
+Do not print cookie values by default. Fetch cookie values only when the user explicitly asks and the security risk is understood.
 
 ## Navigate / reload / close
 

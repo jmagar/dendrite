@@ -5,7 +5,7 @@ Query MCP servers from the shell using FastMCP 3.x client commands: `fastmcp dis
 ## What it does
 
 Lets a shell-capable agent (or a human) inspect MCP servers without a full MCP host:
-- Discover servers configured in `fastmcp.json`
+- Discover servers configured in editor/project MCP configs such as `./mcp.json`
 - List tools / resources / prompts from any reachable server
 - Invoke tools and read resources by name
 - Handle multiple transports (stdio, SSE, streamable HTTP) and auth methods

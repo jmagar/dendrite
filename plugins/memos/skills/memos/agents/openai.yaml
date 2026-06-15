@@ -1,4 +1,4 @@
 interface:
   display_name: "Memos"
-  short_description: "This skill should be used when the user asks to save a note, create a memo, search memos, find notes about something, add a note, capture a thought, save something to their note hub, or mentions the Memos service. Does not apply when the user says 'remember this' without specifying Memos \u2014 that may route to the mnem memory system instead"
-  default_prompt: "Use $memos for this skill should be used when the user asks to save a note, create a memo, search memos, find notes about something, add a note, capture a thought, save something to their note hub, or mentions the Memos service. Does not apply when the user says 'remember this' without specifying Memos \u2014 that may route to the mnem memory system instead."
+  short_description: "Create, search, tag, archive, and manage notes in Memos."
+  default_prompt: "Use $memos to create, search, tag, archive, and manage notes in Memos."

@@ -19,7 +19,8 @@ qBittorrent uses cookie-based authentication. You must first login to obtain a s
 ```bash
 # Login and save cookie
 curl -X POST "http://localhost:8080/api/v2/auth/login" \
-  -d "username=admin&password=adminpass" \
+  --data-urlencode "username=$QBITTORRENT_USERNAME" \
+  --data-urlencode "password=$QBITTORRENT_PASSWORD" \
   -c /tmp/qb-cookie.txt
 
 # Use cookie in subsequent requests
@@ -29,7 +30,7 @@ curl "http://localhost:8080/api/v2/torrents/info" \
 
 ## Quick Start
 
-**Prerequisites:** Add credentials to `~/.config/lab-arrs/config.env`:
+**Prerequisites:** Configure credentials in the arrs plugin settings. The plugin `SessionStart` hook writes `~/.config/lab-arrs/config.env`:
 ```bash
 QBITTORRENT_URL="http://localhost:8080"
 QBITTORRENT_USERNAME="admin"
@@ -38,12 +39,13 @@ QBITTORRENT_PASSWORD="yourpassword"
 
 **Manual API Access:**
 ```bash
-# Load credentials from .env
+# Load credentials from the generated config.
 source ~/.config/lab-arrs/config.env
 
 # Login
 curl -X POST "$QBITTORRENT_URL/api/v2/auth/login" \
-  -d "username=$QBITTORRENT_USERNAME&password=$QBITTORRENT_PASSWORD" \
+  --data-urlencode "username=$QBITTORRENT_USERNAME" \
+  --data-urlencode "password=$QBITTORRENT_PASSWORD" \
   -c /tmp/qb-cookie.txt
 
 # Get torrent list
@@ -74,7 +76,8 @@ Login to qBittorrent.
 **Example Request:**
 ```bash
 curl -X POST "$QB_URL/api/v2/auth/login" \
-  -d "username=admin&password=adminpass" \
+  --data-urlencode "username=$QBITTORRENT_USERNAME" \
+  --data-urlencode "password=$QBITTORRENT_PASSWORD" \
   -c /tmp/qb-cookie.txt
 ```
 
@@ -318,9 +321,9 @@ curl -X POST "$QB_URL/api/v2/torrents/add" \
 
 ---
 
-#### POST /torrents/pause
+#### POST /torrents/stop
 
-Pause torrents.
+Stop torrents.
 
 **Parameters:**
 | Name | Type | Required | Description |
@@ -329,13 +332,13 @@ Pause torrents.
 
 **Example Request:**
 ```bash
-# Pause specific torrent
-curl -X POST "$QB_URL/api/v2/torrents/pause" \
+# Stop specific torrent
+curl -X POST "$QB_URL/api/v2/torrents/stop" \
   -b /tmp/qb-cookie.txt \
   -d "hashes=abc123def456"
 
-# Pause all torrents
-curl -X POST "$QB_URL/api/v2/torrents/pause" \
+# Stop all torrents
+curl -X POST "$QB_URL/api/v2/torrents/stop" \
   -b /tmp/qb-cookie.txt \
   -d "hashes=all"
 ```
@@ -345,9 +348,9 @@ curl -X POST "$QB_URL/api/v2/torrents/pause" \
 
 ---
 
-#### POST /torrents/resume
+#### POST /torrents/start
 
-Resume torrents.
+Start torrents.
 
 **Parameters:**
 | Name | Type | Required | Description |
@@ -356,7 +359,7 @@ Resume torrents.
 
 **Example Request:**
 ```bash
-curl -X POST "$QB_URL/api/v2/torrents/resume" \
+curl -X POST "$QB_URL/api/v2/torrents/start" \
   -b /tmp/qb-cookie.txt \
   -d "hashes=abc123def456"
 ```

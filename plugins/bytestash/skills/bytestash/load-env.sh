@@ -15,7 +15,7 @@ fi
 # Usage: load_env_file [/optional/override/path]
 load_env_file() {
     local default_file="${XDG_CONFIG_HOME:-$HOME/.config}/lab-bytestash/config.env"
-    local env_file="${1:-$default_file}"
+    local env_file="${1:-${BYTESTASH_ENV_FILE:-$default_file}}"
 
     if [[ ! -f "$env_file" && "$env_file" == "$default_file" && -f "$HOME/.lab/.env" ]]; then
         env_file="$HOME/.lab/.env"

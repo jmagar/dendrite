@@ -20,9 +20,9 @@ Manage torrents via qBittorrent WebUI.
 4. Set a username and password
 5. Note the port (default: 8080)
 
-### 2. Add Credentials to .env
+### 2. Configure Credentials
 
-Add these variables to `~/.config/lab-arrs/config.env`:
+Set these variables in the arrs plugin settings. The plugin `SessionStart` hook writes `~/.config/lab-arrs/config.env` for the helper script; do not commit or manually document real credentials:
 
 ```bash
 QBITTORRENT_URL="http://localhost:8080"
@@ -30,12 +30,7 @@ QBITTORRENT_USERNAME="admin"
 QBITTORRENT_PASSWORD="<your_password>"
 ```
 
-Replace with your actual WebUI credentials.
-
-Set file permissions:
-```bash
-chmod 600 ~/.config/lab-arrs/config.env
-```
+Use your actual WebUI URL, username, and password.
 
 ### 3. Test It
 
@@ -97,7 +92,7 @@ qbit-api.sh add-tags <hash> "important,archive"
 
 ## Notes
 
-- Credentials are loaded from `~/.config/lab-arrs/config.env`
+- Credentials are loaded from the generated `~/.config/lab-arrs/config.env`
 - All operations require valid credentials
 - The script automatically handles session management
 
@@ -111,11 +106,11 @@ Detailed API documentation is available in the `references/` directory:
 
 ## Troubleshooting
 
-**"ERROR: .env file not found"**
-→ Create `.env` file at `~/.config/lab-arrs/config.env`
+**"ERROR: config.env file not found"**
+→ Check the arrs plugin settings and restart the session so the hook regenerates `~/.config/lab-arrs/config.env`
 
 **"QBITTORRENT_URL and QBITTORRENT_USERNAME and QBITTORRENT_PASSWORD must be set in .env"**
-→ Check that all three variables are defined in `~/.config/lab-arrs/config.env`
+→ Check that all three variables are set in the arrs plugin settings and regenerated into `~/.config/lab-arrs/config.env`
 
 **Connection refused**
 → Make sure WebUI is enabled in qBittorrent settings

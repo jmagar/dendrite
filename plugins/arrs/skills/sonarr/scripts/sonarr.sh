@@ -3,17 +3,18 @@ set -euo pipefail
 
 # Sonarr API wrapper
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Credentials come from the arrs plugin userConfig (written by its SessionStart hook).
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env"
 [[ -f "$CONFIG_FILE" ]] || { echo "ERROR: $CONFIG_FILE not found — set this service's URL/key in the arrs plugin settings (userConfig)." >&2; exit 1; }
-set -a; source "$CONFIG_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+set +a
 
-# Load credentials from .env
 : "${SONARR_URL:?set it in the arrs plugin settings}"
 : "${SONARR_API_KEY:?set it in the arrs plugin settings}"
+
+SONARR_URL="${SONARR_URL%/}"
 
 # Optional quality profile (with default fallback)
 DEFAULT_QUALITY_PROFILE="${SONARR_DEFAULT_QUALITY_PROFILE:-1}"
@@ -21,26 +22,61 @@ DEFAULT_QUALITY_PROFILE="${SONARR_DEFAULT_QUALITY_PROFILE:-1}"
 API="$SONARR_URL/api/v3"
 AUTH="X-Api-Key: $SONARR_API_KEY"
 
-cmd="$1"
+usage() {
+  cat <<'EOF'
+Usage: sonarr.sh <command> [args]
+
+Commands:
+  search <query>                         Search for TV shows
+  search-json <query>                    Search for TV shows and return JSON
+  exists <tvdbId>                        Check if a show is in the library
+  config                                 Show root folders and quality profiles
+  add <tvdbId> [profileId] [--no-search] Add a show; searches by default
+  remove <tvdbId> [--delete-files]       Remove a show from the library
+EOF
+}
+
+require_arg() {
+  local value="${1:-}"
+  local name="$2"
+  if [[ -z "$value" ]]; then
+    echo "ERROR: missing required argument: $name" >&2
+    usage >&2
+    exit 2
+  fi
+}
+
+urlencode() {
+  jq -nr --arg v "$1" '$v|@uri'
+}
+
+cmd="${1:-}"
+if [[ -z "$cmd" ]]; then
+  usage
+  exit 0
+fi
 shift || true
 
 case "$cmd" in
   search)
-    query="$1"
-    curl -s -H "$AUTH" "$API/series/lookup?term=$(echo "$query" | jq -sRr @uri)" | jq -r '
+    query="${1:-}"
+    require_arg "$query" "query"
+    curl -fsS -H "$AUTH" "$API/series/lookup?term=$(urlencode "$query")" | jq -r '
       to_entries | .[:10] | .[] | 
-      "\(.key + 1). \(.value.title) (\(.value.year)) - https://thetvdb.com/dereferrer/series/\(.value.tvdbId)"
+      "\(.key + 1). \(.value.title) (\(.value.year)) - TVDB \(.value.tvdbId) - https://thetvdb.com/dereferrer/series/\(.value.tvdbId)"
     '
     ;;
     
   search-json)
-    query="$1"
-    curl -s -H "$AUTH" "$API/series/lookup?term=$(echo "$query" | jq -sRr @uri)"
+    query="${1:-}"
+    require_arg "$query" "query"
+    curl -fsS -H "$AUTH" "$API/series/lookup?term=$(urlencode "$query")"
     ;;
     
   exists)
-    tvdbId="$1"
-    result=$(curl -s -H "$AUTH" "$API/series?tvdbId=$tvdbId")
+    tvdbId="${1:-}"
+    require_arg "$tvdbId" "tvdbId"
+    result=$(curl -fsS -H "$AUTH" "$API/series?tvdbId=$(urlencode "$tvdbId")")
     if [ "$result" = "[]" ]; then
       echo "not_found"
     else
@@ -51,15 +87,16 @@ case "$cmd" in
     
   config)
     echo "=== Root Folders ==="
-    curl -s -H "$AUTH" "$API/rootfolder" | jq -r '.[] | "\(.id): \(.path)"'
+    curl -fsS -H "$AUTH" "$API/rootfolder" | jq -r '.[] | "\(.id): \(.path)"'
     echo ""
     echo "=== Quality Profiles ==="
-    curl -s -H "$AUTH" "$API/qualityprofile" | jq -r '.[] | "\(.id): \(.name)"'
+    curl -fsS -H "$AUTH" "$API/qualityprofile" | jq -r '.[] | "\(.id): \(.name)"'
     ;;
     
   add)
-    tvdbId="$1"
-    qualityProfileId="$2"
+    tvdbId="${1:-}"
+    require_arg "$tvdbId" "tvdbId"
+    qualityProfileId="${2:-}"
     searchFlag="true"
     
     # Check for --no-search flag
@@ -70,7 +107,7 @@ case "$cmd" in
     done
     
     # Get series details from lookup
-    series=$(curl -s -H "$AUTH" "$API/series/lookup?term=tvdb:$tvdbId" | jq '.[0]')
+    series=$(curl -fsS -H "$AUTH" "$API/series/lookup?term=tvdb:$(urlencode "$tvdbId")" | jq '.[0]')
     
     if [ "$series" = "null" ] || [ -z "$series" ]; then
       echo "❌ Show not found with TVDB ID: $tvdbId"
@@ -78,14 +115,14 @@ case "$cmd" in
     fi
     
     # Get default root folder
-    rootFolder=$(curl -s -H "$AUTH" "$API/rootfolder" | jq -r '.[0].path')
+    rootFolder=$(curl -fsS -H "$AUTH" "$API/rootfolder" | jq -r '.[0].path')
     
     # Use provided quality profile ID, config default, or first available
     if [ -z "$qualityProfileId" ] || [ "$qualityProfileId" = "--no-search" ]; then
       if [ -n "$DEFAULT_QUALITY_PROFILE" ]; then
         qualityProfile="$DEFAULT_QUALITY_PROFILE"
       else
-        qualityProfile=$(curl -s -H "$AUTH" "$API/qualityprofile" | jq -r '.[0].id')
+        qualityProfile=$(curl -fsS -H "$AUTH" "$API/qualityprofile" | jq -r '.[0].id')
       fi
     else
       qualityProfile="$qualityProfileId"
@@ -106,7 +143,7 @@ case "$cmd" in
       }
     ')
     
-    result=$(curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" -d "$addRequest" "$API/series")
+    result=$(curl -fsS -X POST -H "$AUTH" -H "Content-Type: application/json" -d "$addRequest" "$API/series")
     
     if echo "$result" | jq -e '.id' > /dev/null 2>&1; then
       title=$(echo "$result" | jq -r '.title')
@@ -123,14 +160,15 @@ case "$cmd" in
     ;;
     
   remove)
-    tvdbId="$1"
+    tvdbId="${1:-}"
+    require_arg "$tvdbId" "tvdbId"
     deleteFiles="false"
-    if [ "$2" = "--delete-files" ]; then
+    if [ "${2:-}" = "--delete-files" ]; then
       deleteFiles="true"
     fi
     
     # Get series ID from library
-    series=$(curl -s -H "$AUTH" "$API/series?tvdbId=$tvdbId")
+    series=$(curl -fsS -H "$AUTH" "$API/series?tvdbId=$(urlencode "$tvdbId")")
     
     if [ "$series" = "[]" ]; then
       echo "❌ Show not found in library"
@@ -141,7 +179,7 @@ case "$cmd" in
     title=$(echo "$series" | jq -r '.[0].title')
     year=$(echo "$series" | jq -r '.[0].year')
     
-    curl -s -X DELETE -H "$AUTH" "$API/series/$seriesId?deleteFiles=$deleteFiles" > /dev/null
+    curl -fsS -X DELETE -H "$AUTH" "$API/series/$seriesId?deleteFiles=$deleteFiles" > /dev/null
     
     if [ "$deleteFiles" = "true" ]; then
       echo "🗑️ Removed: $title ($year) + deleted files"
@@ -151,14 +189,8 @@ case "$cmd" in
     ;;
     
   *)
-    echo "Usage: sonarr.sh <command> [args]"
-    echo ""
-    echo "Commands:"
-    echo "  search <query>              Search for TV shows"
-    echo "  search-json <query>         Search (JSON output)"
-    echo "  exists <tvdbId>             Check if show is in library"
-    echo "  config                      Show root folders & quality profiles"
-    echo "  add <tvdbId> [profileId] [--no-search]  Add a show (searches by default)"
-    echo "  remove <tvdbId> [--delete-files]  Remove a show from library"
+    echo "Unknown command: $cmd" >&2
+    usage >&2
+    exit 2
     ;;
 esac

@@ -1,6 +1,6 @@
 # Navigation
 
-Required: Navigation 3 with type-safe `@Serializable` `NavKey` destinations, feature-defined `Navigator` interfaces, app-module wiring. Kotlin code must align with [kotlin-patterns.md](/references/kotlin-patterns.md). Versions live in `assets/libs.versions.toml.template` (`navigation3` bundle).
+Required: Navigation 3 with type-safe `@Serializable` `NavKey` destinations, feature-defined `Navigator` interfaces, app-module wiring. Kotlin code must align with [kotlin-patterns.md](kotlin-patterns.md). Versions live in `assets/libs.versions.toml.template` (`navigation3` bundle).
 
 Navigation 3 1.0 is stable; pin a current version from [Navigation 3 releases](https://developer.android.com/jetpack/androidx/releases/navigation3). Reference the [nav3-recipes](https://github.com/android/nav3-recipes) repository for advanced patterns (multi-back-stack, Hilt integration, ...).
 
@@ -22,7 +22,7 @@ Navigation 3 1.0 is stable; pin a current version from [Navigation 3 releases](h
 
 ## Navigation3 Architecture
 
-Feature-level navigation components (`AuthDestination`, `AuthNavigator`, `AuthGraph`) are created as part of the feature module setup in [modularization.md → Create Feature Module → Step 4](/references/modularization.md).
+Feature-level navigation components (`AuthDestination`, `AuthNavigator`, `AuthGraph`) are created as part of the feature module setup in [modularization.md → Create Feature Module → Step 4](modularization.md).
 
 Required:
 - Each feature owns its `Destination` sealed interface (implements `NavKey`, `@Serializable`) and a `Navigator` interface.
@@ -59,7 +59,7 @@ Use `WindowSizeClass` / `currentWindowAdaptiveInfo()` for custom splits; use `Na
 
 Handle **configuration changes** without losing user context: rotation, fold/unfold, multi-window resize, split-screen enter/exit, hardware keyboard attach/detach.
 
-- Keep UI state in **ViewModel** and process death in **SavedStateHandle** (see [compose-patterns.md](/references/compose-patterns.md) and modularization docs).
+- Keep UI state in **ViewModel** and process death in **SavedStateHandle** (see [compose-patterns.md](compose-patterns.md) and modularization docs).
 - Test with **Don't keep activities** during development to flush out lost state.
 
 ### Foldables
@@ -476,11 +476,11 @@ val authNavigator = remember(navigator) {
 
 ## Navigation Flow
 
-End-to-end flow diagrams (UI → data → navigation): [architecture.md](/references/architecture.md).
+End-to-end flow diagrams (UI → data → navigation): [architecture.md](architecture.md).
 
 ## Migration
 
-Navigation 2.x → Navigation3: [migration.md → Navigation 2.x to Navigation3](/references/migration.md#navigation-2x-to-navigation3).
+Navigation 2.x → Navigation3: [migration.md → Navigation 2.x to Navigation3](migration.md#navigation-2x-to-navigation3).
 
 ## Animations
 
@@ -1282,7 +1282,7 @@ relation=delegate_permission/common.handle_all_urls'
 
 Required JSON shape in the response: a non-empty `statements` array containing the package name and uppercase fingerprint that match the manifest. Empty array = file unreachable, malformed, or wrong content-type.
 
-Per-device verification (`pm set-app-links`, `pm verify-app-links --re-verify`, `pm get-app-links`) and the return-code legend: [testing.md → Testing Deep Links](/references/testing.md#testing-deep-links).
+Per-device verification (`pm set-app-links`, `pm verify-app-links --re-verify`, `pm get-app-links`) and the return-code legend: [testing.md → Testing Deep Links](testing.md#testing-deep-links).
 
 ### Dynamic App Links (Android 15+, API 35)
 
@@ -1625,15 +1625,15 @@ Required when both HTTPS and a custom scheme reach the same `NavKey`: use HTTPS 
 
 Required for inbound custom-scheme links: validate the host as well as the scheme. `myapp://` with no `host` constraint matches `myapp://anything`, including paths an attacker can craft to confuse the parser.
 
-Custom-scheme `adb shell am start` probes: [testing.md → Testing Deep Links](/references/testing.md#testing-deep-links).
+Custom-scheme `adb shell am start` probes: [testing.md → Testing Deep Links](testing.md#testing-deep-links).
 
 ### Testing Deep Links
 
-ADB, REST checks, instrumented `onNewIntent`, and host-state tables: [testing.md → Testing Deep Links](/references/testing.md#testing-deep-links).
+ADB, REST checks, instrumented `onNewIntent`, and host-state tables: [testing.md → Testing Deep Links](testing.md#testing-deep-links).
 
 ### Troubleshooting Deep Links
 
-Required: match a symptom row, run the linked ADB or REST check from [testing.md → Testing Deep Links](/references/testing.md#testing-deep-links), then edit manifest or server data.
+Required: match a symptom row, run the linked ADB or REST check from [testing.md → Testing Deep Links](testing.md#testing-deep-links), then edit manifest or server data.
 
 | Symptom                                                       | Likely cause                                                                                           | Fix                                                                                                                                                  |
 |---------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|

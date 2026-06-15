@@ -42,7 +42,7 @@ Effective tag organization and management strategies.
 
 **List tags with counts:**
 ```bash
-cd ~/claude-homelab/skills/memos
+cd /path/to/dendrite/plugins/memos/skills/memos
 bash scripts/tag-api.sh list
 ```
 
@@ -286,9 +286,9 @@ Create a tag maintenance helper:
 
 ```bash
 #!/bin/bash
-# ~/claude-homelab/skills/memos/scripts/tag-maintenance.sh
+# /path/to/dendrite/plugins/memos/skills/memos/scripts/tag-maintenance.sh
 
-MEMOS_DIR="$HOME/claude-homelab/skills/memos"
+MEMOS_DIR="/path/to/dendrite/plugins/memos/skills/memos"
 cd "$MEMOS_DIR"
 
 echo "=== Tag Statistics ==="
@@ -306,8 +306,8 @@ bash scripts/memo-api.sh list --limit 1000 | jq -r '.memos[] | select(.tags | le
 
 Make it executable and run monthly:
 ```bash
-chmod +x ~/claude-homelab/skills/memos/scripts/tag-maintenance.sh
-bash ~/claude-homelab/skills/memos/scripts/tag-maintenance.sh
+chmod +x /path/to/dendrite/plugins/memos/skills/memos/scripts/tag-maintenance.sh
+bash /path/to/dendrite/plugins/memos/skills/memos/scripts/tag-maintenance.sh
 ```
 
 ## Example: Complete Tagging System

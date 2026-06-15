@@ -21,7 +21,7 @@ DEFAULT_ROOTS = [
     HOME / ".codex" / "plugins" / "cache",
     HOME / ".config" / "github-copilot",
     HOME / ".config" / "gh",
-    HOME / ".agents" / "shared" / "skills",
+    HOME / ".agents" / "src" / "skills",
 ]
 
 TEXT_EXTENSIONS = {
@@ -143,7 +143,12 @@ KNOWN_CLI_TOKENS = {
     "yarn",
 }
 
-CODE_FENCE_RE = re.compile(r"```(?:bash|sh|zsh|shell|console)?\n(.*?)```", re.DOTALL)
+SHELL_FENCE_INFOS = {"bash", "sh", "zsh", "shell", "console"}
+
+CODE_FENCE_RE = re.compile(
+    r"^```(?P<info>[^\n`]*)\n(?P<body>.*?)^```[ \t]*$",
+    re.DOTALL | re.MULTILINE,
+)
 INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 YAML_BANG_RE = re.compile(r"!\s*`([^`\n]+)`")
 ALLOWED_TOOLS_RE = re.compile(r"allowed-tools:\s*([^\n]+)", re.IGNORECASE)
@@ -265,7 +270,10 @@ def extract_candidates(path: Path) -> dict[str, set[str]]:
     candidates: dict[str, set[str]] = defaultdict(set)
 
     for match in CODE_FENCE_RE.finditer(text):
-        for line in match.group(1).splitlines():
+        info = match.group("info").strip().lower().split(None, 1)[0]
+        if info not in SHELL_FENCE_INFOS:
+            continue
+        for line in match.group("body").splitlines():
             cmd = first_command(line)
             if cmd:
                 candidates[cmd].add(f"{path.name}:code-fence")
@@ -279,13 +287,13 @@ def extract_candidates(path: Path) -> dict[str, set[str]]:
         snippet = match.group(1).strip()
         if " " in snippet or snippet.startswith(("/", "$", "./")):
             cmd = first_command(snippet)
-            if cmd:
+            if cmd and (cmd in KNOWN_CLI_TOKENS or shutil.which(cmd)):
                 candidates[cmd].add(f"{path.name}:inline")
             continue
         if re.fullmatch(r"[a-zA-Z][a-zA-Z0-9_.+-]{1,48}", snippet):
             if snippet in PROSE_TOKENS or "_" in snippet:
                 continue
-            if "-" in snippet or snippet in KNOWN_CLI_TOKENS:
+            if snippet in KNOWN_CLI_TOKENS:
                 candidates[snippet].add(f"{path.name}:inline-token")
 
     for match in ALLOWED_TOOLS_RE.finditer(text):

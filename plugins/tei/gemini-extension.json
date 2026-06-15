@@ -1,0 +1,5 @@
+{
+  "name": "tei",
+  "version": "0.1.0",
+  "description": "Skill for operating tei via the lab MCP server / CLI."
+}

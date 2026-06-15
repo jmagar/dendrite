@@ -1,4 +1,4 @@
 interface:
   display_name: "Scrutiny"
-  short_description: "This skill should be used when the user asks about hard drive or SSD health, SMART data, disk failures, drive temperatures, or storage device status. Triggers include: \\\"check my drives\\\", \\\"are any disks failing\\\", \\\"show SMART errors\\\", \\\"what's the temperature on my drives\\\", \\\"is drive X healthy\\\", \\\"check Scrutiny\\\", or any question about disk health monitoring"
-  default_prompt: "Use $scrutiny for this skill should be used when the user asks about hard drive or SSD health, SMART data, disk failures, drive temperatures, or storage device status. Triggers include: \\\"check my drives\\\", \\\"are any disks failing\\\", \\\"show SMART errors\\\", \\\"what's the temperature on my drives\\\", \\\"is drive X healthy\\\", \\\"check Scrutiny\\\", or any question about disk health monitoring."
+  short_description: "Inspect Scrutiny SMART monitoring data for drive health, temperatures, disk failures, and storage device status."
+  default_prompt: "Use $scrutiny when the user asks to check drives, inspect SMART errors, review disk temperatures, verify drive health, or summarize Scrutiny storage status."

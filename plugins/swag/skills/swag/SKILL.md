@@ -1,104 +1,122 @@
 ---
 name: swag
-description: This skill should be used when the user says "add proxy config", "create reverse proxy", "SWAG config", "nginx proxy", "expose service", "proxy configuration", "subdomain config", "subfolder config", "configure SWAG", "list proxy configs", "view proxy config", "edit proxy config", "remove proxy config", "check proxy health", "SWAG logs", "add domain", "configure SSL", "proxy a service", or mentions SWAG, reverse proxy, nginx configuration, or making a service accessible via domain.
+description: "Use when the user needs to manage SWAG/nginx reverse-proxy configs: create, list, view, edit, update, remove, back up, inspect logs, or health-check a proxied service. Trigger phrases include \"add proxy config\", \"create reverse proxy\", \"SWAG config\", \"nginx proxy\", \"expose service\", \"proxy configuration\", \"subdomain config\", \"configure SWAG\", \"list proxy configs\", \"SWAG logs\", \"check proxy health\", or \"proxy a service\"."
 ---
 
 # SWAG Skill
 
 ## Mode Detection
 
-**MCP mode** (preferred): Use when `mcp__swag-mcp__swag` tool is available. The server manages nginx proxy configuration files directly (local or remote via SSH).
+**MCP mode** (preferred): Use the available SWAG MCP tool named `swag`. Different agent runtimes may wrap MCP tool names differently, but the underlying action router is `swag`. The server manages nginx proxy configuration files directly through local or SSH-backed storage.
 
-**HTTP fallback**: No meaningful curl equivalent — SWAG config management requires direct filesystem access. If MCP server is unavailable, surface the issue to the user and suggest restarting it.
+**Fallback**: There is no meaningful curl-only fallback because SWAG config management requires filesystem access. If the MCP server is unavailable, surface that issue and ask the user to restart or reconnect the plugin/server before making changes.
 
-# MCP URL is provided via plugin configuration (SWAG_MCP_URL)
+Configuration comes from plugin settings and MCP server environment variables. Do not hand-edit generated local env files unless the user explicitly asks for plugin/server debugging.
 
 ---
 
-## MCP Mode — Tool Reference
+## MCP Mode - Tool Reference
 
-Single tool: `mcp__swag-mcp__swag` with an `action` parameter.
+Single action router: `swag` with an `action` parameter.
 
 ### List configurations
 
 ```
-mcp__swag-mcp__swag
-  action: "list"
+swag
+  action:      "list"
+  list_filter: (optional) "all", "active", or "samples"
+  query:       (optional) search filter
+  offset:      (optional) pagination offset
+  limit:       (optional) page size
 ```
 
-Returns all proxy configurations with their status (enabled/disabled).
+Returns proxy configurations and their status. `active` lists `.conf` files; `samples` lists `.conf.sample` files.
 
 ### Create configuration
 
 ```
-mcp__swag-mcp__swag
-  action:       "create"
-  server_name:  (required) Service name, e.g. "jellyfin", "sonarr"
-  type:         (required) "subdomain" or "subfolder"
-  upstream_url: (required) Backend URL, e.g. "http://192.168.1.10:8096"
-  auth_method:  (optional) "authelia", "authentik", "basic", "none" — default from server config
-  enable_quic:  (optional) true/false
+swag
+  action:         "create"
+  config_name:    (required) config filename, e.g. "jellyfin.subdomain.conf"
+  server_name:    (required) public domain, e.g. "jellyfin.example.com"
+  upstream_app:   (required) container name, host, or IP
+  upstream_port:  (required) backend port
+  upstream_proto: (optional) "http" or "https", defaults to server behavior
+  auth_method:    (optional) "authelia", "authentik", "basic", or "none"
+  enable_quic:    (optional) true/false
 ```
+
+Only subdomain-style configs are supported by the current templates. For split routing, also pass `mcp_upstream_app`, `mcp_upstream_port`, and `mcp_upstream_proto`.
 
 ### View configuration
 
 ```
-mcp__swag-mcp__swag
+swag
   action:      "view"
-  server_name: (required) Service name
+  config_name: (required) config filename
 ```
 
 ### Edit configuration
 
 ```
-mcp__swag-mcp__swag
-  action:      "edit"
-  server_name: (required) Service name
-  changes:     (required) Description of changes to apply
+swag
+  action:        "edit"
+  config_name:   (required) config filename
+  new_content:   (required) full replacement file content
+  create_backup: (optional) true/false, default true
 ```
 
 ### Update upstream
 
 ```
-mcp__swag-mcp__swag
+swag
   action:       "update"
-  server_name:  (required) Service name
-  upstream_url: (required) New backend URL
+  config_name:  (required) config filename
+  update_field: (required) "port", "upstream", "app", or "add_mcp"
+  update_value: (required) new value
 ```
+
+`app` expects `host:port`. `add_mcp` expects a path such as `/mcp`.
 
 ### Remove configuration
 
 ```
-mcp__swag-mcp__swag
-  action:      "remove"
-  server_name: (required) Service name
+swag
+  action:        "remove"
+  config_name:   (required) config filename
+  create_backup: (optional) true/false, default true
 ```
 
-**DESTRUCTIVE** — removes the nginx config file. Always confirm with user before executing.
+**DESTRUCTIVE** - removes the nginx config file. Always confirm with the user before executing.
 
 ### View logs
 
 ```
-mcp__swag-mcp__swag
+swag
   action:   "logs"
-  log_type: (optional) "access", "error", "fail2ban", "letsencrypt" — default "error"
+  log_type: (optional) "nginx-error", "nginx-access", "fail2ban", "letsencrypt", or "renewal"
+  lines:    (optional) 1-1000, default 50
 ```
 
 ### Manage backups
 
 ```
-mcp__swag-mcp__swag
-  action: "backups"
+swag
+  action:         "backups"
+  backup_action:  (optional) "list" or "cleanup", default "list"
+  retention_days: (optional) cleanup retention; 0 uses the server default
 ```
 
-Lists available configuration backups.
+Cleanup removes old backup files. Confirm before running cleanup.
 
 ### Health check
 
 ```
-mcp__swag-mcp__swag
-  action:      "health_check"
-  server_name: (optional) Check specific service — omit for all
+swag
+  action:           "health_check"
+  domain:           (required) public domain to probe
+  timeout:          (optional) 1-300 seconds
+  follow_redirects: (optional) true/false
 ```
 
 Probes whether proxied services are accessible.
@@ -108,38 +126,38 @@ Probes whether proxied services are accessible.
 ## Typical Workflows
 
 ### Expose a new service
-1. `action: "list"` — confirm no existing config for the service
-2. `action: "create"` — create the config with upstream URL and auth method
-3. `action: "health_check"` — verify the service is accessible
+1. `action: "list"` - confirm no existing config for the service.
+2. `action: "create"` - create the config with `config_name`, `server_name`, `upstream_app`, and `upstream_port`.
+3. `action: "health_check"` - verify the public domain is reachable.
 
 ### Update a service's backend
-1. `action: "view"` — confirm current config
-2. `action: "update"` — set new upstream URL
-3. `action: "health_check"` — verify
+1. `action: "view"` - confirm the current config.
+2. `action: "update"` - change `port`, `upstream`, or `app`.
+3. `action: "health_check"` - verify.
 
 ### Diagnose issues
-1. `action: "health_check"` — check what's failing
-2. `action: "logs"` — review error/access logs
+1. `action: "health_check"` - check the public endpoint.
+2. `action: "logs"` - review nginx error/access logs.
 
 ---
 
 ## Destructive Operations
 
 Always confirm before:
-- `action: "remove"` — permanently deletes the proxy config
-- `action: "edit"` — modifies existing config (non-reversible without backup)
+- `action: "remove"` - deletes the proxy config.
+- `action: "edit"` - replaces the full config content.
+- `action: "backups", backup_action: "cleanup"` - deletes old backups.
 
 ---
 
 ## Proxy Confs Path
 
-The server manages configs at the path configured via `SWAG_MCP_PROXY_CONFS_PATH` or the SSH URI in `SWAG_MCP_PROXY_CONFS_URI`. These are set via userConfig and synced to `.env` at SessionStart — no manual configuration needed.
+The server manages configs at `SWAG_MCP_PROXY_CONFS_PATH` or the SSH URI in `SWAG_MCP_PROXY_CONFS_URI`. These are supplied by plugin settings or server environment. Prefer fixing plugin settings/server configuration over editing generated env files.
 
 ---
 
 ## Notes
 
 - `subdomain` configs require a wildcard DNS entry or per-subdomain record pointing to SWAG
-- `subfolder` configs proxy via path prefix (e.g. `https://domain.com/sonarr/`)
 - Auth methods: `authelia` and `authentik` require those services to be running and configured
 - QUIC/HTTP3 requires ports 443/UDP to be open in addition to 443/TCP

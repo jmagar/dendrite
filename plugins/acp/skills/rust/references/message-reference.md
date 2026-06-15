@@ -1,6 +1,7 @@
 # ACP Message Reference
 
-All 24 ACP methods with direction, type, and purpose.
+ACP methods with direction, type, and purpose. Method names below use the
+JSON-RPC wire names; Rust SDK trait/method names may differ.
 
 | Method | Direction | Type | Purpose |
 |--------|-----------|------|---------|
@@ -16,11 +17,11 @@ All 24 ACP methods with direction, type, and purpose.
 | `session/cancel` | Client → Agent | Notification | Interrupt running prompt |
 | `session/close` | Client → Agent | Request | End session cleanly |
 | `session/set_mode` | Client → Agent | Request | Change permission mode |
-| `session/set_model` | Client → Agent | Request | Change model |
+| `session/set_model` | Client → Agent | Request | Change model when the unstable model surface is enabled |
 | `session/set_config_option` | Client → Agent | Request | Agent-specific config |
-| `fs/readTextFile` | Agent → Client | Request | Read file (permission-gated) |
-| `fs/writeTextFile` | Agent → Client | Request | Write file (permission-gated) |
-| `request/permission` | Agent → Client | Request | Ask user approval for action |
+| `fs/read_text_file` | Agent → Client | Request | Read file (permission-gated) |
+| `fs/write_text_file` | Agent → Client | Request | Write file (permission-gated) |
+| `session/request_permission` | Agent → Client | Request | Ask user approval for action |
 | `terminal/create` | Agent → Client | Request | Spawn process |
 | `terminal/output` | Agent → Client | Request | Poll terminal output buffer |
 | `terminal/wait_for_exit` | Agent → Client | Request | Block until process exits |
@@ -60,7 +61,7 @@ All sent as `session/update` notifications from agent to client.
 | `dontAsk` | Skip all permission dialogs |
 | `bypassPermissions` | No restrictions (dangerous) |
 
-Set via `session/setMode` request or returned in `NewSessionResponse.modes`.
+Set via `session/set_mode` request or returned in `NewSessionResponse.modes`.
 
 ---
 

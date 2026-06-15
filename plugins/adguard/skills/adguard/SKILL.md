@@ -9,12 +9,20 @@ DNS-level ad blocking and network filtering. Talk to it directly over the AdGuar
 
 ## How to call it
 
-Read the base URL and credentials from `~/.lab/.env`:
+Prefer `scripts/adguard-api.sh` for common read-only calls. It sources
+`~/.lab/.env`, keeps the Basic auth password out of output, and exposes
+`status`, `stats`, `querylog`, `filtering`, and `check-host`.
+
+Read the base URL and credentials from `~/.lab/.env` without printing secrets:
 
 ```bash
-ADGUARD_URL=$(grep -E '^ADGUARD_URL='      ~/.lab/.env | cut -d= -f2- | tr -d '"')
-ADGUARD_USERNAME=$(grep -E '^ADGUARD_USERNAME=' ~/.lab/.env | cut -d= -f2- | tr -d '"')
-ADGUARD_PASSWORD=$(grep -E '^ADGUARD_PASSWORD=' ~/.lab/.env | cut -d= -f2- | tr -d '"')
+set -a
+. ~/.lab/.env
+set +a
+
+: "${ADGUARD_URL:?missing ADGUARD_URL in ~/.lab/.env}"
+: "${ADGUARD_USERNAME:?missing ADGUARD_USERNAME in ~/.lab/.env}"
+: "${ADGUARD_PASSWORD:?missing ADGUARD_PASSWORD in ~/.lab/.env}"
 AUTH=(-u "$ADGUARD_USERNAME:$ADGUARD_PASSWORD")
 ```
 

@@ -1,0 +1,5 @@
+{
+  "name": "qdrant",
+  "version": "0.1.0",
+  "description": "Vector database collections and semantic search via direct calls to the Qdrant REST API."
+}

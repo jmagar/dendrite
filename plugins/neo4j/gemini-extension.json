@@ -1,0 +1,5 @@
+{
+  "name": "neo4j",
+  "version": "0.1.0",
+  "description": "Operate a Neo4j graph database with Cypher over the HTTP transactional API or cypher-shell."
+}

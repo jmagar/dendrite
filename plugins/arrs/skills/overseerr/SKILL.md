@@ -60,20 +60,24 @@ Request movies or TV shows:
 
 ```bash
 # Request a movie
-node scripts/request.mjs "Dune" --type movie
+node scripts/search.mjs "Dune" --type movie
+node scripts/request.mjs "Dune" --type movie --mediaId 438631
 
 # Request TV show (all seasons by default)
-node scripts/request.mjs "Bluey" --type tv --seasons all
+node scripts/search.mjs "Bluey" --type tv
+node scripts/request.mjs "Bluey" --type tv --mediaId 82728 --seasons all
 
 # Request specific seasons
-node scripts/request.mjs "Severance" --type tv --seasons 1,2
+node scripts/request.mjs "Severance" --type tv --mediaId 95396 --seasons 1,2
 
 # Request in 4K
-node scripts/request.mjs "Oppenheimer" --type movie --is4k
+node scripts/request.mjs "Oppenheimer" --type movie --mediaId 872585 --is4k
 ```
 
 **Parameters:**
 - `--type movie|tv`: Media type (required)
+- `--mediaId N`: Confirmed TMDB media id from search results (required unless `--yes` is used)
+- `--yes`: Explicitly accept the first search result after user confirmation
 - `--seasons all|1,2,3`: Season selection for TV (default: all)
 - `--is4k`: Request 4K version
 
@@ -126,7 +130,7 @@ When the user asks about media requests:
 1. Search for the media
 2. Present results with TMDB/TVDB links
 3. User confirms selection
-4. Submit request (optionally with 4K flag)
+4. Submit request with the confirmed `--mediaId` (optionally with 4K flag)
 5. Check status periodically or wait for notification
 
 ### Request Statuses

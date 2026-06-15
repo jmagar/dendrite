@@ -2,8 +2,7 @@
 # Environment Loading Library
 # Loads the homelab service env file used by Lab plugins.
 #
-# In skill scripts, source as:
-#   source "./load-env.sh"
+# In skill scripts, source this file from the installed skill directory.
 
 # Prevent direct execution
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -23,7 +22,7 @@ load_env_file() {
 
     if [[ ! -f "$env_file" ]]; then
         echo "ERROR: $env_file not found" >&2
-        echo "Configure the Linkding plugin or add credentials to ~/.lab/.env" >&2
+        echo "Configure the Linkding plugin. Legacy ~/.lab/.env is accepted only as a fallback." >&2
         return 1
     fi
 

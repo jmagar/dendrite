@@ -10,7 +10,7 @@ the build in, launch it, drive every feature, watch for crashes/hangs/error dial
 and emit a structured works/doesn't-work report. Companion to `web-app-testing` and
 `android-app-testing` — all three share one report format (`references/report-format.md`).
 
-Drives the **agent-os** VM (container `agent-os-win11`, `dockur/windows` on `dookie`) through the
+Drives the **agent-os** VM (container `agent-os-win11`, `dockur/windows` on `tootie`) through the
 `agent-os_windows-mcp` upstream on the Lab gateway. Builds on the `agent-os` skill (which is the
 general VM driver) but adds the testing harness: build transfer, feature enumeration, failure
 taxonomy, evidence pipeline, and the report.
@@ -37,15 +37,15 @@ a GUI there crashes with `os error 1459` and screenshots come back blank), and i
 in a browser without rebuilding. Full recipe: `references/ssh-fallback-capture.md`.
 
 ## Prerequisites
-- The **agent-os VM running** on dookie (the skill's preflight starts it if absent).
+- The **agent-os VM running** on tootie (the skill's preflight starts it if absent).
 - The Lab gateway reachable with an execute-capable scope (for drive actions).
 - The built `.exe`/installer on this host (or a URL the guest can fetch).
 
 ## Workflow
 
 1. **Preflight.**
-   - VM up? `ssh dookie 'docker ps --format "{{.Names}}" | grep agent-os-win11'`. If absent:
-     `ssh dookie 'cd /home/jmagar/compose/windows && docker compose up -d'` (boots existing install,
+   - VM up? `ssh tootie 'docker ps --format "{{.Names}}" | grep agent-os-win11'`. If absent:
+     `ssh tootie 'cd /home/jmagar/compose/windows && docker compose up -d'` (boots existing install,
      ~5 min cold; Windows-MCP auto-starts via an in-guest scheduled task).
    - MCP ready? Call `Screenshot {}` — an image back means ready. (Do NOT TCP-probe :8765, false
      negative.)

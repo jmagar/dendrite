@@ -12,17 +12,17 @@ works/doesn't-work + UI/UX report. One of three sibling testing skills (`web-app
 
 ## How it works
 Primary path is **direct local adb** (`scripts/androidtest.sh`): boot emulator → install → launch →
-enumerate screens from `uiautomator` dumps → drive features (`taptext`/`tapxy`/`text`/`key`) →
+enumerate screens from `uiautomator` dumps → drive features (`taptext`/`tapxy`/`swipe`/`text`/`key`) →
 watch `logcat` for crashes/ANRs → capture screenshots + UI dumps → structured report. An optional
-richer path via the `claude-in-mobile` MCP server is documented but currently blocked by a container
-adb gap (see references).
+richer path via the `claude-in-mobile` MCP server is documented, with gateway/device recovery notes
+for ADB bridge issues (see references).
 
 ## Files
 - `SKILL.md` — workflow, driver commands, failure taxonomy, gotchas.
 - `scripts/androidtest.sh` — the adb driver (boot/install/launch/shot/tree/taptext/crashes/…).
   Self-tested live against `axon_test` (Android 15).
 - `references/report-format.md` — shared cross-platform report spec, run-dir layout, verdict words.
-- `references/claude-in-mobile-path.md` — the optional gateway path + its current blocker + fix.
+- `references/claude-in-mobile-path.md` — optional gateway path, checks, and ADB recovery.
 
 ## Prerequisites
 - Android SDK with `adb` + `emulator` (override via `ADB`/`EMULATOR`).

@@ -50,8 +50,9 @@ Clean up afterward: `MSYS_NO_PATHCONV=1 schtasks /delete /tn <name> /f` and stop
 
 The app reads its own config (for the Axon Palette: `%USERPROFILE%\.axon\.env` →
 `AXON_SERVER_URL` / `AXON_MCP_HTTP_TOKEN`, plus `%APPDATA%\<bundle.id>\settings.json`). Seed those
-files via SSH before launch to point the GUI at a real service. agent-os reaches dookie over
-Tailscale (`http://100.88.16.79:8001`) and the static bearer token is accepted there.
+files via SSH before launch to point the GUI at a real service. Use placeholder or environment
+values for tokens in examples; do not paste real bearer tokens into skill docs or committed
+artifacts.
 
 ## Faster loop: iterate the web frontend in a browser (no rebuild)
 
@@ -62,8 +63,8 @@ moot — the app's HTTP layer must use **relative** `/v1/...` paths in browser m
 baseUrl) so requests hit the proxy:
 
 ```js
-// one foreground `node driver.mjs` ON agent-os (node child procs survive there; on dookie's
-// sandbox a backgrounded/child node server gets SIGKILLed when the shell call ends).
+// one foreground `node driver.mjs` ON agent-os (node child procs survive there; on some host
+// sandboxes a backgrounded/child node server gets SIGKILLed when the shell call ends).
 import { chromium } from "playwright-core";
 import { createServer } from "vite";
 const server = await createServer({ root: APP, configFile: `${APP}/vite.config.ts`,

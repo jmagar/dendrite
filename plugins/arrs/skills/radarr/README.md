@@ -22,9 +22,11 @@ All operations use the Radarr API v3 and support collection detection and search
 3. Scroll to **Security** section
 4. Copy your **API Key**
 
-### 2. Configure Environment Variables
+### 2. Configure Plugin Settings
 
-Add credentials to `~/.config/lab-arrs/config.env`:
+Set these values in the arrs plugin settings. The plugin `SessionStart` hook
+writes `~/.config/lab-arrs/config.env`; do not commit or hand-edit credentials
+in this repo.
 
 ```bash
 RADARR_URL="http://localhost:7878"
@@ -82,6 +84,7 @@ If a movie is part of a collection (e.g., Marvel Cinematic Universe, Star Wars),
 
 ```bash
 bash scripts/radarr.sh add-collection 86311  # Marvel Cinematic Universe
+bash scripts/radarr.sh add-collection 86311 "Marvel"  # Provide search term if needed
 ```
 
 Without searching:

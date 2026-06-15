@@ -20,19 +20,19 @@ console/network error instrumentation, a failure taxonomy, and the shared report
   that for "log in and download the invoice"; use THIS for "test the whole app and report defects."
 - `android-app-testing` / `desktop-app-testing` — same job, native targets.
 
-## Prerequisites (verified 2026-05-29)
+## Prerequisites
 1. **A Chrome with CDP open.** Default endpoint `http://127.0.0.1:9222`. Confirm:
-   `curl -s http://127.0.0.1:9222/json/version` → returns a `Browser` string. In this homelab a
-   persistent headless Chrome runs there (axon-chrome). Override with `WEBTEST_CDP`.
+   `curl -s http://127.0.0.1:9222/json/version` returns a `Browser` string. Do not assume this
+   endpoint exists; verify it live. Override with `WEBTEST_CDP`.
    - No CDP available? Launch one: `chromium --headless --remote-debugging-port=9222` (or use the
      `chrome` / `agent-browser` skills to get a session), then point the driver at it.
-2. **Playwright venv (one-time, no API keys):**
+2. **Playwright environment (one-time, no API keys):**
    ```bash
    uv venv /tmp/pw_venv --python 3.12
-   uv pip install --python /tmp/pw_venv/bin/python "playwright>=1.59,<1.60"
+   uv pip install --python /tmp/pw_venv/bin/python "playwright>=1.59"
    ```
-   Gotcha: `playwright.__version__` does NOT exist — verify with
-   `from playwright.sync_api import sync_playwright`.
+   Prefer an existing project or toolchain Playwright install when one exists. Gotcha:
+   `playwright.__version__` does NOT exist — verify with `from playwright.sync_api import sync_playwright`.
 3. **Spinning up the app's own dev server against an auth'd backend?** If you're starting the
    frontend yourself (not hitting a deployed URL) and it calls a token-protected backend, front the
    dev server with a proxy that **injects the bearer token** — the browser never holds it and CORS
@@ -59,9 +59,9 @@ features (see Workflow). The class bakes in the live-validated gotchas:
 
 1. **Preflight.** Confirm CDP (`curl .../json/version`) and the venv import. Pick the target URL.
    Create the run dir: `~/.agents/docs/sessions/<app>-web-test/run_<id>/`.
-2. **Map features.** `goto` the app, snapshot the **ARIA/DOM tree** (Playwright
-   `page.accessibility.snapshot()` or `page.get_by_role(...)` enumeration), and list every nav item,
-   button, form, link, tab. Merge with any user-supplied spec. This list is the test checklist —
+2. **Map features.** `goto` the app, snapshot the **ARIA/DOM tree** using the available browser
+   inspection APIs and locators, and list every nav item, button, form, link, tab. Merge with any
+   user-supplied spec. This list is the test checklist —
    one row per feature in the report.
 3. **Write `plan.md`** in the run dir: the feature checklist as Critical Points to verify.
 4. **Exercise each feature** in an instrumented script (`final_script.py` importing `WebTest`):
@@ -70,9 +70,9 @@ features (see Workflow). The class bakes in the live-validated gotchas:
 5. **Detect failures** — after each action check for: non-2xx `goto` status, thrown `pageerror`,
    `console` errors, `requestfailed`, an element that should appear/disappear and didn't, a flow
    that dead-ends. Classify PASS / PARTIAL / FAIL / BLOCKED.
-6. **Self-verify** each Critical Point against its screenshot — `Read` the PNG and confirm the
-   expected UI is actually there (don't trust that the script "ran"). Re-run in `run_<id+1>/` if
-   you fixed the plan.
+6. **Self-verify** each Critical Point against its screenshot — inspect the PNG with the available
+   image-viewing tool and confirm the expected UI is actually there (don't trust that the script
+   "ran"). Re-run in `run_<id+1>/` if you fixed the plan.
 7. **UX/a11y pass** — score the rubric in the report format from the captured trees + screenshots
    (unlabelled ARIA nodes = an accessibility finding).
 8. **Write the report** → `report.md` + `result.json` in the run dir, per

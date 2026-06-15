@@ -5,12 +5,12 @@ Copy-paste ready commands for common Tautulli operations.
 ## Setup
 
 ```bash
-# Add to ~/.config/lab-arrs/config.env
+# Written to ~/.config/lab-arrs/config.env from arrs plugin settings
 TAUTULLI_URL="http://192.168.1.100:8181"
 TAUTULLI_API_KEY="<your_api_key>"
 
 # Navigate to skill directory
-cd $CLAUDE_PLUGIN_ROOT/skills/tautulli
+cd <arrs-plugin-root>/skills/tautulli
 ```
 
 ## Quick Commands
@@ -347,7 +347,7 @@ Add to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
 # Tautulli shortcuts
-alias tautulli='cd $CLAUDE_PLUGIN_ROOT/skills/tautulli && ./scripts/tautulli-api.sh'
+alias tautulli='cd <arrs-plugin-root>/skills/tautulli && ./scripts/tautulli-api.sh'
 alias tautulli-activity='tautulli activity | jq ".response.data.sessions[] | {user: .friendly_name, title: .full_title, progress: .progress_percent}"'
 alias tautulli-history='tautulli history | jq -r ".response.data.data[] | \"\(.date | strftime(\"%Y-%m-%d %H:%M\")) - \(.friendly_name) - \(.full_title)\""'
 alias tautulli-users='tautulli user-stats | jq -r ".response.data[] | \"\(.friendly_name): \(.plays) plays\""'

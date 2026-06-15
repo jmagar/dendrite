@@ -7,7 +7,7 @@
 
 **Solution:**
 1. Get API key from Settings → General → Security → API Key
-2. Add to `~/.config/lab-arrs/config.env`: `SONARR_API_KEY="<your_api_key>"`
+2. Update the arrs plugin settings so the generated config contains `SONARR_API_KEY="<your_api_key>"`
 3. Verify key in request: `curl -v "$SONARR_URL/api/v3/system/status" -H "X-Api-Key: $KEY"`
 4. Check for extra spaces or characters in key
 5. Ensure header name is `X-Api-Key` (case-sensitive)

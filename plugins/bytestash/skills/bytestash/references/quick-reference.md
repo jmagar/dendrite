@@ -4,16 +4,10 @@ Quick command examples for common ByteStash operations.
 
 ## Setup
 
-```bash
-# Add credentials to .env
-cat >> ~/.lab/.env <<EOF
-BYTESTASH_URL="https://bytestash.example.com"
-BYTESTASH_USERNAME="<your_username>"
-BYTESTASH_PASSWORD="<your_password>"
-EOF
-
-chmod 600 ~/.lab/.env
-```
+Configure credentials through the plugin userConfig when possible. The plugin
+hook writes `${XDG_CONFIG_HOME:-~/.config}/lab-bytestash/config.env` with mode
+`600`. Use `~/.lab/.env` only as a local migration fallback, and never commit
+either file.
 
 The wrapper logs in at `POST /api/auth/login` and sends snippet requests with
 `bytestashauth: bearer <jwt>`. Do not use `BYTESTASH_API_KEY` for snippet CRUD on
@@ -24,7 +18,7 @@ ByteStash <= 1.0.0; API keys are limited to public/read-only endpoints there.
 ### List All Snippets
 
 ```bash
-cd skills/bytestash
+cd plugins/bytestash/skills/bytestash
 ./scripts/bytestash-api.sh list | jq .
 ```
 
@@ -313,20 +307,21 @@ fi
 ### Debug API Requests
 
 ```bash
-# Add verbose output to script
 # First obtain a JWT without printing credentials:
 JWT="$(curl -sS -X POST "$BYTESTASH_URL/api/auth/login" \
   -H "Content-Type: application/json" \
   -d "$(jq -n --arg u "$BYTESTASH_USERNAME" --arg p "$BYTESTASH_PASSWORD" \
     '{username:$u,password:$p}')" | jq -r '.token')"
 
-curl -v -H "bytestashauth: bearer $JWT" \
-  "$BYTESTASH_URL/api/snippets"
+# Send the JWT through curl config stdin so it does not appear in process argv.
+curl -fsS --config - "$BYTESTASH_URL/api/snippets" <<EOF
+header = "bytestashauth: bearer ${JWT}"
+EOF
 
-# Check environment variables
-echo "URL: $BYTESTASH_URL"
-echo "Username set: ${BYTESTASH_USERNAME:+yes}"
-echo "Password set: ${BYTESTASH_PASSWORD:+yes}"
+# Check environment variables without printing secret values.
+for var in BYTESTASH_URL BYTESTASH_USERNAME BYTESTASH_PASSWORD BYTESTASH_TOKEN; do
+  if [ -n "${!var:-}" ]; then echo "$var=set"; else echo "$var=missing"; fi
+done
 ```
 
 ### Handle Errors

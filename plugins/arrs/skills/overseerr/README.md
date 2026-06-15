@@ -22,9 +22,9 @@ All operations use the Overseerr API (stable version, not the beta Seerr rewrite
 3. Scroll to **API Key** section
 4. Copy your API key (or generate a new one)
 
-### 2. Add Credentials to .env File
+### 2. Configure Plugin Settings
 
-Add your Overseerr configuration to `~/.config/lab-arrs/config.env`:
+Add your Overseerr URL and API key in the arrs plugin settings (`userConfig`). The plugin hook writes them to `~/.config/lab-arrs/config.env` automatically:
 
 ```bash
 OVERSEERR_URL="http://localhost:5055"
@@ -32,9 +32,9 @@ OVERSEERR_API_KEY="your-api-key-here"
 ```
 
 **Important:**
-- The `.env` file must be located at `~/.config/lab-arrs/config.env`
-- This file is gitignored (never committed)
-- Set file permissions: `chmod 600 ~/.config/lab-arrs/config.env`
+- Do not commit credentials.
+- Do not manually edit `~/.config/lab-arrs/config.env` for normal setup; it is generated from plugin settings.
+- Direct edits are only for advanced troubleshooting and may be overwritten by the plugin hook.
 
 **Configuration options:**
 - `OVERSEERR_URL`: Your Overseerr server URL (no trailing slash)
@@ -68,16 +68,17 @@ node scripts/search.mjs "star wars" --limit 5
 
 ### Request Movies
 
-Request a movie with automatic detection:
+Search first, then request the confirmed result:
 
 ```bash
-node scripts/request.mjs "Dune" --type movie
+node scripts/search.mjs "Dune" --type movie
+node scripts/request.mjs "Dune" --type movie --mediaId 438631
 ```
 
 Request a 4K version:
 
 ```bash
-node scripts/request.mjs "Oppenheimer" --type movie --is4k
+node scripts/request.mjs "Oppenheimer" --type movie --mediaId 872585 --is4k
 ```
 
 ### Request TV Shows
@@ -85,19 +86,20 @@ node scripts/request.mjs "Oppenheimer" --type movie --is4k
 Request all seasons (default):
 
 ```bash
-node scripts/request.mjs "Bluey" --type tv --seasons all
+node scripts/search.mjs "Bluey" --type tv
+node scripts/request.mjs "Bluey" --type tv --mediaId 82728 --seasons all
 ```
 
 Request specific seasons:
 
 ```bash
-node scripts/request.mjs "Severance" --type tv --seasons 1,2
+node scripts/request.mjs "Severance" --type tv --mediaId 95396 --seasons 1,2
 ```
 
 Request with 4K:
 
 ```bash
-node scripts/request.mjs "Breaking Bad" --type tv --seasons all --is4k
+node scripts/request.mjs "Breaking Bad" --type tv --mediaId 1396 --seasons all --is4k
 ```
 
 ### Check Request Status

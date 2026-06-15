@@ -12,12 +12,14 @@ pip install caldav vobject icalendar
 
 ### Configure Credentials
 
-Add to `~/.lab/.env`:
+Configure plugin userConfig. The setup hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-radicale/config.env` with mode `600`.
+Legacy `~/.lab/.env` remains a fallback during migration.
 
 ```bash
-RADICALE_URL="http://localhost:5232"
-RADICALE_USERNAME="admin"
-RADICALE_PASSWORD="password"
+RADICALE_URL="https://radicale.example.test"
+RADICALE_USERNAME="<radicale-username>"
+RADICALE_PASSWORD="<radicale-password>"
 ```
 
 ## Calendar Operations
@@ -308,7 +310,7 @@ python scripts/radicale-api.py events list \
 - `1` - General error (connection failed, invalid arguments, etc.)
 
 **Common errors:**
-- `ERROR: .env file not found` - Create `.env` with credentials
+- `ERROR: Radicale config not found` - Configure plugin userConfig or verify fallback config
 - `ERROR: Failed to connect to Radicale` - Check URL and credentials
 - `ERROR: Calendar 'X' not found` - Calendar name doesn't exist
 - `ERROR: Addressbook 'X' not found` - Addressbook name doesn't exist

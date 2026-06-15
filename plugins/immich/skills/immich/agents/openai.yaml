@@ -1,4 +1,4 @@
 interface:
   display_name: "Immich"
-  short_description: "This skill should be used when the user mentions Immich or asks to browse their photo library, search for photos, find pictures from a trip or date range, list albums, check server stats, or view storage usage. Triggers include: \\\"find photos of\\\", \\\"show my albums\\\", \\\"search Immich\\\", \\\"how many photos do I have\\\", \\\"check my Immich server\\\", or any question about a self-hosted photo library"
-  default_prompt: "Use $immich for this skill should be used when the user mentions Immich or asks to browse their photo library, search for photos, find pictures from a trip or date range, list albums, check server stats, or view storage usage. Triggers include: \\\"find photos of\\\", \\\"show my albums\\\", \\\"search Immich\\\", \\\"how many photos do I have\\\", \\\"check my Immich server\\\", or any question about a self-hosted photo library."
+  short_description: "Use when the user mentions Immich or asks to search photos or videos, browse albums, find assets from a trip or date range, check server health, view statistics, or inspect storage usage."
+  default_prompt: "Use $immich to search and browse Immich photos, videos, albums, date ranges, server health, statistics, and storage usage."

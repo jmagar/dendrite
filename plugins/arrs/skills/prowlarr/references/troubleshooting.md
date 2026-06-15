@@ -83,7 +83,7 @@
 **Solution:**
 1. Verify apps configured: `GET /api/v1/applications`
 2. Check app sync level: `fullSync` required for auto-sync
-3. Manually trigger sync: `POST /api/v1/command` with `{"name": "ApplicationSync"}`
+3. Manually trigger sync: `POST /api/v1/command` with `{"name": "ApplicationIndexerSync"}`
 4. Test app connection: `POST /api/v1/applications/test`
 5. Verify app API keys are correct
 
@@ -127,7 +127,7 @@
 2. Test application: `POST /api/v1/applications/test`
 3. Check API keys match between Prowlarr and app
 4. Ensure correct sync level: `fullSync` or `addOnly`
-5. Manually sync: `POST /api/v1/command` with `{"name": "ApplicationSync"}`
+5. Manually sync: `POST /api/v1/command` with `{"name": "ApplicationIndexerSync"}`
 
 ### Indexers duplicated in Sonarr/Radarr
 **Cause:** Manual indexers + Prowlarr sync

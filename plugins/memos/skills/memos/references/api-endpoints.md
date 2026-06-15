@@ -50,7 +50,7 @@ Tags are parsed from content using hashtag format (`#tagname`). They are NOT pas
   "visibility": "PRIVATE",
   "tags": ["tags"],
   "pinned": false,
-  "resources": [],
+  "attachments": [],
   "relations": [],
   "reactions": []
 }
@@ -141,7 +141,7 @@ curl "https://memos.example.com/api/v1/memos/abc123" \
 - `content` - Memo content
 - `visibility` - Visibility setting
 - `pinned` - Pin status
-- `rowStatus` - Archive status (`NORMAL` or `ARCHIVED`)
+- `state` - Memo state (`NORMAL` or `ARCHIVED`)
 
 **Response:** Updated memo object
 
@@ -168,23 +168,26 @@ curl -X DELETE "https://memos.example.com/api/v1/memos/abc123" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-## Resource Service (Attachments)
+## Attachment Service
 
-### Upload Resource
+### Create Attachment
 
-**Endpoint:** `POST /resources`
+**Endpoint:** `POST /attachments`
 
-**Request:** Multipart form data
-
-**Form Fields:**
-- `file` (file, required) - File to upload
-- `memoId` (string, optional) - Attach to specific memo
+**Request Body:**
+```json
+{
+  "filename": "document.pdf",
+  "type": "application/pdf",
+  "content": "<base64_file_content>",
+  "memo": "memos/xyz789"
+}
+```
 
 **Response:**
 ```json
 {
-  "name": "resources/abc123",
-  "uid": "abc123",
+  "name": "attachments/abc123",
   "filename": "document.pdf",
   "memo": "memos/xyz789",
   "createTime": "2026-02-07T00:00:00Z",
@@ -195,34 +198,35 @@ curl -X DELETE "https://memos.example.com/api/v1/memos/abc123" \
 
 **Example:**
 ```bash
-curl -X POST "https://memos.example.com/api/v1/resources" \
+curl -X POST "https://memos.example.com/api/v1/attachments" \
   -H "Authorization: Bearer $TOKEN" \
-  -F "file=@document.pdf"
+  -H "Content-Type: application/json" \
+  -d '{"filename":"document.pdf","type":"application/pdf","content":"<base64_file_content>"}'
 ```
 
-### List Resources
+### List Attachments
 
-**Endpoint:** `GET /resources`
+**Endpoint:** `GET /attachments`
 
 **Query Parameters:**
 - `filter` (string, optional) - Filter expression
 
 **Example:**
 ```bash
-curl "https://memos.example.com/api/v1/resources" \
+curl "https://memos.example.com/api/v1/attachments" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### Delete Resource
+### Delete Attachment
 
-**Endpoint:** `DELETE /resources/{name}`
+**Endpoint:** `DELETE /attachments/{name}`
 
 **Path Parameters:**
-- `name` (string, required) - Resource name (with "resources/" prefix)
+- `name` (string, required) - Attachment name (with "attachments/" prefix)
 
 **Example:**
 ```bash
-curl -X DELETE "https://memos.example.com/api/v1/resources/abc123" \
+curl -X DELETE "https://memos.example.com/api/v1/attachments/abc123" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -275,13 +279,14 @@ curl -X PATCH "https://memos.example.com/api/v1/users/1?updateMask=nickname" \
   -d '{"nickname": "New Name"}'
 ```
 
-### Create Access Token
+### Create Personal Access Token
 
-**Endpoint:** `POST /users/{id}/access-tokens`
+**Endpoint:** `POST /users/{id}/personalAccessTokens`
 
 **Request Body:**
 ```json
 {
+  "parent": "users/1",
   "description": "Token description"
 }
 ```
@@ -289,36 +294,39 @@ curl -X PATCH "https://memos.example.com/api/v1/users/1?updateMask=nickname" \
 **Response:**
 ```json
 {
-  "accessToken": "eyJhbGci...",
-  "description": "Token description"
+  "personalAccessToken": {
+    "name": "users/1/personalAccessTokens/abc123",
+    "description": "Token description"
+  },
+  "token": "<shown_once>"
 }
 ```
 
 **Example:**
 ```bash
-curl -X POST "https://memos.example.com/api/v1/users/1/access-tokens" \
+curl -X POST "https://memos.example.com/api/v1/users/1/personalAccessTokens" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"description": "API Token"}'
+  -d '{"parent": "users/1", "description": "API Token"}'
 ```
 
-### List Access Tokens
+### List Personal Access Tokens
 
-**Endpoint:** `GET /users/{id}/access-tokens`
+**Endpoint:** `GET /users/{id}/personalAccessTokens`
 
 **Example:**
 ```bash
-curl "https://memos.example.com/api/v1/users/1/access-tokens" \
+curl "https://memos.example.com/api/v1/users/1/personalAccessTokens" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### Delete Access Token
+### Delete Personal Access Token
 
-**Endpoint:** `DELETE /users/{id}/access-tokens/{token}`
+**Endpoint:** `DELETE /users/{id}/personalAccessTokens/{token}`
 
 **Example:**
 ```bash
-curl -X DELETE "https://memos.example.com/api/v1/users/1/access-tokens/abc123" \
+curl -X DELETE "https://memos.example.com/api/v1/users/1/personalAccessTokens/abc123" \
   -H "Authorization: Bearer $TOKEN"
 ```
 

@@ -59,12 +59,13 @@ Follow instructions at https://github.com/Tautulli/Tautulli#installation
 3. Enable **"API enabled"** checkbox
 4. Copy your **API Key**
 
-### 4. Add to Environment Variables
+### 4. Configure Credentials
 
-Add your Tautulli credentials to `~/.config/lab-arrs/config.env`:
+Set your Tautulli credentials in the arrs plugin settings. The plugin
+`SessionStart` hook writes them to `~/.config/lab-arrs/config.env`; do not
+commit or edit real credentials into this repository.
 
 ```bash
-# Tautulli Analytics
 TAUTULLI_URL="http://192.168.1.100:8181"
 TAUTULLI_API_KEY="<your_api_key>"
 ```
@@ -76,7 +77,7 @@ TAUTULLI_API_KEY="<your_api_key>"
 ### 5. Test It
 
 ```bash
-cd $CLAUDE_PLUGIN_ROOT/skills/tautulli
+cd <arrs-plugin-root>/skills/tautulli
 ./scripts/tautulli-api.sh server-info
 ```
 
@@ -348,7 +349,7 @@ This skill complements the existing `plex` skill:
 # Check if Tautulli is running
 curl -I http://localhost:8181
 
-# Verify URL in .env
+# Verify URL from the generated config
 echo $TAUTULLI_URL
 
 # Test with full URL
@@ -366,7 +367,7 @@ curl "http://localhost:8181/api/v2?apikey=<your_api_key>&cmd=get_server_info"
 1. Verify API enabled in Settings → Web Interface → API
 2. Copy API key carefully (no spaces)
 3. Regenerate API key if needed
-4. Check `.env` file has no quotes around key
+4. Check the generated config has the correct key value and no extra spaces
 
 ### Empty or missing data
 

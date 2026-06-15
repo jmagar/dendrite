@@ -1,4 +1,4 @@
 interface:
   display_name: "Clipboard"
-  short_description: "Push text to or read text from their Windows clipboard over SSH"
-  default_prompt: "Use $clipboard for push text to or read text from their Windows clipboard over SSH."
+  short_description: "Push or read text on the Windows clipboard over SSH"
+  default_prompt: "Use $clipboard to copy text to the Windows clipboard or read clipboard contents over SSH."

@@ -9,7 +9,7 @@ Control and query Plex Media Server using the Plex API. Browse libraries, search
 
 ## Purpose
 
-This skill provides **read-only** access to your Plex Media Server:
+This skill primarily provides **read-only** access to your Plex Media Server:
 - Browse library sections (Movies, TV, Music, Photos)
 - Search for specific media
 - View recently added content
@@ -17,7 +17,7 @@ This skill provides **read-only** access to your Plex Media Server:
 - View "On Deck" (continue watching)
 - List available clients/players
 
-All operations are **GET-only** and safe for monitoring/browsing.
+Most operations are **GET-only** and safe for monitoring/browsing. The `refresh` helper triggers a library scan; treat it as admin-only and get explicit confirmation before running it.
 
 ## Setup
 
@@ -145,7 +145,7 @@ curl -s "$PLEX_URL/clients" -H "X-Plex-Token: $PLEX_TOKEN" -H "Accept: applicati
 # List playlists
 ./scripts/plex-api.sh playlists
 
-# Refresh library section (scan for new media)
+# Refresh library section (admin-only scan; confirm first)
 ./scripts/plex-api.sh refresh 1
 
 # View all commands
@@ -183,7 +183,7 @@ Always list sections first to get the correct section keys for your server.
 ## Notes
 
 - Requires network access to your Plex server
-- All calls are **read-only GET requests**
+- Most calls are **read-only GET requests**; library refresh starts a server-side scan and needs explicit confirmation.
 - Library section keys (1, 2, 3...) vary by server setup — list sections first
 - Playback control is possible but not implemented (safety)
 - Always confirm before triggering playback on remote devices

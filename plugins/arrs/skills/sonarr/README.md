@@ -21,9 +21,11 @@ All operations use the Sonarr API v3 and support monitor options and search-on-a
 3. Scroll to **Security** section
 4. Copy your **API Key**
 
-### 2. Add Credentials to .env
+### 2. Configure Credentials
 
-Add the following to `~/.config/lab-arrs/config.env`:
+Set the following values in the arrs plugin settings. The plugin `SessionStart`
+hook writes them to `~/.config/lab-arrs/config.env`; do not commit or edit real
+credentials into this repository.
 
 ```bash
 SONARR_URL="http://localhost:8989"
@@ -39,7 +41,7 @@ SONARR_DEFAULT_QUALITY_PROFILE="1"  # Optional: defaults to 1 if not set
 ### 3. Test It
 
 ```bash
-bash scripts/sonarr.sh search "Breaking Bad"
+./scripts/sonarr.sh search "Breaking Bad"
 ```
 
 ## Usage Examples
@@ -47,8 +49,8 @@ bash scripts/sonarr.sh search "Breaking Bad"
 ### Search for shows
 
 ```bash
-bash scripts/sonarr.sh search "Breaking Bad"
-bash scripts/sonarr.sh search "The Office"
+./scripts/sonarr.sh search "Breaking Bad"
+./scripts/sonarr.sh search "The Office"
 ```
 
 Returns a numbered list with TVDB IDs and links.
@@ -58,7 +60,7 @@ Returns a numbered list with TVDB IDs and links.
 Before adding, check if a show is already in your library:
 
 ```bash
-bash scripts/sonarr.sh exists 81189  # Breaking Bad TVDB ID
+./scripts/sonarr.sh exists 81189  # Breaking Bad TVDB ID
 ```
 
 ### Add a show
@@ -66,13 +68,13 @@ bash scripts/sonarr.sh exists 81189  # Breaking Bad TVDB ID
 Add a show with automatic searching (default):
 
 ```bash
-bash scripts/sonarr.sh add 81189  # Searches immediately
+./scripts/sonarr.sh add 81189  # Searches immediately
 ```
 
 Add without searching (manual search later):
 
 ```bash
-bash scripts/sonarr.sh add 81189 --no-search
+./scripts/sonarr.sh add 81189 --no-search
 ```
 
 ### Remove a show
@@ -80,13 +82,13 @@ bash scripts/sonarr.sh add 81189 --no-search
 Remove but keep downloaded files:
 
 ```bash
-bash scripts/sonarr.sh remove 81189
+./scripts/sonarr.sh remove 81189
 ```
 
 Remove and delete all files:
 
 ```bash
-bash scripts/sonarr.sh remove 81189 --delete-files
+./scripts/sonarr.sh remove 81189 --delete-files
 ```
 
 **Always ask user if they want to delete files when removing!**
@@ -96,7 +98,7 @@ bash scripts/sonarr.sh remove 81189 --delete-files
 Get available root folders and quality profiles:
 
 ```bash
-bash scripts/sonarr.sh config
+./scripts/sonarr.sh config
 ```
 
 Use this to determine your `SONARR_DEFAULT_QUALITY_PROFILE` ID.
@@ -113,8 +115,8 @@ Detailed API documentation is available in the `references/` directory:
 
 When a user asks to add a TV show:
 
-1. **Search**: `bash scripts/sonarr.sh search "Show Name"`
-2. **Present results**: Always include TVDB links in format `[Title (Year)](https://thetvdb.com/series/SLUG)`
+1. **Search**: `./scripts/sonarr.sh search "Show Name"`
+2. **Present results**: Always include TVDB IDs and links in format `[Title (Year)](https://thetvdb.com/dereferrer/series/TVDB_ID)`
 3. **User picks**: User selects a number from the search results
 4. **Check**: Run `exists <tvdbId>` to verify it's not already added
 5. **Add**: Run `add <tvdbId>` to add the show and start searching
@@ -122,7 +124,7 @@ When a user asks to add a TV show:
 ## Troubleshooting
 
 **"Sonarr not configured"**
-→ Check your `.env` file exists at `~/.config/lab-arrs/config.env` and contains SONARR_URL and SONARR_API_KEY
+→ Check the arrs plugin settings and confirm `~/.config/lab-arrs/config.env` was generated with `SONARR_URL` and `SONARR_API_KEY`
 
 **"Connection refused"**
 → Verify your Sonarr server URL is correct and Sonarr is running
@@ -131,7 +133,7 @@ When a user asks to add a TV show:
 → Your API key is invalid — check Settings → General → Security
 
 **"Quality profile not found"**
-→ Run `bash scripts/sonarr.sh config` to see available profile IDs
+→ Run `./scripts/sonarr.sh config` to see available profile IDs
 
 ## Notes
 

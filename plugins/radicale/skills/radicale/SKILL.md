@@ -1,6 +1,6 @@
 ---
 name: radicale
-description: This skill should be used when managing calendars and contacts on a self-hosted Radicale CalDAV/CardDAV server. Use when the user asks to "list my calendar", "what's on my calendar this week", "show me my events", "when is my next event", "add to my calendar", "create an event", "schedule a meeting", "schedule an event", "delete an event", "cancel event", "remove event", "find a contact", "what's someone's email", "search my contacts", "look up [person] in contacts", "add a contact", "save contact", "save someone's phone number", or mentions Radicale, CalDAV, CardDAV, calendar events, or contact management operations.
+description: Use when managing calendars or contacts on a self-hosted Radicale CalDAV/CardDAV server. Trigger for requests such as "list my calendar", "what's on my calendar this week", "when is my next event", "add to my calendar", "create an event", "schedule a meeting", "cancel an event", "find a contact", "what's someone's email", "search my contacts", "add a contact", or mentions of Radicale, CalDAV, CardDAV, calendar events, addressbooks, or contact management.
 ---
 
 # Radicale CalDAV/CardDAV Management
@@ -47,19 +47,21 @@ python scripts/radicale-api.py --help
 
 ### Credentials
 
-Configure these values in plugin userConfig. The hook writes
+Configure these values through plugin userConfig. The setup hook writes
 `${XDG_CONFIG_HOME:-~/.config}/lab-radicale/config.env` with mode `600`.
-`~/.lab/.env` remains a fallback during migration:
+Legacy `~/.lab/.env` and `~/.claude-homelab/.env` files remain fallbacks during
+migration, but do not ask users to hand-edit them unless plugin config is
+unavailable:
 
 ```bash
-RADICALE_URL="http://localhost:5232"
-RADICALE_USERNAME="admin"
-RADICALE_PASSWORD="password"
+RADICALE_URL="https://radicale.example.test"
+RADICALE_USERNAME="<radicale-username>"
+RADICALE_PASSWORD="<radicale-password>"
 ```
 
 **Security:**
-- Generated config and `.env` files are local-only (never commit credentials)
-- Set permissions: `chmod 600 ~/.lab/.env`
+- Generated config and `.env` files are local-only; never commit credentials
+- The plugin hook sets generated config permissions to `600`
 
 ## Core Operations
 
@@ -271,9 +273,9 @@ When user mentions calendars or contacts:
 All operations return JSON with status. Check for:
 
 **Connection errors:**
-- `ERROR: .env file not found` → Guide user to create `.env` file
+- `ERROR: Radicale config not found` → Configure plugin userConfig or verify legacy fallback files
 - `ERROR: Failed to connect to Radicale` → Check Radicale is running, verify URL
-- `ERROR: Authentication failed` → Verify credentials in `.env`
+- `ERROR: Authentication failed` → Verify plugin-configured credentials
 
 **Resource errors:**
 - `ERROR: Calendar 'X' not found` → List available calendars with `calendars list`
@@ -303,7 +305,7 @@ All operations return JSON with status. Check for:
 - No event reminders/alarms
 
 **Security:**
-- All credentials stored in `.env` file (gitignored)
+- Credentials are read from generated plugin config or legacy local env files
 - API script never logs credentials
 - Connection uses HTTP basic auth (HTTPS recommended for production)
 
@@ -323,5 +325,5 @@ External:
 Run this skill's scripts with the Bash tool directly:
 
 ```bash
-python ./skills/radicale/scripts/radicale-api.py [args]
+python scripts/radicale-api.py [args]
 ```

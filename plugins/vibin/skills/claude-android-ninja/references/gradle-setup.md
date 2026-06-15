@@ -1,6 +1,6 @@
 # Gradle & Build Configuration
 
-Required: Gradle 9.x wrapper, JVM 17+, KSP (never kapt), version catalog, convention plugins in `build-logic/convention`. Module structure follows [modularization.md](/references/modularization.md). Gradle wrapper and catalog `agp` are independent pins; a high Gradle version does not force a matching AGP patch.
+Required: Gradle 9.x wrapper, JVM 17+, KSP (never kapt), version catalog, convention plugins in `build-logic/convention`. Module structure follows [modularization.md](modularization.md). Gradle wrapper and catalog `agp` are independent pins; a high Gradle version does not force a matching AGP patch.
 
 ## AGP 9 Key Changes
 
@@ -58,7 +58,7 @@ Run after every AGP 9 build-config change. Do **not** run `clean` first - it doe
 ./gradlew build --dry-run   # Configures every task without executing
 ```
 
-On failure, the failing task name identifies the module / DSL block to fix. For `MissingValueException` / "provider has no value" during `compile*JavaWithJavac`, capture `./gradlew help --stacktrace` before changing Kotlin; isolate JaCoCo combined-report wiring per [android-code-coverage.md](/references/android-code-coverage.md).
+On failure, the failing task name identifies the module / DSL block to fix. For `MissingValueException` / "provider has no value" during `compile*JavaWithJavac`, capture `./gradlew help --stacktrace` before changing Kotlin; isolate JaCoCo combined-report wiring per [android-code-coverage.md](android-code-coverage.md).
 
 ### AGP 9 Toolchain Compatibility Notes
 
@@ -76,7 +76,7 @@ On failure, the failing task name identifies the module / DSL block to fix. For 
 
 ## Project Structure
 
-Module layout and naming: [modularization.md](/references/modularization.md).
+Module layout and naming: [modularization.md](modularization.md).
 
 ## Version Catalog
 
@@ -238,7 +238,7 @@ Implementations in `assets/convention/`:
 - `KotlinSerializationConventionPlugin.kt` - JSON serialization
 - `FirebaseConventionPlugin.kt` - Firebase Crashlytics integration
 - `SentryConventionPlugin.kt` - Sentry crash reporting integration
-- `PlayVitalsReportingConventionPlugin.kt` - Optional root `playVitalsReport` task ([Play Vitals reporting](/references/android-performance.md)); pairs with `PlayVitalsReportingTask.kt`
+- `PlayVitalsReportingConventionPlugin.kt` - Optional root `playVitalsReport` task ([Play Vitals reporting](android-performance.md)); pairs with `PlayVitalsReportingTask.kt`
 
 **Configuration Files (in config/ subdirectory):**
 - `config/KotlinAndroid.kt` - Common Kotlin/Android setup
@@ -253,12 +253,12 @@ Setup and usage: `assets/convention/QUICK_REFERENCE.md`.
 
 ### Registering a root-level reporting task (Play Vitals)
 
-Optional Play Vitals reporting ([android-performance.md](/references/android-performance.md)) ships as a convention plugin to copy into `build-logic`:
+Optional Play Vitals reporting ([android-performance.md](android-performance.md)) ships as a convention plugin to copy into `build-logic`:
 
 | Source (copy to `build-logic/convention/src/main/kotlin/`)                                                                | Role                                                                                                                              |
 |---------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | [`assets/convention/PlayVitalsReportingConventionPlugin.kt`](../assets/convention/PlayVitalsReportingConventionPlugin.kt) | Registers **`playVitalsReport`** on **`rootProject` only** (`id`: **`app.play.vitals`**)                                          |
-| [`assets/convention/PlayVitalsReportingTask.kt`](../assets/convention/PlayVitalsReportingTask.kt)                         | Default task body: env check + lifecycle log; add **`PlayVitalsRepository`** per [android-performance.md](/references/android-performance.md) |
+| [`assets/convention/PlayVitalsReportingTask.kt`](../assets/convention/PlayVitalsReportingTask.kt)                         | Default task body: env check + lifecycle log; add **`PlayVitalsRepository`** per [android-performance.md](android-performance.md) |
 
 The plugin is already wired in [`assets/convention/build.gradle.kts`](../assets/convention/build.gradle.kts) (`gradlePlugin { register("playVitals") { ... } }`). **`gradle/libs.versions.toml`** should include **`app-play-vitals`** from [`assets/libs.versions.toml.template`](../assets/libs.versions.toml.template) (`[plugins]`).
 
@@ -268,7 +268,7 @@ Required:
 - Forbidden inside `subprojects { }` / `allprojects { }` (duplicates / wrong scope).
 - Wire CI to run `./gradlew playVitalsReport` on a schedule.
 
-Query payload and HTTP code: [android-performance.md](/references/android-performance.md). This section only covers Gradle wiring.
+Query payload and HTTP code: [android-performance.md](android-performance.md). This section only covers Gradle wiring.
 
 ## Module Build Files
 
@@ -533,7 +533,7 @@ dependencies {
 
 ### Benchmark module
 
-**Use when:** macrobenchmark coverage from [android-performance.md](/references/android-performance.md) applies. Host it in a dedicated `:benchmark` test module.
+**Use when:** macrobenchmark coverage from [android-performance.md](android-performance.md) applies. Host it in a dedicated `:benchmark` test module.
 
 `benchmark/build.gradle.kts`:
 ```kotlin
@@ -568,7 +568,7 @@ dependencies {
 
 ### Compose stability analyzer
 
-**Use when:** CI must gate composable stability per [android-performance.md → Compose Stability Validation](/references/android-performance.md#compose-stability-validation-optional).
+**Use when:** CI must gate composable stability per [android-performance.md → Compose Stability Validation](android-performance.md#compose-stability-validation-optional).
 
 Root `build.gradle.kts`:
 ```kotlin
@@ -600,7 +600,7 @@ composeStabilityAnalyzer {
 
 ## Code Quality (Detekt)
 
-Required: apply Detekt via the `app.detekt` convention plugin in every module. Setup, baselines, CI: [code-quality.md](/references/code-quality.md).
+Required: apply Detekt via the `app.detekt` convention plugin in every module. Setup, baselines, CI: [code-quality.md](code-quality.md).
 
 ## Build Variants & Optimization
 
@@ -742,7 +742,7 @@ With `android.nonTransitiveRClass=true`, each module generates its own R class c
 **Required:**
 - Use import aliases (`as CoreUiR`) when one file pulls strings from multiple foreign modules.
 - Group cross-module resource imports at the top of the file.
-- String ownership rules: [android-i18n.md → String resource ownership](/references/android-i18n.md#string-resource-ownership).
+- String ownership rules: [android-i18n.md → String resource ownership](android-i18n.md#string-resource-ownership).
 
 ### R8 / ProGuard Configuration
 
@@ -782,7 +782,7 @@ retrace build/outputs/mapping/release/mapping.txt stacktrace.txt
 
 Check `build/outputs/mapping/release/` for the mapping file after each release build.
 
-See [android-security.md](/references/android-security.md#proguard--r8-hardening) for security-specific hardening rules (log stripping, aggressive obfuscation, manifest settings).
+See [android-security.md](android-security.md#proguard--r8-hardening) for security-specific hardening rules (log stripping, aggressive obfuscation, manifest settings).
 
 ### R8 Keep-Rules Audit
 
@@ -850,7 +850,7 @@ For annotation-driven reflection, use `-if @YourAnnotation class **` so the rule
 **Final guardrail.** Before shipping any `proguard-rules.pro` change:
 
 1. `./gradlew assembleRelease` (or `bundleRelease`) succeeds.
-2. Run a UI Automator smoke test over the packages whose rules changed (see [testing.md](/references/testing.md)).
+2. Run a UI Automator smoke test over the packages whose rules changed (see [testing.md](testing.md)).
 3. Diff `mapping.txt` line count against the previous release. Drops are the win signal; jumps mean a broader keep slipped in.
 
 ## Build Performance
@@ -994,7 +994,7 @@ implementation(libs.example.lib)
 | Symptom                       | Fix                                                                                                                                                |
 |-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | Slow configuration phase      | Use `tasks.register`; defer I/O via `providers`; move plugins into convention plugins; remove `subprojects { }` / `allprojects { }`.              |
-| Slow execution phase          | Migrate kapt → KSP ([dependencies.md](/references/dependencies.md)); enable `org.gradle.caching=true`; enable `org.gradle.parallel=true`; raise `-Xmx`. |
+| Slow execution phase          | Migrate kapt → KSP ([dependencies.md](dependencies.md)); enable `org.gradle.caching=true`; enable `org.gradle.parallel=true`; raise `-Xmx`. |
 | Slow dependency resolution    | Pin exact versions in the catalog; order `google()` before `mavenCentral()`; remove unused repos; ensure `org.gradle.caching=true`.               |
 
 ## Rules
@@ -1002,7 +1002,7 @@ implementation(libs.example.lib)
 Required:
 - Centralize all versions in `gradle/libs.versions.toml`.
 - Extract every reusable build configuration into a convention plugin.
-- Use KSP for annotation processing ([dependencies.md](/references/dependencies.md)).
+- Use KSP for annotation processing ([dependencies.md](dependencies.md)).
 - Enable type-safe project accessors and local + remote build cache.
 - Apply Compose-only UI; no View binding, no legacy `View` system.
 
