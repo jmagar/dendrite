@@ -15,5 +15,26 @@
     "adblocking",
     "network",
     "homelab"
-  ]
+  ],
+  "userConfig": {
+    "adguard_url": {
+      "type": "string",
+      "title": "AdGuard URL",
+      "description": "Base URL of the AdGuard Home instance, including scheme. Do not include a trailing slash or /control.",
+      "required": true
+    },
+    "adguard_username": {
+      "type": "string",
+      "title": "Username",
+      "description": "AdGuard Home username used for HTTP Basic authentication.",
+      "required": true
+    },
+    "adguard_password": {
+      "type": "string",
+      "title": "Password",
+      "description": "AdGuard Home password used for HTTP Basic authentication.",
+      "sensitive": true,
+      "required": true
+    }
+  }
 }

@@ -4,9 +4,12 @@ function usage() {
   process.stderr.write(
     [
       'Usage:',
-      '  node request.mjs "title" --type movie|tv [--seasons all|1,2] [--is4k] [--serverId N] [--profileId N] [--rootFolder PATH] [--languageProfileId N] [--userId N]',
+      '  node request.mjs "title" --type movie|tv --mediaId N [--seasons all|1,2] [--is4k] [--serverId N] [--profileId N] [--rootFolder PATH] [--languageProfileId N] [--userId N]',
+      '  node request.mjs "title" --type movie|tv --yes [same options]',
       '',
       'Notes:',
+      '- Search first with search.mjs and pass the confirmed TMDB id as --mediaId.',
+      '- --yes explicitly accepts the first search result; use only after the user confirmed that behavior.',
       '- For TV, default is --seasons all unless you specify a list.',
       '',
     ].join('\n')
@@ -28,7 +31,30 @@ if (candidates.length === 0) {
   throw new Error(`No ${type} results found for query: ${title}`);
 }
 
-const chosen = candidates[0];
+let chosen;
+if (args.mediaId !== undefined) {
+  const mediaId = toInt(args.mediaId, { name: 'mediaId' });
+  chosen = candidates.find((candidate) => Number(candidate.id) === mediaId);
+  if (!chosen) {
+    throw new Error(`No ${type} result with mediaId ${mediaId} found for query: ${title}`);
+  }
+} else if (args.yes) {
+  chosen = candidates[0];
+} else {
+  printJson({
+    error: 'Refusing to auto-request the first search result without confirmation.',
+    nextStep: 'Re-run with --mediaId after confirming the correct result, or pass --yes to accept the first result.',
+    candidates: candidates.slice(0, 10).map((candidate) => ({
+      id: candidate.id,
+      title: candidate.title,
+      name: candidate.name,
+      mediaType: candidate.mediaType,
+      releaseDate: candidate.releaseDate,
+      firstAirDate: candidate.firstAirDate,
+    })),
+  });
+  process.exit(2);
+}
 
 let seasons;
 if (type === 'tv') {

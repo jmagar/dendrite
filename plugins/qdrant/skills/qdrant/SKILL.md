@@ -1,23 +1,43 @@
 ---
 name: qdrant
-description: "This skill should be used when the user asks about vector search, semantic search, or managing a Qdrant vector database. Triggers include: \"list collections\", \"create a collection\", \"search by vector\", \"upsert points\", \"run a similarity search\", \"find nearest neighbors\", \"check Qdrant health\", \"embedding storage\", or any mention of managing a Qdrant instance."
+description: "This skill should be used when the user asks to inspect, operate, or troubleshoot a Qdrant vector database. Triggers include: \"list Qdrant collections\", \"create a collection\", \"inspect collection config\", \"upsert points\", \"query points\", \"run similarity search\", \"find nearest neighbors\", \"check Qdrant health\", \"embedding storage\", or \"vector database is down\"."
 ---
 
 # Qdrant
 
-Vector database for semantic search and embeddings. Talk to it directly over its HTTP REST API.
+Vector database for semantic search and embeddings. Use the Qdrant REST API for
+direct collection, point, and search operations.
 
 ## How to call it
 
-Read the base URL (and optional API key) from `~/.lab/.env`, then curl the Qdrant REST API:
+Prefer `scripts/qdrant-api.sh` for common collection and point operations. It
+loads `QDRANT_URL` and optional `QDRANT_API_KEY` from the plugin-generated
+config first, then the environment or legacy `~/.lab/.env`, adds the API key
+header only when present, and exposes `health`,
+`collections`, `collection`, `create`, `scroll`, `query`, `upsert`, and
+`delete-collection`.
+
+Configure `qdrant_url` and optional sensitive `qdrant_api_key` in Claude plugin
+settings or Gemini extension settings. The hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-qdrant/config.env` with mode `600`.
+
+Read connection settings without printing secrets, and do not add real API keys
+to repo examples or committed files.
 
 ```bash
-QDRANT_URL=$(grep -E '^QDRANT_URL='     ~/.lab/.env | cut -d= -f2-)
-QDRANT_API_KEY=$(grep -E '^QDRANT_API_KEY=' ~/.lab/.env | cut -d= -f2-)
+read_lab_env() {
+  awk -F= -v key="$1" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' ~/.lab/.env 2>/dev/null
+}
+
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-qdrant/config.env" 2>/dev/null || true
+QDRANT_URL=${QDRANT_URL:-$(read_lab_env QDRANT_URL)}
+QDRANT_API_KEY=${QDRANT_API_KEY:-$(read_lab_env QDRANT_API_KEY)}
+: "${QDRANT_URL:?Set QDRANT_URL in generated config, environment, or ~/.lab/.env}"
 AUTH=(); [ -n "$QDRANT_API_KEY" ] && AUTH=(-H "api-key: $QDRANT_API_KEY")
 ```
 
-`QDRANT_API_KEY` is optional — include the `api-key` header only when it is set. Never echo the key.
+`QDRANT_API_KEY` is optional. Include the `api-key` header only when it is set.
+Never echo the key or paste it into chat.
 
 ## Common operations
 
@@ -29,23 +49,34 @@ AUTH=(); [ -n "$QDRANT_API_KEY" ] && AUTH=(-H "api-key: $QDRANT_API_KEY")
 | Create collection | `curl -sS -X PUT "${AUTH[@]}" -H 'Content-Type: application/json' "$QDRANT_URL/collections/<name>" -d '{"vectors":{"size":<dim>,"distance":"Cosine"}}'` |
 | Delete collection (**destructive**) | `curl -sS -X DELETE "${AUTH[@]}" "$QDRANT_URL/collections/<name>"` |
 | Upsert points | `curl -sS -X PUT "${AUTH[@]}" -H 'Content-Type: application/json' "$QDRANT_URL/collections/<name>/points?wait=true" -d '{"points":[{"id":1,"vector":[...],"payload":{}}]}'` |
-| Search by vector | `curl -sS -X POST "${AUTH[@]}" -H 'Content-Type: application/json' "$QDRANT_URL/collections/<name>/points/search" -d '{"vector":[...],"limit":10,"with_payload":true}'` |
+| Query nearest points | `curl -sS -X POST "${AUTH[@]}" -H 'Content-Type: application/json' "$QDRANT_URL/collections/<name>/points/query" -d '{"query":[...],"limit":10,"with_payload":true}'` |
+| Scroll points | `curl -sS -X POST "${AUTH[@]}" -H 'Content-Type: application/json' "$QDRANT_URL/collections/<name>/points/scroll" -d '{"limit":10,"with_payload":true,"with_vector":false}'` |
 
 Full REST reference: <https://api.qdrant.tech/>
 
 ## Destructive actions
 
-Deleting a collection (`DELETE /collections/<name>`) removes all of its data and is irreversible. Confirm with the user before running it.
+Deleting a collection (`DELETE /collections/<name>`) removes all of its data and
+is irreversible. Confirm with the user before running it. Also confirm before
+large point deletions, shard changes, snapshot restores, or collection
+recreation.
 
 ## Configuration
 
-`QDRANT_URL` (required) and `QDRANT_API_KEY` (optional) live in `~/.lab/.env`. Verify connectivity:
+`QDRANT_URL` is required. `QDRANT_API_KEY` is optional. Prefer Claude/Gemini
+settings; use `~/.lab/.env` only as a local runtime fallback, not as committed
+configuration. Verify connectivity:
 
 ```bash
-curl -sS "$QDRANT_URL/" -w '\nHTTP %{http_code}\n'
+curl -sS "${AUTH[@]}" "$QDRANT_URL/" -w '\nHTTP %{http_code}\n'
 ```
+
+If the local Labby gateway exposes a Qdrant tool, use that managed tool instead
+of raw curl after confirming its live schema. Raw REST remains the fallback for
+direct instance work.
 
 ## When NOT to use this skill
 
 - The user is asking about a different homelab service — load that service's skill instead.
-- The user wants to *generate* embeddings (not store/search them) — that's the `tei` skill.
+- The user wants to *generate* embeddings, not store or search them - use the
+  `tei` skill.

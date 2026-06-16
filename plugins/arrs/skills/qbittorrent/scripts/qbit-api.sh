@@ -4,15 +4,15 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Credentials come from the arrs plugin userConfig (written by its SessionStart hook).
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env"
 [[ -f "$CONFIG_FILE" ]] || { echo "ERROR: $CONFIG_FILE not found — set this service's URL/key in the arrs plugin settings (userConfig)." >&2; exit 1; }
-set -a; source "$CONFIG_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+set +a
 
-# Load credentials from .env (qBittorrent uses username/password, not API key)
+# qBittorrent uses username/password, not an API key.
 : "${QBITTORRENT_URL:?set it in the arrs plugin settings}"
 : "${QBITTORRENT_USERNAME:?set it in the arrs plugin settings}"
 : "${QBITTORRENT_PASSWORD:?set it in the arrs plugin settings}"
@@ -32,7 +32,8 @@ do_login() {
     local resp
     resp=$(curl -sS -i -X POST \
         -H "Referer: $QBIT_URL" \
-        -d "username=$QBIT_USER&password=$QBIT_PASS" \
+        --data-urlencode "username=$QBIT_USER" \
+        --data-urlencode "password=$QBIT_PASS" \
         "$QBIT_URL/api/v2/auth/login" 2>&1)
     
     if echo "$resp" | grep -iq "set-cookie: SID="; then
@@ -82,6 +83,32 @@ api_call() {
         "${QBIT_URL}${endpoint}"
 }
 
+qbit_major_version() {
+    local version major
+    version=$(api_call GET "/api/v2/app/version" | tr -d '\r\n')
+    major="${version#v}"
+    major="${major%%.*}"
+    [[ "$major" =~ ^[0-9]+$ ]] && echo "$major" || echo 4
+}
+
+torrent_control_endpoint() {
+    local action="$1"
+    local major
+    major=$(qbit_major_version)
+
+    if (( major >= 5 )); then
+        case "$action" in
+            pause) echo "/api/v2/torrents/stop" ;;
+            resume) echo "/api/v2/torrents/start" ;;
+        esac
+    else
+        case "$action" in
+            pause) echo "/api/v2/torrents/pause" ;;
+            resume) echo "/api/v2/torrents/resume" ;;
+        esac
+    fi
+}
+
 usage() {
     cat <<EOF
 qBittorrent WebUI API CLI
@@ -97,8 +124,8 @@ Commands:
   add <url|magnet> [--category C] [--tags T] [--paused] [--skip-check]
   add-file <path> [--category C] [--tags T] [--paused]
   
-  pause <hash|all>               Pause torrent(s)
-  resume <hash|all>              Resume torrent(s)
+  pause <hash|all>               Pause/stop torrent(s)
+  resume <hash|all>              Resume/start torrent(s)
   delete <hash> [--files]        Delete torrent (optionally with files)
   recheck <hash>                 Recheck torrent
   reannounce <hash>              Reannounce to trackers
@@ -188,11 +215,11 @@ cmd_add() {
         esac
     done
     
-    local data="urls=$url&paused=$paused&skip_checking=$skip_check"
-    [[ -n "$category" ]] && data+="&category=$category"
-    [[ -n "$tags" ]] && data+="&tags=$tags"
-    
-    api_call POST "/api/v2/torrents/add" -d "$data"
+    local args=(--data-urlencode "urls=$url" -d "paused=$paused" -d "skip_checking=$skip_check")
+    [[ -n "$category" ]] && args+=(--data-urlencode "category=$category")
+    [[ -n "$tags" ]] && args+=(--data-urlencode "tags=$tags")
+
+    api_call POST "/api/v2/torrents/add" "${args[@]}"
     echo '{"status": "ok"}'
 }
 
@@ -223,13 +250,13 @@ cmd_add_file() {
 
 cmd_pause() {
     local hashes="$1"
-    api_call POST "/api/v2/torrents/pause" -d "hashes=$hashes"
+    api_call POST "$(torrent_control_endpoint pause)" -d "hashes=$hashes"
     echo '{"status": "ok"}'
 }
 
 cmd_resume() {
     local hashes="$1"
-    api_call POST "/api/v2/torrents/resume" -d "hashes=$hashes"
+    api_call POST "$(torrent_control_endpoint resume)" -d "hashes=$hashes"
     echo '{"status": "ok"}'
 }
 

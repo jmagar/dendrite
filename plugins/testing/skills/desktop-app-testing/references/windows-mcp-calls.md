@@ -5,16 +5,18 @@ Windows 11 VM (container `agent-os-win11`, `dockur/windows` on host `tootie`), d
 `agent-os_windows-mcp` upstream on the Lab gateway.
 
 ## Invocation surface
-In a Code Mode session, call upstream tools from `mcp__plugin_lab_lab__execute`:
+In a Code Mode session, call upstream tools from the Labby gateway `execute` tool when that surface
+is available:
 ```js
 async () => {
   const r = await callTool("agent-os_windows-mcp::Screenshot", {});
   return (r?.content||[]).map(c => c.type==="text" ? c.text.slice(0,200) : {img:(c.data||"").length});
 }
 ```
-Outside Code Mode the same server may appear as direct `mcp__windows-mcp__*` tools, or via the
-gateway `tool_execute`. **Canonical tool names + params are below** — adapt the wrapper to whatever
-surface is live. Do NOT target `steamy-windows-mcp` (that's the user's personal desktop).
+Outside Code Mode the same server may appear as direct `mcp__windows-mcp__*` tools, via a gateway
+`execute` wrapper, or as OpenAI/Codex app tools. **Canonical upstream tool names + params are below**
+— adapt only the wrapper to whatever surface is live. Do NOT target `steamy-windows-mcp` (that's the
+user's personal desktop).
 
 ## ⚠️ Destructive-action gate (critical)
 Write/drive tools (`PowerShell`, `App`, `Click`, `Type`, `Move`, `Scroll`, `Shortcut`, `Process`,
@@ -33,11 +35,11 @@ docker-compose.yml restart` (the dev container bind-mounts `./bin/labby`).
 Read-only tools (`Screenshot`, `Snapshot`) are never gated.
 
 ## Preflight / readiness
-1. VM up? `ssh dookie 'docker ps --format "{{.Names}}" | grep agent-os-win11'`. If absent:
-   `ssh dookie 'cd /home/jmagar/compose/windows && docker compose up -d'` (storage is
+1. VM up? `ssh tootie 'docker ps --format "{{.Names}}" | grep agent-os-win11'`. If absent:
+   `ssh tootie 'cd /home/jmagar/compose/windows && docker compose up -d'` (storage is
    pre-provisioned → boots existing install, ~5 min cold). Windows-MCP starts via a **scheduled
    task** inside the guest — it comes up on its own after boot.
-2. MCP reachable? **Do NOT** TCP-probe `agent-os.tootie.tv:8765` from dookie (false-negative — wrong
+2. MCP reachable? **Do NOT** TCP-probe `agent-os.tootie.tv:8765` from the host (false-negative — wrong
    interface). The real readiness check is a `Screenshot {}` call returning an image.
 
 ## Tool reference (canonical names + params)
@@ -84,10 +86,10 @@ Read-only tools (`Screenshot`, `Snapshot`) are never gated.
 
 ## Getting a build .exe into the VM
 The `\\host.lan\Data` SMB share is install-time only. Post-OOBE, transfer by either:
-- **HTTP-pull via PowerShell** (verified reachable — guest→dookie `True`): serve the build on dookie
+- **HTTP-pull via PowerShell** (verified reachable — guest→host `True`): serve the build on a host
   (`python -m http.server`) and
-  `PowerShell {command:"Invoke-WebRequest -Uri 'http://dookie:PORT/app.exe' -OutFile \"$env:USERPROFILE\\Desktop\\app.exe\"; Unblock-File \"$env:USERPROFILE\\Desktop\\app.exe\""}`.
-- **SCP** to the guest: `scp -P 2222 app.exe docker@<dookie-ip>:` (port 2222 forwards to guest sshd).
+  `PowerShell {command:"Invoke-WebRequest -Uri 'http://<host>:PORT/app.exe' -OutFile \"$env:USERPROFILE\\Desktop\\app.exe\"; Unblock-File \"$env:USERPROFILE\\Desktop\\app.exe\""}`.
+- **SCP** to the guest: `scp -P 2222 app.exe docker@<tootie-ip>:` (port 2222 forwards to guest sshd).
 Always `Unblock-File` copied binaries (MOTW/SmartScreen), and pre-create a firewall allow rule if
 the app binds a port (first-bind raises a desktop prompt that stalls unattended runs).
 

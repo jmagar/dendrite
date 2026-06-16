@@ -11,7 +11,7 @@ works/doesn't-work + UI/UX report. One of three sibling testing skills (`web-app
   general agent-os VM driving (`agent-os`).
 
 ## How it works
-Drives the agent-os VM (`agent-os-win11`, dockur/windows on dookie) through the
+Drives the agent-os VM (`agent-os-win11`, dockur/windows on tootie) through the
 `agent-os_windows-mcp` gateway: transfer the build in → launch (`PowerShell Start-Process`) →
 enumerate controls from the UI Automation tree (`Snapshot`) → drive by element label
 (`Click`/`Type`) → detect crashes/hangs/error dialogs (`Process`, `Get-WinEvent`, `WaitFor`) →
@@ -24,7 +24,7 @@ capture screenshots + tree dumps → structured report.
 - `references/report-format.md` — shared cross-platform report spec, run-dir layout, verdict words.
 
 ## Prerequisites
-- agent-os VM running on dookie (preflight starts it if absent; ~5 min cold boot).
+- agent-os VM running on tootie (preflight starts it if absent; ~5 min cold boot).
 - Lab gateway reachable with an execute-capable scope (`lab`/`lab:admin`) for drive actions.
 - The `.exe`/installer on this host or a URL the guest can fetch.
 

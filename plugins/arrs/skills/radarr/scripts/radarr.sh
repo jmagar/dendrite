@@ -3,13 +3,13 @@ set -euo pipefail
 
 # Radarr API wrapper
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Credentials come from the arrs plugin userConfig (written by its SessionStart hook).
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env"
 [[ -f "$CONFIG_FILE" ]] || { echo "ERROR: $CONFIG_FILE not found — set this service's URL/key in the arrs plugin settings (userConfig)." >&2; exit 1; }
-set -a; source "$CONFIG_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+set +a
 
 # Load credentials from .env
 : "${RADARR_URL:?set it in the arrs plugin settings}"
@@ -21,8 +21,10 @@ DEFAULT_QUALITY_PROFILE="${RADARR_DEFAULT_QUALITY_PROFILE:-1}"
 API="$RADARR_URL/api/v3"
 AUTH="X-Api-Key: $RADARR_API_KEY"
 
-cmd="$1"
-shift || true
+cmd="${1:-}"
+if [ "$#" -gt 0 ]; then
+  shift
+fi
 
 case "$cmd" in
   search)
@@ -60,7 +62,7 @@ case "$cmd" in
     
   add)
     tmdbId="$1"
-    qualityProfileId="$2"
+    qualityProfileId="${2:-}"
     searchFlag="true"
     
     # Check for --no-search flag
@@ -114,14 +116,16 @@ case "$cmd" in
     
   add-collection)
     collectionTmdbId="$1"
-    searchTerm="$2"
+    searchTerm=""
     searchFlag="true"
     
-    # Check for --no-search flag
+    # Optional positional search term plus optional --no-search flag.
     for arg in "$@"; do
-      if [ "$arg" = "--no-search" ]; then
-        searchFlag="false"
-      fi
+      case "$arg" in
+        --no-search) searchFlag="false" ;;
+        "$collectionTmdbId") ;;
+        *) searchTerm="$arg" ;;
+      esac
     done
     
     echo "🔍 Finding movies in collection..."
@@ -133,7 +137,7 @@ case "$cmd" in
     if [ -n "$collection" ] && [ "$collection" != "null" ]; then
       collectionTitle=$(echo "$collection" | jq -r '.title')
       # Remove "Collection" suffix for better search
-      searchTerm=$(echo "$collectionTitle" | sed 's/ Collection$//')
+      searchTerm="${collectionTitle% Collection}"
     fi
     
     # If no search term yet, use the provided one or fail
@@ -228,7 +232,7 @@ case "$cmd" in
   remove)
     tmdbId="$1"
     deleteFiles="false"
-    if [ "$2" = "--delete-files" ]; then
+    if [ "${2:-}" = "--delete-files" ]; then
       deleteFiles="true"
     fi
     
@@ -243,7 +247,6 @@ case "$cmd" in
     movieId=$(echo "$movie" | jq -r '.[0].id')
     title=$(echo "$movie" | jq -r '.[0].title')
     year=$(echo "$movie" | jq -r '.[0].year')
-    hasFile=$(echo "$movie" | jq -r '.[0].hasFile')
     
     curl -s -X DELETE -H "$AUTH" "$API/movie/$movieId?deleteFiles=$deleteFiles" > /dev/null
     
@@ -268,7 +271,7 @@ case "$cmd" in
     echo "  exists <tmdbId>             Check if movie is in library"
     echo "  config                      Show root folders & quality profiles"
     echo "  add <tmdbId> [profileId] [--no-search]  Add a movie (searches by default)"
-    echo "  add-collection <tmdbId> [--no-search]  Add full collection"
+    echo "  add-collection <tmdbId> [searchTerm] [--no-search]  Add full collection"
     echo "  remove <tmdbId>             Remove a movie from library"
     echo "  collection-info <tmdbId>    Get collection details"
     ;;

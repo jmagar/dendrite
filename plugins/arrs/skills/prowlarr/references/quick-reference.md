@@ -4,7 +4,7 @@ Common operations for quick copy-paste usage.
 
 ## Setup
 
-Add to `~/.config/lab-arrs/config.env`:
+Credentials are configured in the arrs plugin settings. The plugin `SessionStart` hook writes `~/.config/lab-arrs/config.env` for helper scripts and manual curl sessions:
 
 ```bash
 PROWLARR_URL="http://localhost:9696"
@@ -216,7 +216,7 @@ curl -X POST "$PROWLARR_URL/api/v1/downloadclient" \
       {"name": "host", "value": "qbittorrent"},
       {"name": "port", "value": 8080},
       {"name": "username", "value": "admin"},
-      {"name": "password", "value": "adminpass"}
+      {"name": "password", "value": "QBITTORRENT_PASSWORD"}
     ]
   }'
 ```

@@ -2,8 +2,7 @@
 # Environment Loading Library
 # Loads the generated Memos plugin config with legacy env fallbacks.
 #
-# In skill scripts, source as:
-#   source "$HOME/.claude-homelab/load-env.sh"
+# In skill scripts, source this file from the skill directory.
 
 # Prevent direct execution
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -11,7 +10,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     exit 1
 fi
 
-# Load a generated plugin config, legacy ~/.lab/.env, or old ~/.claude-homelab/.env.
+# Load the generated plugin config, with legacy fallbacks for older installs.
 # Usage: load_env_file [/optional/override/path]
 load_env_file() {
     local default_file="${XDG_CONFIG_HOME:-$HOME/.config}/lab-memos/config.env"
@@ -26,7 +25,7 @@ load_env_file() {
 
     if [[ ! -f "$env_file" ]]; then
         echo "ERROR: $env_file not found" >&2
-        echo "Configure the Memos plugin or add credentials to ~/.lab/.env" >&2
+        echo "Configure the Memos plugin settings so the hook can write ~/.config/lab-memos/config.env" >&2
         return 1
     fi
 

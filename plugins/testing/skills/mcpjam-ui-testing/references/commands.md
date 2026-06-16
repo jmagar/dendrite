@@ -44,13 +44,15 @@ mcpjam resources read \
   --resource-uri ui://axon/status-dashboard
 mcpjam tools call \
   --url http://127.0.0.1:8001/mcp \
-  --name axon_status_dashboard \
-  --arguments '{}'
+  --tool-name axon_status_dashboard \
+  --tool-args '{}'
 ```
 
 Check for:
 
-- `axon_status_dashboard._meta.ui.resourceUri == "ui://axon/status-dashboard"`.
+- `axon_status_dashboard._meta.ui.resourceUri == "ui://axon/status-dashboard"` for MCP Apps.
+  Legacy `_meta["ui/resourceUri"]` and OpenAI `openai/outputTemplate` metadata may be accepted for
+  compatibility, but do not use them as the primary contract for new MCP Apps.
 - `axon` has no dashboard UI metadata unless intentionally rendering for every routed call.
 - `resources/read` returns HTML content, not markdown/text-only fallback.
 - Tool call returns `structuredContent`.
@@ -62,12 +64,21 @@ mcpjam inspector start
 mcpjam inspector open
 mcpjam tools call \
   --url http://127.0.0.1:8001/mcp \
-  --name axon_status_dashboard \
-  --arguments '{}' \
-  --ui
+  --tool-name axon_status_dashboard \
+  --tool-args '{}' \
+  --ui \
+  --require-render \
+  --quiet \
+  --format json
 ```
 
-If `--ui` is not recognized, run:
+Treat the raw tool result and Inspector render as separate outcomes. A successful command only
+proves the tool call worked; the UI pass condition is `inspectorRender.status == "rendered"`. If the
+status is `skipped`, follow `inspectorRender.remediation` (for example, open the active Inspector
+client) and rerun. `--require-render` makes skipped renders fail instead of returning success with a
+warning.
+
+If `--ui`, `--require-render`, or the current flag names are not recognized, run:
 
 ```bash
 mcpjam tools call --help

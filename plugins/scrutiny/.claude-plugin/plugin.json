@@ -15,5 +15,13 @@
     "drives",
     "health",
     "homelab"
-  ]
+  ],
+  "userConfig": {
+    "scrutiny_url": {
+      "type": "string",
+      "title": "Scrutiny URL",
+      "description": "Base URL of the Scrutiny web UI/API, including scheme. Do not include a trailing /api path.",
+      "required": true
+    }
+  }
 }

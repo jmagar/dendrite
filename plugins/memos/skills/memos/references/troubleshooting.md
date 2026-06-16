@@ -17,16 +17,16 @@ Common issues and their solutions.
 3. Missing Authorization header
 
 **Solutions:**
-1. Verify token in `.env` file:
+1. Verify token in generated plugin config:
    ```bash
-   grep "^MEMOS_API_TOKEN" ~/.lab/.env
+   grep "^MEMOS_API_TOKEN" "${XDG_CONFIG_HOME:-$HOME/.config}/lab-memos/config.env"
    ```
 
 2. Regenerate token in Memos UI:
    - Log into Memos instance
    - Settings → Access Tokens
    - Create new token
-   - Update `.env` file
+   - Update Memos plugin settings
 
 3. Test authentication:
    ```bash
@@ -55,13 +55,13 @@ curl: (7) Failed to connect to memos.example.com port 443
 
 **Causes:**
 1. Memos instance not running
-2. Wrong URL in `.env`
+2. Wrong URL in plugin settings
 3. Network connectivity issue
 
 **Solutions:**
 1. Verify URL:
    ```bash
-   grep "^MEMOS_URL" ~/.lab/.env
+   grep "^MEMOS_URL" "${XDG_CONFIG_HOME:-$HOME/.config}/lab-memos/config.env"
    ```
 
 2. Test connectivity:
@@ -148,24 +148,11 @@ curl: (60) SSL certificate problem: unable to get local issuer certificate
 ### Environment File Not Found
 
 **Error Message:**
-```json
-{"error": "Environment file not found", "path": "/home/user/.lab/.env"}
+```text
+ERROR: ~/.config/lab-memos/config.env not found
 ```
 
-**Solution:**
-1. Create `.env` file:
-   ```bash
-   touch ~/.lab/.env
-   chmod 600 ~/.lab/.env
-   ```
-
-2. Add credentials:
-   ```bash
-   cat >> ~/.lab/.env <<'EOF'
-   MEMOS_URL="https://memos.example.com"
-   MEMOS_API_TOKEN="<your_api_token>"
-   EOF
-   ```
+**Solution:** Configure the Memos plugin settings so the setup hook writes `${XDG_CONFIG_HOME:-~/.config}/lab-memos/config.env`.
 
 ### Missing Credentials
 
@@ -175,9 +162,9 @@ curl: (60) SSL certificate problem: unable to get local issuer certificate
 ```
 
 **Solution:**
-1. Check `.env` contains both variables:
+1. Check generated config contains both variables:
    ```bash
-   grep "^MEMOS" ~/.lab/.env
+   grep "^MEMOS" "${XDG_CONFIG_HOME:-$HOME/.config}/lab-memos/config.env"
    ```
 
 2. Ensure no typos in variable names (case-sensitive)
@@ -356,9 +343,9 @@ curl -v -H "Authorization: Bearer $MEMOS_API_TOKEN" \
 
 3. Verify API access directly:
    ```bash
-   source ~/.lab/.env
+   source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-memos/config.env"
    curl -H "Authorization: Bearer $MEMOS_API_TOKEN" \
-     "https://memos.example.com/api/v1/users/1"
+     "$MEMOS_URL/api/v1/auth/me"
    ```
 
 4. Check Memos documentation:
@@ -372,4 +359,4 @@ curl -v -H "Authorization: Bearer $MEMOS_API_TOKEN" \
 3. **Wrong visibility**: Default is PRIVATE, not PUBLIC
 4. **Malformed filters**: Use Google AIP-160 syntax exactly
 5. **Expired tokens**: Regenerate periodically
-6. **File permissions**: `.env` should be 600 (read/write owner only)
+6. **File permissions**: generated config should be 600 (read/write owner only)

@@ -10,11 +10,15 @@ Last verified: 2026-05-23 against npm `claude-in-mobile@3.8.1`.
 
 ## Setup Commands
 
-```bash
-# MCP for Codex
-codex mcp add mobile -- npx -y claude-in-mobile
+These commands are for manual fallback setup. If the Testing plugin is already installed and Labby
+or the active runtime already exposes `claude-in-mobile`, use that existing upstream instead of
+adding a duplicate MCP server.
 
-# MCP for Claude Code
+```bash
+# MCP for Codex, local stdio fallback
+codex mcp add mobile -- npx -y claude-in-mobile@latest
+
+# MCP for Claude Code, local stdio fallback
 claude mcp add --scope user --transport stdio mobile -- npx claude-in-mobile@latest
 
 # Native CLI on macOS

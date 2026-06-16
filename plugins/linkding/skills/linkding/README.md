@@ -18,22 +18,19 @@ Manage bookmarks via Linkding REST API.
 3. Find the **REST API** section
 4. Copy your **API Token**
 
-### 2. Add Credentials to .env
+### 2. Configure the Plugin
 
-Add these variables to `~/.lab/.env`:
-
-```bash
-LINKDING_URL="http://localhost:9090"
-LINKDING_API_KEY="<your_api_token>"
-```
+Set `linkding_url` and `linkding_api_key` through plugin userConfig. The setup
+hook writes them to `${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/config.env`
+with file mode `600`. Legacy `~/.lab/.env` is accepted only as a fallback during
+migration.
 
 `LINKDING_TOKEN` is also accepted as a local alias when `LINKDING_API_KEY` is
 unset.
 
 **Security:**
-- The `.env` file is gitignored and should have permissions `chmod 600`
 - Replace the URL with your actual Linkding server address
-- Never commit the `.env` file to version control
+- Never commit real credentials or generated local config files
 
 ### 3. Test It
 
@@ -114,11 +111,12 @@ linkding-api.sh bundle-create "Work Resources" \
 
 ## Environment Variables
 
-The script automatically loads credentials from `~/.lab/.env`. You can also set them in your shell environment:
+The script automatically loads credentials from the generated plugin config. You
+can also set them in your shell environment for local testing:
 
 ```bash
 export LINKDING_URL="https://linkding.example.com"
-export LINKDING_API_KEY="your-api-token"
+export LINKDING_API_KEY="REPLACE_WITH_LINKDING_API_TOKEN"
 ```
 
 `LINKDING_TOKEN` is also accepted as a local alias.
@@ -132,13 +130,13 @@ Detailed API documentation is available in the `references/` directory:
 ## Troubleshooting
 
 **"LINKDING_URL and LINKDING_API_KEY must be set"**
-→ Check that `~/.lab/.env` exists and contains these variables
+→ Check that plugin userConfig has `linkding_url` and `linkding_api_key`, then rerun the setup hook
 
 **401 Unauthorized**
 → Your API token is invalid — regenerate it in Linkding settings
 
-**"No such file or directory: .env"**
-→ Create the `.env` file at `~/.lab/.env` with your credentials
+**"config.env not found"**
+→ Reconfigure or reinstall the Linkding plugin so the setup hook regenerates local config
 
 ## License
 

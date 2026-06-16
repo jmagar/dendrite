@@ -58,8 +58,10 @@ ERROR: Failed to connect to Radicale: Connection refused
 
 2. **Wrong URL:**
    ```bash
-   # Verify URL in .env
-   grep RADICALE_URL ~/.env ~/.claude-homelab/.env
+   # Verify URL in generated config or legacy fallback
+   grep -h '^RADICALE_URL=' \
+     "${XDG_CONFIG_HOME:-$HOME/.config}/lab-radicale/config.env" \
+     "$HOME/.lab/.env" 2>/dev/null
 
    # Test connection manually
    curl http://localhost:5232
@@ -82,14 +84,16 @@ caldav.lib.error.AuthorizationError
 
 **Solutions:**
 
-1. **Verify credentials in .env:**
+1. **Verify credentials in generated plugin config or fallback env:**
    ```bash
-   cat ~/.claude-homelab/.env | grep RADICALE
+   grep -h '^RADICALE_' \
+     "${XDG_CONFIG_HOME:-$HOME/.config}/lab-radicale/config.env" \
+     "$HOME/.lab/.env" 2>/dev/null
    ```
 
-2. **Test credentials manually:**
+2. **Test credentials manually without putting secrets in the command line:**
    ```bash
-   curl -u admin:password http://localhost:5232/.web/
+   curl -u "<radicale-username>" http://localhost:5232/.web/
    ```
 
 3. **Check Radicale users file:**
@@ -108,20 +112,21 @@ caldav.lib.error.AuthorizationError
 
 **Error:**
 ```
-ERROR: .env file not found at /home/user/.claude-homelab/.env
+ERROR: Radicale config not found. Searched: ...
 ```
 
 **Solution:**
 ```bash
-# Create .env file
-cat > ~/.claude-homelab/.env <<EOF
-RADICALE_URL="http://localhost:5232"
-RADICALE_USERNAME="admin"
-RADICALE_PASSWORD="<your_password>"
+# Prefer plugin userConfig. If that is unavailable, create a local fallback.
+mkdir -p ~/.lab
+cat > ~/.lab/.env <<'EOF'
+RADICALE_URL="https://radicale.example.test"
+RADICALE_USERNAME="<radicale-username>"
+RADICALE_PASSWORD="<radicale-password>"
 EOF
 
 # Set permissions
-chmod 600 ~/.claude-homelab/.env
+chmod 600 ~/.lab/.env
 ```
 
 ## Calendar Issues
@@ -264,7 +269,7 @@ bash: ./scripts/radicale-api.py: Permission denied
 
 **Solution:**
 ```bash
-chmod +x /home/jmagar/claude-homelab/skills/radicale/scripts/radicale-api.py
+chmod +x scripts/radicale-api.py
 ```
 
 ### .env File Permissions
@@ -273,7 +278,7 @@ chmod +x /home/jmagar/claude-homelab/skills/radicale/scripts/radicale-api.py
 
 **Solution:**
 ```bash
-chmod 600 ~/.claude-homelab/.env
+chmod 600 "${XDG_CONFIG_HOME:-$HOME/.config}/lab-radicale/config.env"
 ```
 
 ## Data Format Issues
@@ -355,14 +360,14 @@ logging.basicConfig(level=logging.DEBUG)
 ### Test Connection Manually
 
 ```bash
-# Test HTTP connection
-curl -v -u admin:password http://localhost:5232/
+# Test HTTP connection; curl prompts for the password
+curl -v -u "<radicale-username>" http://localhost:5232/
 
 # Test CalDAV PROPFIND
 curl -X PROPFIND \
-  -u admin:password \
+  -u "<radicale-username>" \
   -H "Depth: 0" \
-  http://localhost:5232/admin/
+  http://localhost:5232/<radicale-username>/
 ```
 
 ### Check Radicale Logs
@@ -384,12 +389,6 @@ If issues persist:
 
 1. **Check Radicale documentation:** https://radicale.org/v3.html
 2. **Check caldav library docs:** https://caldav.readthedocs.io/
-3. **Query embedded RFC documentation:**
-   ```bash
-   cd /home/jmagar/claude-homelab/skills/firecrawl
-   firecrawl query "CalDAV authentication error 401"
-   ```
-
-4. **Review protocol RFCs:**
+3. **Review protocol RFCs:**
    - RFC 4791 (CalDAV): https://www.rfc-editor.org/rfc/rfc4791
    - RFC 6352 (CardDAV): https://www.rfc-editor.org/rfc/rfc6352

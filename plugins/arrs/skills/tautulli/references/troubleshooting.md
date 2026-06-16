@@ -39,13 +39,13 @@ Common issues and solutions when using the Tautulli skill.
    - It should be a long alphanumeric string (32+ characters)
    ```
 
-3. **Update .env file:**
+3. **Update arrs plugin settings:**
    ```bash
-   # Edit ~/.config/lab-arrs/config.env
+   # Generated in ~/.config/lab-arrs/config.env
    TAUTULLI_API_KEY="correct-key-here"
 
-   # NO quotes around value if contains special chars
-   # NO spaces before or after the =
+   # Quotes are safe for shell sourcing
+   # Use no spaces before or after the =
    ```
 
 4. **Test the key:**
@@ -56,13 +56,13 @@ Common issues and solutions when using the Tautulli skill.
    # Should return success JSON
    ```
 
-### Error: "ERROR: TAUTULLI_API_KEY must be set in .env"
+### Error: "TAUTULLI_API_KEY: set it in the arrs plugin settings"
 
-**Cause:** Environment variable not loaded or .env file missing.
+**Cause:** The generated config file is missing or the variable was not loaded.
 
 **Solutions:**
 
-1. **Check .env file exists:**
+1. **Check generated config file exists:**
    ```bash
    ls -la ~/.config/lab-arrs/config.env
    ```
@@ -74,7 +74,7 @@ Common issues and solutions when using the Tautulli skill.
 
 3. **Verify format:**
    ```bash
-   # Correct format in .env
+   # Correct generated format
    TAUTULLI_URL="http://192.168.1.100:8181"
    TAUTULLI_API_KEY="<your_api_key>"
 
@@ -155,7 +155,7 @@ curl: (7) Failed to connect to 192.168.1.100 port 8181: Connection refused
 
 1. **Use HTTP instead:**
    ```bash
-   # In .env
+   # In arrs plugin settings
    TAUTULLI_URL="http://192.168.1.100:8181"  # Not https://
    ```
 
@@ -276,13 +276,13 @@ jq --version
 
 ```bash
 # Convert line endings
-dos2unix $CLAUDE_PLUGIN_ROOT/skills/tautulli/scripts/tautulli-api.sh
+dos2unix <tautulli-skill-dir>/scripts/tautulli-api.sh
 
 # Or use sed
-sed -i 's/\r$//' $CLAUDE_PLUGIN_ROOT/skills/tautulli/scripts/tautulli-api.sh
+sed -i 's/\r$//' <tautulli-skill-dir>/scripts/tautulli-api.sh
 
 # Ensure executable
-chmod +x $CLAUDE_PLUGIN_ROOT/skills/tautulli/scripts/tautulli-api.sh
+chmod +x <tautulli-skill-dir>/scripts/tautulli-api.sh
 ```
 
 ### Error: Permission denied
@@ -293,10 +293,10 @@ chmod +x $CLAUDE_PLUGIN_ROOT/skills/tautulli/scripts/tautulli-api.sh
 
 ```bash
 # Make executable
-chmod +x $CLAUDE_PLUGIN_ROOT/skills/tautulli/scripts/tautulli-api.sh
+chmod +x <tautulli-skill-dir>/scripts/tautulli-api.sh
 
 # Verify
-ls -l $CLAUDE_PLUGIN_ROOT/skills/tautulli/scripts/tautulli-api.sh
+ls -l <tautulli-skill-dir>/scripts/tautulli-api.sh
 # Should show: -rwxr-xr-x
 ```
 
@@ -602,7 +602,7 @@ If none of these solutions work:
    - [ ] Can access Tautulli web UI
    - [ ] Plex server is connected
    - [ ] Some historical data exists
-   - [ ] .env file has correct variables
+   - [ ] Generated config file has correct variables
    - [ ] Script is executable
 
 5. **Collect debug info:**

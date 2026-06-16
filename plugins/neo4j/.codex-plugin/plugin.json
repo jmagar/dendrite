@@ -1,6 +1,6 @@
 {
   "name": "neo4j",
-  "description": "Skill for operating neo4j via the lab MCP server / CLI.",
+  "description": "Operate a Neo4j graph database with Cypher over the HTTP transactional API or cypher-shell.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"
@@ -16,6 +16,7 @@
     "homelab"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Neo4j",
     "shortDescription": "Run Neo4j graph queries and inspect graph schema.",

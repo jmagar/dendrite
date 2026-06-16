@@ -5,12 +5,9 @@
 
 set -euo pipefail
 
-# Load credentials from .env
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
-[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
+_LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
+[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
 # shellcheck source=/dev/null
 source "$_LOAD_ENV" || { echo "ERROR: load-env.sh not found. Run /homelab-core:setup" >&2; exit 1; }
 load_service_credentials "memos" "MEMOS_URL" "MEMOS_API_TOKEN"
@@ -39,23 +36,13 @@ api_call() {
     curl "${curl_args[@]}" "${API_BASE}${endpoint}"
 }
 
-# Helper function to get current user ID from JWT token
+# Helper function to get current user name from the authenticated token.
 get_current_user_id() {
-    # Decode JWT token to extract user ID
-    # JWT format: header.payload.signature
-    local payload
-    payload=$(echo "$MEMOS_API_TOKEN" | cut -d'.' -f2)
-
-    # Add padding if needed for base64 decode
-    local padding=$((4 - ${#payload} % 4))
-    [[ $padding -ne 4 ]] && payload="${payload}$(printf '=%.0s' $(seq 1 $padding))"
-
-    # Decode and extract user ID
     local user_id
-    user_id=$(echo "$payload" | base64 -d 2>/dev/null | jq -r '.sub' 2>/dev/null)
+    user_id=$(api_call GET "/auth/me" | jq -r '.user.name // empty')
 
     if [[ -z "$user_id" ]] || [[ "$user_id" == "null" ]]; then
-        echo '{"error": "Failed to extract user ID from token"}' >&2
+        echo '{"error": "Failed to get current user from /auth/me"}' >&2
         return 1
     fi
 
@@ -66,9 +53,7 @@ get_current_user_id() {
 # Usage: user-api.sh whoami
 cmd_whoami() {
     local user_id
-    user_id=$(get_current_user_id) || exit 1
-
-    api_call GET "/users/${user_id}"
+    api_call GET "/auth/me"
 }
 
 # Command: tokens
@@ -77,13 +62,10 @@ cmd_tokens() {
     local user_id="${1:-}"
 
     if [[ -z "$user_id" ]]; then
-        # Get current user's tokens
-        local current_user
         user_id=$(get_current_user_id) || exit 1
-        user_id="users/${user_id}"
     fi
 
-    api_call GET "/${user_id}/access-tokens"
+    api_call GET "/${user_id}/personalAccessTokens"
 }
 
 # Command: create-token
@@ -93,15 +75,15 @@ cmd_create_token() {
 
     # Get current user
     local current_user
-    current_user=$(api_call GET "/auth/current-user")
+    current_user=$(api_call GET "/auth/me")
     local user_id
-    user_id=$(echo "$current_user" | jq -r '.name')
+    user_id=$(echo "$current_user" | jq -r '.user.name')
 
     # Create payload
     local payload
-    payload=$(jq -n --arg desc "$description" '{description: $desc}')
+    payload=$(jq -n --arg parent "$user_id" --arg desc "$description" '{parent: $parent, description: $desc}')
 
-    api_call POST "/${user_id}/access-tokens" "$payload"
+    api_call POST "/${user_id}/personalAccessTokens" "$payload"
 }
 
 # Command: delete-token
@@ -116,11 +98,11 @@ cmd_delete_token() {
 
     # Get current user
     local current_user
-    current_user=$(api_call GET "/auth/current-user")
+    current_user=$(api_call GET "/auth/me")
     local user_id
-    user_id=$(echo "$current_user" | jq -r '.name')
+    user_id=$(echo "$current_user" | jq -r '.user.name')
 
-    api_call DELETE "/${user_id}/access-tokens/${token_name}"
+    api_call DELETE "/${user_id}/personalAccessTokens/${token_name}"
 }
 
 # Command: profile
@@ -130,7 +112,7 @@ cmd_profile() {
 
     if [[ -z "$user_id" ]]; then
         # Get current user
-        api_call GET "/auth/current-user"
+        api_call GET "/auth/me"
     else
         api_call GET "/${user_id}"
     fi

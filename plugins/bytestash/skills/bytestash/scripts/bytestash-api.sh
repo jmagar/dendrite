@@ -7,8 +7,6 @@ set -euo pipefail
 
 # === Configuration ===
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
 [[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
 # shellcheck source=/dev/null
@@ -19,14 +17,18 @@ source "$_LOAD_ENV" || { echo "ERROR: load-env.sh not found. Run /homelab-core:s
 init_config() {
     # Prefer the plugin hook's generated config; ~/.lab/.env remains a migration fallback.
     local envf="${BYTESTASH_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/lab-bytestash/config.env}"
+    local legacy_env="${HOME}/.lab/.env"
+    if [[ "$envf" != "$legacy_env" && -f "$legacy_env" ]]; then
+        set -a
+        # shellcheck source=/dev/null
+        source "$legacy_env"
+        set +a
+    fi
     if [[ -f "$envf" ]]; then
         set -a
         # shellcheck source=/dev/null
         source "$envf"
         set +a
-    fi
-    if [[ -z "${BYTESTASH_URL:-}" ]]; then
-        load_service_credentials "bytestash" "BYTESTASH_URL" "BYTESTASH_URL" 2>/dev/null || true
     fi
     : "${BYTESTASH_URL:?ERROR: BYTESTASH_URL not set in $envf}"
     BYTESTASH_URL="${BYTESTASH_URL%/}"
@@ -358,7 +360,7 @@ push_snippet() {
             }')
 
         fragments_json=$(echo "$fragments_json" | jq --argjson frag "$fragment" '. + [$frag]')
-        ((position++))
+        ((position += 1))
     done
 
     # Auto-detect categories from languages if not provided

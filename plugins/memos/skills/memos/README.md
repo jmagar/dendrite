@@ -29,26 +29,18 @@ This skill provides full read-write access to your Memos instance, allowing you 
 
 ### 3. Configure Credentials
 
-Add your credentials to `~/.claude-homelab/.env`:
+Configure these values in the Memos plugin settings (`userConfig`). The plugin hook writes `${XDG_CONFIG_HOME:-~/.config}/lab-memos/config.env` automatically:
 
 ```bash
 # Memos - Self-hosted note-taking service
 MEMOS_URL="https://memos.example.com"
-MEMOS_API_TOKEN="eyJhbGciOiJIUzI1NiIsImtpZCI6InYxIiwidHlwIjoiSldUIn0..."
+MEMOS_API_TOKEN="<your_memos_personal_access_token>"
 ```
 
 **Security notes:**
-- `.env` file is gitignored (never committed to version control)
-- Set restrictive permissions: `chmod 600 ~/.claude-homelab/.env`
+- Never commit tokens or generated config files
+- The plugin-generated config file is written with restrictive permissions
 - API token has same permissions as your user account
-
-### 4. Create Symlink
-
-Link the skill to Claude's skills directory:
-
-```bash
-ln -sf ~/claude-homelab/skills/memos ~/.claude/skills/memos
-```
 
 ## Usage Examples
 
@@ -182,13 +174,13 @@ bash scripts/resource-api.sh list
 
 **Error:** `Connection refused`
 - **Cause:** Memos instance not running or wrong URL
-- **Solution:** Verify `MEMOS_URL` in `.env` and check instance status
+- **Solution:** Verify `MEMOS_URL` in plugin settings and check instance status
 
 ### Authentication Errors
 
 **Error:** `401 Unauthorized`
 - **Cause:** Invalid or expired API token
-- **Solution:** Regenerate token in Memos UI and update `.env`
+- **Solution:** Regenerate token in Memos UI and update plugin settings
 
 ### Script Errors
 
@@ -196,9 +188,9 @@ bash scripts/resource-api.sh list
 - **Cause:** Missing required tool
 - **Solution:** Install jq: `sudo apt install jq` (Ubuntu/Debian)
 
-**Error:** `No such file: .env`
-- **Cause:** `.env` file not found
-- **Solution:** Create `.env` file at `~/.claude-homelab/.env` with credentials
+**Error:** `config.env not found`
+- **Cause:** Plugin config hook has not written the generated config
+- **Solution:** Configure the Memos plugin settings and restart the session or re-run the plugin setup hook
 
 ### API Errors
 

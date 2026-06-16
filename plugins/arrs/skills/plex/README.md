@@ -1,6 +1,6 @@
 # Plex Skill
 
-Control and monitor your Plex Media Server.
+Browse and monitor your Plex Media Server.
 
 ## What It Does
 
@@ -11,7 +11,7 @@ Control and monitor your Plex Media Server.
 - **On Deck** — See continue watching content
 - **Clients** — List available Plex clients/players
 
-All operations are read-only and use the Plex Media Server API.
+Most operations are read-only and use the Plex Media Server API. Library refresh starts a server-side scan; ask for explicit confirmation before running it.
 
 ## Setup
 
@@ -28,21 +28,13 @@ All operations are read-only and use the Plex Media Server API.
 3. Look for `X-Plex-Token` in the XML or headers
 4. Copy the token value
 
-### 2. Set Environment Variables
+### 2. Configure Plugin Settings
 
-Create your Plex configuration:
-
-```bash
-export PLEX_URL="http://192.168.1.100:32400"
-export PLEX_TOKEN="<your_plex_token>"
-```
-
-Or add to your shell profile (`~/.bashrc`, `~/.zshrc`):
+Set your Plex URL and token in the arrs plugin settings (`userConfig`). The plugin hook writes them to `~/.config/lab-arrs/config.env` automatically:
 
 ```bash
-echo 'export PLEX_URL="http://192.168.1.100:32400"' >> ~/.bashrc
-echo 'export PLEX_TOKEN="<your_plex_token>"' >> ~/.bashrc
-source ~/.bashrc
+PLEX_URL="http://192.168.1.100:32400"
+PLEX_TOKEN="<your_plex_token>"
 ```
 
 **Configuration options:**
@@ -52,7 +44,7 @@ source ~/.bashrc
 ### 3. Test It
 
 ```bash
-curl -s "$PLEX_URL/?X-Plex-Token=$PLEX_TOKEN" -H "Accept: application/json"
+./scripts/plex-api.sh info | jq
 ```
 
 ## Usage Examples

@@ -15,5 +15,20 @@
     "ai",
     "ml",
     "homelab"
-  ]
+  ],
+  "userConfig": {
+    "tei_url": {
+      "type": "string",
+      "title": "TEI URL",
+      "description": "Base URL of the Text Embeddings Inference server, including scheme and port. Do not include a trailing slash.",
+      "required": true
+    },
+    "tei_auth_header": {
+      "type": "string",
+      "title": "Auth Header",
+      "description": "Optional full HTTP auth header for protected deployments, for example: Authorization: Bearer <token>. Leave blank for trusted local deployments.",
+      "sensitive": true,
+      "required": false
+    }
+  }
 }

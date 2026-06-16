@@ -1,4 +1,4 @@
 interface:
   display_name: "LoggiFly"
-  short_description: "This skill should be used when the user wants to configure LoggiFly Docker log alerting, add or edit keyword or regex alert patterns, set up notifications for container log events, watch container logs for errors or crashes, configure container_action restart/stop rules, or troubleshoot why LoggiFly alerts are not firing. Triggers include: \\\"alert me when my container logs an error\\\", \\\"how do I add a regex pattern to loggifly\\\", \\\"set up loggifly notifications\\\", \\\"loggifly config\\\""
-  default_prompt: "Use $loggifly for this skill should be used when the user wants to configure LoggiFly Docker log alerting, add or edit keyword or regex alert patterns, set up notifications for container log events, watch container logs for errors or crashes, configure container_action restart/stop rules, or troubleshoot why LoggiFly alerts are not firing. Triggers include: \\\"alert me when my container logs an error\\\", \\\"how do I add a regex pattern to loggifly\\\", \\\"set up loggifly notifications\\\", \\\"loggifly config\\\"."
+  short_description: "Configure LoggiFly Docker log alerting, notifications, and container actions."
+  default_prompt: "Use $loggifly to configure LoggiFly log alerts, notifications, and safe container action rules."

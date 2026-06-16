@@ -24,17 +24,11 @@ api_call() {
     local endpoint="$2"
     shift 2
 
-    # Add token to URL if not already present
-    local separator="?"
-    if [[ "$endpoint" == *"?"* ]]; then
-        separator="&"
-    fi
-
     curl -sS -X "$method" \
         -H "Accept: application/json" \
         -H "X-Plex-Token: $PLEX_TOKEN" \
         "$@" \
-        "${PLEX_URL}${endpoint}${separator}X-Plex-Token=${PLEX_TOKEN}"
+        "${PLEX_URL}${endpoint}"
 }
 
 usage() {
@@ -61,10 +55,10 @@ Commands:
   clients                        List connected clients/players
 
   playlists                      List all playlists
-  accounts                       List user accounts (admin only)
-  prefs                          Server preferences (admin only)
+  accounts                       List user accounts (admin only, read-only)
+  prefs                          Server preferences (admin only, read-only)
 
-  refresh <section-id>          Refresh library section (scan for new media)
+  refresh <section-id>          Refresh library section (admin-only scan)
 
 Examples:
   $(basename "$0") libraries

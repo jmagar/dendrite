@@ -34,7 +34,8 @@ RADARR_DEFAULT_QUALITY_PROFILE="1"  # Optional (defaults to 1)
 
 ## Commands
 
-All commands return JSON output.
+Run commands from this skill directory. The helper prints human-readable output for
+interactive commands and offers `search-json` when raw lookup JSON is needed.
 
 ### Search for Movies
 
@@ -57,17 +58,19 @@ bash scripts/radarr.sh exists <tmdbId>
 
 ```bash
 bash scripts/radarr.sh add <tmdbId>              # Searches immediately (default)
+bash scripts/radarr.sh add <tmdbId> <profileId>  # Use a specific quality profile
 bash scripts/radarr.sh add <tmdbId> --no-search  # Add without searching
 ```
 
 ### Add Full Collection
 
 ```bash
-bash scripts/radarr.sh add-collection <collectionTmdbId>
+bash scripts/radarr.sh add-collection <collectionTmdbId> "<search term>"
 bash scripts/radarr.sh add-collection <collectionTmdbId> --no-search
 ```
 
-Adds all movies in a collection (e.g., all Lord of the Rings movies).
+Adds all movies in a collection (e.g., all Lord of the Rings movies). Provide a
+search term when Radarr has not already indexed the collection name.
 
 ### Remove a Movie
 
@@ -115,10 +118,12 @@ Always include TMDB links when presenting search results:
 
 ### add command
 - `<tmdbId>`: TMDB ID of the movie (required)
+- `<profileId>`: optional Radarr quality profile ID
 - `--no-search`: Don't search for movie after adding
 
 ### add-collection command
 - `<collectionTmdbId>`: TMDB ID of the collection (required)
+- `<search term>`: optional movie search term used to discover collection members
 - `--no-search`: Don't search for movies after adding
 
 ### remove command
@@ -129,7 +134,7 @@ Always include TMDB links when presenting search results:
 
 - Requires network access to your Radarr server
 - Uses Radarr API v3
-- All data operations return JSON
+- Use `search-json` or direct API calls from `references/` when JSON output is required
 - Quality profile IDs vary by installation — use `config` to discover yours
 - The `defaultQualityProfile` from config is used when adding movies
 - Collections are TMDB-specific and include related movies (sequels, franchises)

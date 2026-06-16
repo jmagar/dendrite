@@ -16,13 +16,16 @@ meta-tools instead of many single-purpose tools.
 
 ## MCP Configuration
 
-For Codex:
+This Testing plugin installs the skill metadata only. Register the MCP server only when no
+`claude-in-mobile` upstream is already available through Labby or the active agent runtime.
+
+For Codex, local stdio fallback:
 
 ```bash
-codex mcp add mobile -- npx -y claude-in-mobile
+codex mcp add mobile -- npx -y claude-in-mobile@latest
 ```
 
-For Claude Code:
+For Claude Code, local stdio fallback:
 
 ```bash
 claude mcp add --scope user --transport stdio mobile -- npx claude-in-mobile@latest
@@ -44,7 +47,8 @@ Equivalent JSON config:
 
 Use MCP tools for interactive agent automation. Use the native CLI for scripts,
 CI smoke tests, local setup, or quick manual checks. Check the current package
-with `npm view claude-in-mobile version` before pinning a version.
+with `npm view claude-in-mobile version` before pinning a version. Do not overwrite
+an existing project or user MCP config entry unless the user asks for that change.
 
 ## Requirements
 

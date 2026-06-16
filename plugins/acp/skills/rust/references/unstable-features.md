@@ -1,6 +1,7 @@
 # ACP Unstable Features Reference
 
-All 9 unstable feature flags in the `agent-client-protocol` crate. Each is independently activatable; use the umbrella `unstable` to enable all.
+Unstable surfaces in the `agent-client-protocol` crate. Most have independent
+feature flags; use the umbrella `unstable` to enable the full unstable surface.
 
 > **Reviewed against agent-client-protocol 0.13.1.** Some unstable features from 0.11.2 may have been stabilized or removed. Verify current status with `cargo search agent-client-protocol` and the grep pattern at the bottom of this file before assuming a feature is still gated.
 >
@@ -25,19 +26,22 @@ agent-client-protocol = { version = "0", features = [
 
 ---
 
-## Feature Table
+## Independently Selectable Feature Flags
 
 | Feature flag | Method / Types unlocked | Status |
 |---|---|---|
 | `unstable_session_close` | `session/close` · `CloseSessionRequest` · `CloseSessionResponse` · `SessionCloseCapabilities` | Unstable |
 | `unstable_session_fork` | `session/fork` · `ForkSessionRequest` · `ForkSessionResponse` · `SessionForkCapabilities` | Unstable |
 | `unstable_session_resume` | `session/resume` · `ResumeSessionRequest` · `ResumeSessionResponse` · `SessionResumeCapabilities` | Unstable |
-| `unstable_session_model` | `session/set_model` · adds `model` to `NewSessionCapabilities` and `LoadSessionCapabilities` | Unstable |
 | `unstable_session_usage` | `usage: Option<Usage>` on `PromptResponse` · `UsageUpdate` `SessionUpdate` variant | Unstable |
 | `unstable_message_id` | `message_id: Option<String>` on `PromptRequest` + `user_message_id: Option<String>` on `PromptResponse` (UUID format) | Unstable |
 | `unstable_auth_methods` | Additional `AuthMethodType` variants for richer credential formats | Unstable |
 | `unstable_cancel_request` | `CancelRequestNotification` (cancel-as-request) · error code `-32800` `RequestCancelled` | Unstable |
 | `unstable_boolean_config` | Boolean values in `session/set_config_option` · `SessionConfigValueBoolean` variant | Unstable |
+
+Model-related unstable APIs are still part of the unstable surface in 0.13.x,
+but there is no independent `unstable_session_model` feature flag to enable
+selectively. Use the umbrella `unstable` feature when this surface is needed.
 
 ---
 
@@ -123,31 +127,6 @@ AgentCapabilities {
 
 ---
 
-### `unstable_session_model`
-
-Allows the client to change the LLM model mid-session via `session/set_model`. Also adds a `model` field to `NewSessionCapabilities` and `LoadSessionCapabilities` so agents can advertise which models they support.
-
-```rust
-// In new_session or load_session capabilities (unstable_session_model)
-NewSessionCapabilities {
-    modes: vec!["default".into(), "acceptEdits".into()],
-    model: Some("claude-opus-4-5".into()),
-}
-
-// session/set_model request
-SetModelRequest {
-    session_id: "uuid-1234".into(),
-    model: "claude-sonnet-4-6".into(),
-    meta: None,
-}
-
-SetModelResponse {}
-```
-
-`claude-agent-acp` exposes this as `unstable_setSessionModel()`.
-
----
-
 ### `unstable_session_usage`
 
 Adds token usage tracking to prompt responses and session updates.
@@ -216,7 +195,7 @@ CancelRequestNotification {
 }
 ```
 
-Without this flag, `session/cancel` is a fire-and-forget notification and there is no -32800 error code. The `on_cancel()` method in the `Agent` trait handles the notification form and is **stable**.
+Without this flag, `session/cancel` is a fire-and-forget notification and there is no -32800 error code. The stable `Agent::cancel()` method handles the notification form.
 
 ---
 
@@ -239,9 +218,9 @@ Agents that advertise boolean config options must enable this flag and handle bo
 ## Stability Notes
 
 - As of **v0.13.1** (schema crate), verify each feature's current gate status using the grep pattern below — some features from 0.11.2 may have been stabilized or removed. The `unstable` umbrella feature still enables the remaining gated surface. `unstable_session_model` is no longer a separate feature in 0.13.x; model-related capabilities are controlled by the umbrella `unstable` flag.
-- `codex-acp` enables `features = ["unstable"]` (all 9) — this is the recommended pattern for production agents that need the full feature set.
+- `codex-acp` enables `features = ["unstable"]` — this is the recommended pattern for production agents that need the full unstable surface.
 - `session_info_update` (`session/update` with session title) is **stable** and available without any feature flag.
-- The stable `Agent::on_cancel()` trait method handles `session/cancel` as a notification. `unstable_cancel_request` is only needed for the request/response variant and the -32800 error code.
+- The stable `Agent::cancel()` trait method handles `session/cancel` as a notification. `unstable_cancel_request` is only needed for the request/response variant and the -32800 error code.
 
 ---
 

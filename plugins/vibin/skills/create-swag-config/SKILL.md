@@ -1,129 +1,129 @@
 ---
 name: create-swag-config
-description: 'Use whenever the user wants to add or scaffold a new reverse proxy config for SWAG — the LinuxServer.io SWAG proxy on `squirts` (`/mnt/appdata/swag/nginx/proxy-confs/`) that fronts every `*.tootie.tv` subdomain. Triggers: "create a swag config", "add a swag proxy for X", "add X to swag", "make a subdomain config", "expose X on tootie.tv", "add reverse proxy for X", "new tootie.tv subdomain", "proxy X through swag", "scaffold a swag entry", "wire up a SWAG mcp config". Always prefer the `swag-mcp` MCP server (registered as `swag` at `https://swag.tootie.tv/mcp`, exposes one action-routed tool: `swag` with actions list/create/view/edit/update/remove/logs/backups/health_check) over hand-writing files — it validates inputs, renders the canonical Jinja2 template, writes the file with the correct name, manages backups, and exposes its own health_check. Hand-write only when swag-mcp is unreachable. Does NOT trigger for nginx work outside this homelab.'
+description: 'Use whenever the user wants to add or scaffold a LinuxServer.io SWAG/nginx reverse proxy config: "create a swag config", "add a swag proxy for X", "add X to swag", "make a subdomain config", "expose X on my domain", "add reverse proxy for X", "new subdomain", "proxy X through swag", or "scaffold a swag entry". Uses Vibin-managed SWAG deployment variables instead of hardcoded hostnames/domains. Does not trigger for unrelated nginx work.'
 ---
 
 # create-swag-config
 
-Add a new reverse proxy entry to **SWAG** (LinuxServer.io) on host `squirts`. SWAG fronts every `*.tootie.tv` subdomain — currently ~128 active configs. Every entry is one file at `/mnt/appdata/swag/nginx/proxy-confs/<service>.subdomain.conf` rendered from a single canonical Jinja2 template (`mcp.subdomain.conf.j2`) that supports OAuth-protected `/mcp`, optional Authelia gating on `/`, and MCP streaming semantics.
+Create or update a SWAG reverse-proxy config by writing the proxy-confs file
+directly. Do not rely on the retired `swag-mcp` marketplace plugin.
 
-Layout on squirts:
+## Configuration
 
-- Repo: `~/code/swag-mcp/`
-- Template: `~/code/swag-mcp/templates/mcp.subdomain.conf.j2`
-- Deployed includes: `/mnt/appdata/swag/nginx/{mcp-server,mcp-location,authelia-server,authelia-location,proxy,resolver,ssl}.conf`
-- Deployed configs: `/mnt/appdata/swag/nginx/proxy-confs/*.subdomain.conf`
-- SWAG container: `swag` (image `lscr.io/linuxserver/swag`)
-- swag-mcp container: `swag-mcp` (image `ghcr.io/jmagar/swag-mcp:<ver>`)
+Resolve these variables before writing. Prefer the generated config file at
+`${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env`, then environment
+variables, then ask the user for anything still missing.
 
-## Preferred path — call swag-mcp
+| Variable | Purpose |
+|---|---|
+| `SWAG_EDGE_HOST` | SSH host that owns the SWAG appdata/config directory. |
+| `SWAG_PUBLIC_BASE_DOMAIN` | Base domain for subdomains, such as `example.com`. |
+| `SWAG_PROXY_CONFS_PATH` | Host path to SWAG `nginx/proxy-confs`. |
+| `SWAG_CONTAINER_NAME` | SWAG container name, default `swag`. |
+| `SWAG_DEFAULT_AUTH_METHOD` | Default auth include set, default `authelia`. |
+| `SWAG_DEFAULT_UPSTREAM_PROTO` | Default upstream protocol, default `http`. |
+| `SWAG_DEFAULT_ENABLE_QUIC` | Default QUIC setting, default `false`. |
+| `SWAG_RELOAD_WAIT_SECONDS` | Wait before health check, default `30`. |
 
-`swag-mcp` is an MCP server that owns SWAG config CRUD. **Use it instead of hand-editing whenever possible.** It validates inputs, renders the canonical template, writes the file with the correct name, keeps backups of replaced configs, and exposes health checks. Hand-editing exists as a fallback, not a default.
+Use these shell defaults when the generated config is unavailable:
 
-The server is registered in `~/.claude.json` as `swag` (URL: `https://swag.tootie.tv/mcp`). It exposes **one** action-routed tool — `swag` — plus a `swag_help` reference tool. All operations go through `swag` with an `action` parameter.
-
-### Actions
-
-| Action | Purpose | Key params |
-|---|---|---|
-| `list` | List proxy configs | `list_filter`: `all` \| `active` \| `samples` |
-| `create` | Render template + write `<config_name>` | `config_name`, `server_name`, `upstream_app`, `upstream_port`, `upstream_proto`, `auth_method`, optional `mcp_upstream_*`, `enable_quic` |
-| `view` | Read an existing config's contents | `config_name` |
-| `edit` | Replace full file contents | `config_name`, `new_content` |
-| `update` | Patch a single field | `config_name`, `update_field` (e.g. `port`, `upstream`, `app`, `add_mcp`), `update_value` |
-| `remove` | Delete a config (auto-backup) | `config_name` |
-| `logs` | Tail SWAG container logs | `log_type`: `nginx-access` \| `nginx-error` \| `fail2ban`, `lines` |
-| `backups` | Manage backups | `backup_action`: `list` \| `cleanup`, optional `retention_days` |
-| `health_check` | HTTP check a domain | `domain` |
-
-### Concrete call — adding `foo` on port 9000 with Authelia
-
-```json
-{
-  "action": "create",
-  "config_name": "foo.subdomain.conf",
-  "server_name": "foo.tootie.tv",
-  "upstream_app": "100.88.16.79",
-  "upstream_port": 9000,
-  "upstream_proto": "http",
-  "auth_method": "authelia",
-  "enable_quic": false
-}
+```bash
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env" 2>/dev/null || true
+: "${SWAG_EDGE_HOST:?set SWAG_EDGE_HOST in Vibin plugin settings or environment}"
+: "${SWAG_PUBLIC_BASE_DOMAIN:?set SWAG_PUBLIC_BASE_DOMAIN in Vibin plugin settings or environment}"
+: "${SWAG_PROXY_CONFS_PATH:?set SWAG_PROXY_CONFS_PATH in Vibin plugin settings or environment}"
+SWAG_CONTAINER_NAME="${SWAG_CONTAINER_NAME:-swag}"
+SWAG_DEFAULT_AUTH_METHOD="${SWAG_DEFAULT_AUTH_METHOD:-authelia}"
+SWAG_DEFAULT_UPSTREAM_PROTO="${SWAG_DEFAULT_UPSTREAM_PROTO:-http}"
+SWAG_DEFAULT_ENABLE_QUIC="${SWAG_DEFAULT_ENABLE_QUIC:-false}"
+SWAG_RELOAD_WAIT_SECONDS="${SWAG_RELOAD_WAIT_SECONDS:-30}"
 ```
 
-Typical first call when the user says "add X":
+## Workflow
 
-1. `swag` with `action: "list"`, `list_filter: "active"` — see what's already there, avoid name collisions, sanity-check similar services for the right shape.
-2. `swag` with `action: "create"` and the fields below.
-3. After create returns, `swag` with `action: "health_check", domain: "<service>.tootie.tv"` to confirm the new vhost responds. SWAG's filewatch picks up the file in roughly 30 seconds — if `health_check` returns a connection error immediately, wait and retry rather than restarting the container.
-4. If something's wrong, `swag` with `action: "logs", log_type: "nginx-error", lines: 100` to see the parse error.
+1. Normalize the service name to lowercase kebab-case unless the user gives an
+   exact config filename. Reject filenames that do not match
+   `^[a-z0-9][a-z0-9-]*\.subdomain\.conf$`.
+2. Build `config_name=<service>.subdomain.conf` and
+   `server_name=<service>.$SWAG_PUBLIC_BASE_DOMAIN`.
+3. Validate the filename locally before composing remote paths:
+   ```bash
+   case "$config_name" in
+     *[!a-z0-9.-]*|*/*|*..*) echo "unsafe config name: $config_name" >&2; exit 1 ;;
+   esac
+   [[ "$config_name" =~ ^[a-z0-9][a-z0-9-]*\.subdomain\.conf$ ]] || exit 1
+   ```
+4. Inspect existing configs before writing. Pass `SWAG_PROXY_CONFS_PATH` and
+   `config_name` as remote script arguments; do not concatenate unchecked names
+   into a remote shell string.
+5. Pick the config shape:
+   - MCP-aware service with browser app gated by auth: include `mcp-server.conf`
+     and the matching auth server/location includes.
+   - MCP-aware service whose upstream owns OAuth/auth: include `mcp-server.conf`
+     but no external auth includes.
+   - Plain web app: start from the LinuxServer `_template.subdomain.conf.sample`
+     if available and do not add unused MCP locations unless the user asks.
+6. Write through a temp file, validate, and roll back automatically if nginx
+   rejects the new config. Use the full transaction script in
+   `references/fallback-template.md`; the required sequence is:
+   ```bash
+   tmp=$(mktemp)
+   # render config into "$tmp"
+   scp "$tmp" "$SWAG_EDGE_HOST:/tmp/$config_name"
+   # remote transaction:
+   # - copy current target to a timestamped backup when it exists
+   # - copy staged file into the proxy-confs directory, then mv into place
+   # - run: docker exec "$SWAG_CONTAINER_NAME" nginx -t
+   # - on failure, restore the backup or remove the new file, then exit nonzero
+   ```
+7. Wait for SWAG's file watcher, then verify:
+   ```bash
+   sleep "$SWAG_RELOAD_WAIT_SECONDS"
+   curl -sSI "https://$server_name" | sed -n '1,20p'
+   ```
 
-### `samples` filter
+Healthy unauthenticated responses are usually `200`, `302`, `401`, or `403`
+depending on the auth layer. Hard failures include `502`, default-backend
+`404`, TLS errors, or nginx parse failures.
 
-`list_filter: "samples"` returns LinuxServer-shipped reference configs (`*.subdomain.conf.sample` files for common apps — collabora, wallabag, etc.). Use them as a starting point for non-MCP services where the SWAG community already has a known-good config; `view` the sample, copy what's relevant, then `create` your version.
+## Create Shape
 
-## Decision tree before `create`
+For an auth-gated MCP-aware service, collect:
 
-Three real-world shapes to match (deployed configs to crib from):
+```text
+service_name      short service id
+server_name       <service>.$SWAG_PUBLIC_BASE_DOMAIN
+upstream_app      container name, host, or IP
+upstream_port     backend port
+upstream_proto    usually http
+mcp_upstream_app  usually same as upstream_app
+mcp_upstream_port usually same as upstream_port
+mcp_upstream_proto usually same as upstream_proto
+auth_method       authelia, authentik, tinyauth, ldap, or none
+enable_quic       true/false
+```
 
-| Shape | Example services | `auth_method` | Notes |
-|---|---|---|---|
-| **MCP service, Authelia on `/`, OAuth on `/mcp`** | `syslog`, `axon` | `authelia` | App at `/` is Authelia-gated; `/mcp` is OAuth-verified by the upstream's sidecar; well-known endpoints exposed by `mcp-server.conf` include. |
-| **MCP service, upstream owns OAuth, no Authelia** | `lab` | `none` | Lab MCP server handles OAuth itself end-to-end; SWAG just forwards. |
-| **Plain web app, no MCP** | most legacy services | `authelia` (or another) | The unified template still works — set `mcp_upstream_*` to the same as `upstream_*`; nothing routes through `/mcp` if the app doesn't speak it. For purely non-MCP apps, consider hand-writing from a LinuxServer sample (`list_filter: "samples"`) instead. |
+When the user gives only a service and port, ask for or infer `upstream_app`.
+Do not invent a private IP or host. If the user says "same host as service X",
+inspect the existing config for service X and reuse that pattern.
 
-Pick the shape, then collect:
+Only render QUIC/HTTP3 lines when `enable_quic=true` and the target SWAG host
+already uses a confirmed QUIC include or listen pattern in nearby configs.
+Otherwise leave QUIC disabled even if the variable exists.
 
-- `config_name` — `<service>.subdomain.conf` (SWAG's filewatch keys on this exact pattern).
-- `server_name` — almost always `<service>.tootie.tv`.
-- `upstream_app` — host or IP. Tailscale IPs like `100.88.16.79` are common here; container names work when the upstream shares SWAG's Docker network.
-- `upstream_port` — app port.
-- `upstream_proto` — `http` or `https`. Almost always `http` (TLS terminates at SWAG).
-- `mcp_upstream_app` / `_port` / `_proto` — for MCP-aware apps, point at the MCP HTTP endpoint. Often identical to the main upstream when one process serves both.
-- `auth_method` — `authelia`, `authentik`, `tinyauth`, `ldap`, or `none`.
-- `enable_quic` — almost always `false`. Only flip when the user explicitly asks for HTTP/3.
+## References
 
-When the user gives a service and a port and nothing else, default to: `server_name=<service>.tootie.tv`, `upstream_proto=http`, `auth_method=authelia`, `enable_quic=false`, and set `mcp_upstream_*` equal to `upstream_*`. Confirm before writing.
+- `references/examples.md`: variableized examples for auth-gated MCP,
+  upstream-owned auth, and plain web services.
+- `references/fallback-template.md`: direct hand-write template and reload
+  procedure when no managed helper exists.
+- `references/includes.md`: which SWAG include files to use.
 
-## DNS, certs, and reload behavior
+## Guardrails
 
-- **DNS is already handled.** `*.tootie.tv` is a wildcard A/CNAME pointing at the SWAG host. Adding a new subdomain needs no DNS work.
-- **TLS is already handled.** SWAG holds a wildcard cert for `*.tootie.tv`; the new vhost picks it up via `include /config/nginx/ssl.conf`.
-- **Reload is automatic.** LinuxServer SWAG watches `proxy-confs/` and reloads nginx within ~30 seconds of a file change. Don't manually `nginx -s reload` or restart the container unless the watcher seems broken — give it the half-minute first, then check `swag` `action: "logs"` to see whether nginx parsed the new file.
-
-## Fallback — hand-writing
-
-When swag-mcp is unreachable (server down, gateway errors, network partition), write the file directly. The canonical shape and the full template are in `references/fallback-template.md`. The 30-second summary: copy `lab.subdomain.conf` (or `syslog.subdomain.conf` for Authelia-gated services), change names/ports, save to `/mnt/appdata/swag/nginx/proxy-confs/<service>.subdomain.conf`, wait for filewatch, hit `/health` or the root to verify.
-
-## Examples — annotated, taken from deployed configs
-
-See `references/examples.md` for the three shipped patterns side-by-side (syslog, lab, axon) with the differences highlighted. Use it when you need to confirm "should this service be like syslog or like lab" without re-reading the deployed file.
-
-## What's in each include
-
-Header-level summary: every include file is already deployed in `/mnt/appdata/swag/nginx/`; your config just references them. Don't author them again. For a full table of which include does what and when to include which, see `references/includes.md`.
-
-## Verification checklist
-
-Before declaring done:
-
-1. `swag` `action: "view", config_name: "<service>.subdomain.conf"` to confirm the file landed.
-2. Wait ~30s for SWAG's filewatch.
-3. `swag` `action: "health_check", domain: "<service>.tootie.tv"` — expect 200/302/401 (the 401 is Authelia redirecting unauth'd browsers, that's healthy). Hard fails: 502, 404 "Default backend", TLS hang.
-4. For MCP services: hit `https://<service>.tootie.tv/.well-known/oauth-authorization-server` and confirm JSON with `issuer`, `authorization_endpoint`, `token_endpoint`.
-5. If anything fails: `swag` `action: "logs", log_type: "nginx-error", lines: 100` — fix, then `update` or `edit` and re-verify.
-
-## Conventions worth honoring
-
-- **One file per subdomain.** Don't bundle multiple services into one `.conf`.
-- **Filename = `<service_name>.subdomain.conf`** exactly. SWAG's filewatch keys on this pattern.
-- **Backups are auto-managed by swag-mcp.** Don't delete `.bak`/`.backup` files manually — use `swag` `action: "backups", backup_action: "cleanup"` with `retention_days` instead.
-- **Tailscale IPs are fine** as upstreams (`100.x.y.z`). They're the norm for upstreams that don't share SWAG's Docker network.
-- **`client_max_body_size 0`** on the server block disables the limit — appropriate for MCP/file-upload services.
-- **Don't reintroduce `oauth.conf`.** A `.bak` of it exists in `/mnt/appdata/swag/nginx/` from a prior architecture; the current world is `mcp-server.conf` + `mcp-location.conf`.
-
-## When to NOT use this skill
-
-- Changing auth on an *existing* working config → `update` with a field-level patch is enough; full template re-render is overkill.
-- Non-tootie.tv config or a totally non-SWAG nginx — out of scope.
-- Adding an upstream service itself (Docker container, Tailscale node, port-forward) — that's setup work on the upstream host, not in SWAG.
+- Confirm before `remove`, full-file overwrite of an existing config, or backup
+  cleanup.
+- Never put passwords or tokens in nginx config files.
+- Do not reintroduce legacy OAuth include files unless the user explicitly asks
+  and the target host actually has them.
+- Keep one service per `.subdomain.conf`.

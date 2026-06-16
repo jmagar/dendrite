@@ -1,4 +1,4 @@
 interface:
   display_name: "Neo4j"
-  short_description: "This skill should be used when the user wants to query a Neo4j graph database, run Cypher statements, inspect node labels or relationship types, check schema constraints or indexes, verify Neo4j connectivity, or explore graph data. Triggers include: \\\"run a Cypher query\\\", \\\"what nodes are in my graph\\\", \\\"list relationship types\\\", \\\"check my Neo4j instance\\\", \\\"show me the graph schema\\\", or any question about graph database queries"
-  default_prompt: "Use $neo4j for this skill should be used when the user wants to query a Neo4j graph database, run Cypher statements, inspect node labels or relationship types, check schema constraints or indexes, verify Neo4j connectivity, or explore graph data. Triggers include: \\\"run a Cypher query\\\", \\\"what nodes are in my graph\\\", \\\"list relationship types\\\", \\\"check my Neo4j instance\\\", \\\"show me the graph schema\\\", or any question about graph database queries."
+  short_description: "Use when the user wants to query Neo4j with Cypher, inspect labels or relationship types, check constraints or indexes, verify connectivity, or explore graph data."
+  default_prompt: "Use $neo4j to run read-only Cypher, inspect graph schema, list labels or relationship types, check indexes or constraints, and verify Neo4j connectivity."

@@ -1,0 +1,19 @@
+{
+  "name": "tei",
+  "version": "0.1.0",
+  "description": "Skill for operating tei via the lab MCP server / CLI.",
+  "settings": [
+    {
+      "name": "TEI URL",
+      "description": "Base URL of the Text Embeddings Inference server, including scheme and port. Do not include a trailing slash.",
+      "envVar": "TEI_URL",
+      "sensitive": false
+    },
+    {
+      "name": "Auth Header",
+      "description": "Optional full HTTP auth header for protected deployments, for example: Authorization: Bearer <token>. Leave blank for trusted local deployments.",
+      "envVar": "TEI_AUTH_HEADER",
+      "sensitive": true
+    }
+  ]
+}

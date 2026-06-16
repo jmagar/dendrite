@@ -1,4 +1,4 @@
 interface:
   display_name: "NotebookLM"
-  short_description: "This skill should be used when the user mentions NotebookLM, says /notebooklm, or asks to create a podcast, generate an audio overview, make a quiz, summarize URLs, add sources to NotebookLM, generate flashcards, create a mind map, make an infographic, or download generated content. Covers full programmatic access to Google NotebookLM including features unavailable in the web UI"
-  default_prompt: "Use $notebooklm for this skill should be used when the user mentions NotebookLM, says /notebooklm, or asks to create a podcast, generate an audio overview, make a quiz, summarize URLs, add sources to NotebookLM, generate flashcards, create a mind map, make an infographic, or download generated content. Covers full programmatic access to Google NotebookLM including features unavailable in the web UI."
+  short_description: "Use when the user mentions NotebookLM or asks to manage notebooks, add sources, summarize or query source material, generate podcasts, videos, quizzes, flashcards, reports, mind maps, infographics, slide decks, or download NotebookLM artifacts."
+  default_prompt: "Use $notebooklm to operate Google NotebookLM from the CLI: authenticate, create or select notebooks, add sources, query content, generate artifacts, wait for completion when appropriate, and download results."

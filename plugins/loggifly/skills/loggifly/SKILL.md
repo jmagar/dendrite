@@ -19,6 +19,8 @@ docker inspect loggifly --format '{{range .Mounts}}{{.Source}} -> {{.Destination
 docker logs --tail 50 loggifly        # LoggiFly logs config-reload + match events here
 ```
 
+Before adding or changing `container_action` rules, inspect the mount, copy the current `config.yaml` to a timestamped backup, edit the host-side file, and validate the YAML syntax before relying on hot reload. These actions can restart, stop, or start containers, so make the target container and trigger rule explicit.
+
 ## config.yaml structure (v2)
 
 ```yaml

@@ -21,10 +21,12 @@ Usage:
 Credentials:
     Reads from ~/.config/lab-radicale/config.env (plugin hook output), then
     falls back to ~/.lab/.env and ~/.claude-homelab/.env:
-        RADICALE_URL="http://localhost:5232"
-        RADICALE_USERNAME="admin"
-        RADICALE_PASSWORD="password"
+        RADICALE_URL="https://radicale.example.test"
+        RADICALE_USERNAME="<radicale-username>"
+        RADICALE_PASSWORD="<radicale-password>"
 """
+
+from __future__ import annotations
 
 import argparse
 import json
@@ -38,9 +40,24 @@ try:
     import caldav
     import vobject
     from icalendar import Calendar, Event
-except ImportError:
+except ImportError as exc:
+    caldav = None
+    vobject = None
+    Calendar = None
+    Event = None
+    MISSING_IMPORT_ERROR = exc
+else:
+    MISSING_IMPORT_ERROR = None
+
+
+def require_dependencies() -> None:
+    """Exit with install guidance if required CalDAV libraries are unavailable."""
+    if MISSING_IMPORT_ERROR is None:
+        return
+
     print("ERROR: Required libraries not installed", file=sys.stderr)
     print("Install with: pip install caldav vobject icalendar", file=sys.stderr)
+    print(f"Import error: {MISSING_IMPORT_ERROR}", file=sys.stderr)
     sys.exit(1)
 
 
@@ -80,6 +97,7 @@ def load_env() -> Dict[str, str]:
 
 def get_radicale_client() -> caldav.DAVClient:
     """Create and return a CalDAV client connected to Radicale."""
+    require_dependencies()
     env = load_env()
 
     url = env.get("RADICALE_URL")
@@ -88,7 +106,7 @@ def get_radicale_client() -> caldav.DAVClient:
 
     if not all([url, username, password]):
         print(
-            "ERROR: RADICALE_URL, RADICALE_USERNAME, and RADICALE_PASSWORD must be set in .env",
+            "ERROR: RADICALE_URL, RADICALE_USERNAME, and RADICALE_PASSWORD must be set in Radicale config",
             file=sys.stderr,
         )
         sys.exit(1)

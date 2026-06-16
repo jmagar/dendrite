@@ -1,0 +1,5 @@
+{
+  "name": "loggifly",
+  "version": "0.1.0",
+  "description": "Skill for operating loggifly via the lab MCP server / CLI."
+}

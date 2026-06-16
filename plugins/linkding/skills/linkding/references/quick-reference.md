@@ -4,13 +4,10 @@ Common operations for quick copy-paste usage.
 
 ## Setup
 
-Add credentials to `~/.lab/.env`:
-```bash
-LINKDING_URL="http://localhost:9090"
-LINKDING_API_KEY="your-api-token"
-```
-
-Get your API token from the Settings page in Linkding's web UI.
+Plugin userConfig writes credentials to
+`${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/config.env`; legacy
+`~/.lab/.env` is accepted only as a migration fallback. Get your API token from
+the Settings page in Linkding's web UI.
 
 ## Quick Bookmark Creation
 
@@ -48,7 +45,7 @@ curl -X POST "$LINKDING_URL/api/bookmarks/" \
   -d '{
     "url": "https://example.com",
     "title": "Reference Article",
-    "archived": true,
+    "is_archived": true,
     "tag_names": ["reference", "archive"]
   }'
 ```
@@ -92,21 +89,21 @@ curl -s "$LINKDING_URL/api/bookmarks/?q=python+tutorial" \
 ### Filter Archived Bookmarks
 
 ```bash
-curl -s "$LINKDING_URL/api/bookmarks/?archived=true" \
+curl -s "$LINKDING_URL/api/bookmarks/archived/" \
   -H "Authorization: Token $LINKDING_API_KEY" | jq '.results[] | {title, url}'
 ```
 
 ### Filter Non-Archived Bookmarks
 
 ```bash
-curl -s "$LINKDING_URL/api/bookmarks/?archived=false" \
+curl -s "$LINKDING_URL/api/bookmarks/" \
   -H "Authorization: Token $LINKDING_API_KEY" | jq '.results[] | {title, url}'
 ```
 
 ### Combine Search and Filters
 
 ```bash
-curl -s "$LINKDING_URL/api/bookmarks/?q=github&archived=false&limit=20" \
+curl -s "$LINKDING_URL/api/bookmarks/?q=github&limit=20" \
   -H "Authorization: Token $LINKDING_API_KEY" | jq '.results[] | {title, url, tag_names}'
 ```
 
@@ -127,10 +124,9 @@ curl -s "$LINKDING_URL/api/bookmarks/?limit=50&offset=50" \
 ### Check Before Adding
 
 ```bash
-curl -X POST "$LINKDING_URL/api/bookmarks/check/" \
+curl -G "$LINKDING_URL/api/bookmarks/check/" \
   -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com"}' | jq
+  --data-urlencode "url=https://example.com" | jq
 ```
 
 Returns existing bookmark if found, or `{"bookmark": null}` if new.
@@ -183,19 +179,15 @@ curl -X PATCH "$LINKDING_URL/api/bookmarks/123/" \
 ### Archive Single Bookmark
 
 ```bash
-curl -X POST "$LINKDING_URL/api/bookmarks/archive/" \
-  -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"id": 123}'
+curl -X POST "$LINKDING_URL/api/bookmarks/123/archive/" \
+  -H "Authorization: Token $LINKDING_API_KEY"
 ```
 
 ### Unarchive Single Bookmark
 
 ```bash
-curl -X POST "$LINKDING_URL/api/bookmarks/unarchive/" \
-  -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"id": 123}'
+curl -X POST "$LINKDING_URL/api/bookmarks/123/unarchive/" \
+  -H "Authorization: Token $LINKDING_API_KEY"
 ```
 
 ### Get Specific Bookmark
@@ -257,10 +249,10 @@ curl -s "$LINKDING_URL/api/bookmarks/?limit=100" \
 ### Export Bookmarks as CSV
 
 ```bash
-echo "title,url,tags,description,archived,date_added" > bookmarks.csv
+echo "title,url,tags,description,is_archived,date_added" > bookmarks.csv
 curl -s "$LINKDING_URL/api/bookmarks/?limit=100" \
   -H "Authorization: Token $LINKDING_API_KEY" | \
-  jq -r '.results[] | [.title, .url, (.tag_names | join(";")), .description, .archived, .date_added] | @csv' >> bookmarks.csv
+  jq -r '.results[] | [.title, .url, (.tag_names | join(";")), .description, .is_archived, .date_added] | @csv' >> bookmarks.csv
 ```
 
 ### Find Bookmarks Without Tags
@@ -288,10 +280,8 @@ curl -s "$LINKDING_URL/api/bookmarks/" \
   jq -r '.results[] | select(.unread == true and (.date_added | fromdateiso8601 < (now - (30*24*60*60)))) | .id' | \
   while read id; do
     echo "Archiving bookmark $id"
-    curl -X POST "$LINKDING_URL/api/bookmarks/archive/" \
-      -H "Authorization: Token $LINKDING_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d "{\"id\": $id}"
+    curl -X POST "$LINKDING_URL/api/bookmarks/$id/archive/" \
+      -H "Authorization: Token $LINKDING_API_KEY"
     sleep 0.5
   done
 ```
@@ -313,10 +303,9 @@ curl -s "$LINKDING_URL/api/user/profile/" \
 URL="https://example.com/python-tutorial"
 
 # 1. Check if already saved
-EXISTING=$(curl -s -X POST "$LINKDING_URL/api/bookmarks/check/" \
+EXISTING=$(curl -sG "$LINKDING_URL/api/bookmarks/check/" \
   -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"url\": \"$URL\"}" | jq -r '.bookmark.id // empty')
+  --data-urlencode "url=$URL" | jq -r '.bookmark.id // empty')
 
 if [ -n "$EXISTING" ]; then
   echo "Already saved as bookmark ID: $EXISTING"
@@ -386,13 +375,11 @@ CUTOFF_DATE=$(date -d "90 days ago" -u +"%Y-%m-%dT%H:%M:%SZ")
 
 curl -s "$LINKDING_URL/api/bookmarks/" \
   -H "Authorization: Token $LINKDING_API_KEY" | \
-  jq -r ".results[] | select(.unread == false and .archived == false and .date_added < \"$CUTOFF_DATE\") | .id" | \
+  jq -r ".results[] | select(.unread == false and .is_archived == false and .date_added < \"$CUTOFF_DATE\") | .id" | \
   while read id; do
     echo "Archiving old bookmark ID: $id"
-    curl -X POST "$LINKDING_URL/api/bookmarks/archive/" \
-      -H "Authorization: Token $LINKDING_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d "{\"id\": $id}"
+    curl -X POST "$LINKDING_URL/api/bookmarks/$id/archive/" \
+      -H "Authorization: Token $LINKDING_API_KEY"
     sleep 0.5
   done
 ```
@@ -453,7 +440,7 @@ curl -s "$LINKDING_URL/api/tags/" \
 ```bash
 echo "=== Linkding Statistics ==="
 TOTAL=$(curl -s "$LINKDING_URL/api/bookmarks/" -H "Authorization: Token $LINKDING_API_KEY" | jq '.count')
-ARCHIVED=$(curl -s "$LINKDING_URL/api/bookmarks/?archived=true" -H "Authorization: Token $LINKDING_API_KEY" | jq '.count')
+ARCHIVED=$(curl -s "$LINKDING_URL/api/bookmarks/archived/" -H "Authorization: Token $LINKDING_API_KEY" | jq '.count')
 TAGS=$(curl -s "$LINKDING_URL/api/tags/" -H "Authorization: Token $LINKDING_API_KEY" | jq '.count')
 
 echo "Total Bookmarks: $TOTAL"

@@ -148,7 +148,7 @@ Result: `compileSdk` / `targetSdk` raised with manifest, Gradle, and feature cod
 → Enable dynamic color (Material You) for API 31+, harmonize brand/extended colors against `primary` - see [Brand Color Harmonization](references/android-theming.md#brand-color-harmonization)
 → Honor the system contrast slider on Android 14+ (API 34) by shipping Medium/High-contrast scheme variants and reading `UiModeManager.getContrast()` - see [User Contrast Preference](references/android-theming.md#user-contrast-preference-android-14)
 → For region-local palette overrides (destructive scopes, on-media toolbars), use a nested `MaterialTheme` with `colorScheme.copy(...)` - see [Scoped Themes](references/android-theming.md#scoped-themes)
-→ Pick `Card` / `OutlinedCard` / `ElevatedCard` by surface separation, not importance, and override shapes at the **token** level - see [Card Variants](references/compose-patterns.md#card-variants-filled--outlined--elevated) and [Component Shape Defaults](references/compose-patterns.md#component-shape-defaults)
+→ Pick `Card` / `OutlinedCard` / `ElevatedCard` by surface separation, not importance, and override shapes at the **token** level - see [Card Variants](references/compose-patterns.md) and [Component Shape Defaults](references/compose-patterns.md#component-shape-defaults)
 
 **Writing any Kotlin code?**
 → **Always** follow [kotlin-patterns.md](references/kotlin-patterns.md)

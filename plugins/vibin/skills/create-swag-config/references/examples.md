@@ -1,36 +1,31 @@
-# Three deployed SWAG MCP configs, annotated
+# Variableized SWAG Config Patterns
 
-Pulled from `/mnt/appdata/swag/nginx/proxy-confs/` on `squirts`. Use these as cookie-cutters — pick the shape that matches the service you're adding, then change names/ports.
+Use these as patterns, replacing uppercase placeholders from the Vibin SWAG
+configuration or from the user's request.
 
-## Pattern A — Authelia on `/`, MCP sidecar exposes `/mcp` (most common)
+## Pattern A: Auth-Gated App Plus MCP Routes
 
-**Used by:** `syslog`, `axon`
-
-Authelia gates the human-facing app at `/`. The MCP endpoints exposed by `mcp-server.conf` (well-known, `/jwks`, `/authorize`, `/token`, etc.) are accessible without Authelia because MCP clients authenticate themselves with bearer tokens, not browser cookies.
+Use when the browser app at `/` should be protected by an external auth include,
+while `/mcp` and session routes are forwarded to an MCP-capable upstream.
 
 ```nginx
-## Version 2026/05/14 - Standardized
-# Service: syslog-mcp
-# Domain: syslog.tootie.tv
-# Auth: Authelia on /
-
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
-    server_name syslog.tootie.tv;
+    server_name SERVICE_NAME.PUBLIC_BASE_DOMAIN;
     include /config/nginx/ssl.conf;
     client_max_body_size 0;
 
-    set $upstream_app "100.88.16.79";
-    set $upstream_port "3100";
-    set $upstream_proto "http";
+    set $upstream_app "UPSTREAM_APP";
+    set $upstream_port "UPSTREAM_PORT";
+    set $upstream_proto "UPSTREAM_PROTO";
 
-    set $mcp_upstream_app "100.88.16.79";
-    set $mcp_upstream_port "3100";
-    set $mcp_upstream_proto "http";
+    set $mcp_upstream_app "MCP_UPSTREAM_APP";
+    set $mcp_upstream_port "MCP_UPSTREAM_PORT";
+    set $mcp_upstream_proto "MCP_UPSTREAM_PROTO";
 
     include /config/nginx/mcp-server.conf;
-    include /config/nginx/authelia-server.conf;        # ← present
+    include /config/nginx/AUTH_METHOD-server.conf;
 
     location /mcp {
         if ($origin_valid = 0) {
@@ -51,7 +46,7 @@ server {
     }
 
     location / {
-        include /config/nginx/authelia-location.conf;  # ← present
+        include /config/nginx/AUTH_METHOD-location.conf;
         include /config/nginx/resolver.conf;
         include /config/nginx/proxy.conf;
         proxy_pass $upstream_proto://$upstream_app:$upstream_port;
@@ -59,56 +54,34 @@ server {
 }
 ```
 
-Tell swag-mcp:
+Use `AUTH_METHOD=authelia`, `authentik`, `tinyauth`, or `ldap` only when those
+include files exist on the target SWAG host.
 
-```
-create_config({
-  service_name:    "syslog",
-  server_name:     "syslog.tootie.tv",
-  upstream_app:    "100.88.16.79",
-  upstream_port:   3100,
-  upstream_proto:  "http",
-  mcp_upstream_app:   "100.88.16.79",
-  mcp_upstream_port:  3100,
-  mcp_upstream_proto: "http",
-  auth_method:     "authelia",
-  enable_quic:     false,
-})
-```
+If `SWAG_DEFAULT_ENABLE_QUIC=true`, inspect existing configs on the same host
+first and add only the QUIC/HTTP3 lines that match that local pattern.
 
-## Pattern B — Upstream owns OAuth, no Authelia anywhere
+## Pattern B: Upstream Owns Auth
 
-**Used by:** `lab`
-
-The upstream MCP server (in `lab`'s case, the lab gateway itself) implements OAuth 2.1 end-to-end and exposes its own auth UI at `/`. SWAG just terminates TLS, validates origin, and forwards everything.
-
-Diff vs. Pattern A:
-- **No** `include /config/nginx/authelia-server.conf;` at the server level
-- **No** `include /config/nginx/authelia-location.conf;` inside `location /`
+Use when the upstream service handles OAuth/auth end-to-end. Same as Pattern A,
+but omit the auth server include and the auth location include.
 
 ```nginx
-## Version 2026/05/14 - Standardized
-# Service: lab
-# Domain: lab.tootie.tv
-# Auth: OAuth (built-in to lab MCP server) — no Authelia on /
-
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
-    server_name lab.tootie.tv;
+    server_name SERVICE_NAME.PUBLIC_BASE_DOMAIN;
     include /config/nginx/ssl.conf;
     client_max_body_size 0;
 
-    set $upstream_app "100.88.16.79";
-    set $upstream_port "8765";
-    set $upstream_proto "http";
+    set $upstream_app "UPSTREAM_APP";
+    set $upstream_port "UPSTREAM_PORT";
+    set $upstream_proto "UPSTREAM_PROTO";
 
-    set $mcp_upstream_app "100.88.16.79";
-    set $mcp_upstream_port "8765";
-    set $mcp_upstream_proto "http";
+    set $mcp_upstream_app "MCP_UPSTREAM_APP";
+    set $mcp_upstream_port "MCP_UPSTREAM_PORT";
+    set $mcp_upstream_proto "MCP_UPSTREAM_PROTO";
 
     include /config/nginx/mcp-server.conf;
-    # ← no authelia-server.conf
 
     location /mcp {
         if ($origin_valid = 0) {
@@ -129,7 +102,6 @@ server {
     }
 
     location / {
-        # ← no authelia-location.conf
         include /config/nginx/resolver.conf;
         include /config/nginx/proxy.conf;
         proxy_pass $upstream_proto://$upstream_app:$upstream_port;
@@ -137,40 +109,17 @@ server {
 }
 ```
 
-Tell swag-mcp:
+## Pattern C: Plain Web App
 
-```
-create_config({
-  service_name:    "lab",
-  server_name:     "lab.tootie.tv",
-  upstream_app:    "100.88.16.79",
-  upstream_port:   8765,
-  upstream_proto:  "http",
-  mcp_upstream_app:   "100.88.16.79",
-  mcp_upstream_port:  8765,
-  mcp_upstream_proto: "http",
-  auth_method:     "none",
-  enable_quic:     false,
-})
+For non-MCP services, prefer the LinuxServer sample from the target host:
+
+```bash
+ssh "$SWAG_EDGE_HOST" 'bash -s' -- "$SWAG_PROXY_CONFS_PATH" <<'REMOTE'
+set -euo pipefail
+cat "$1/_template.subdomain.conf.sample"
+REMOTE
 ```
 
-## Pattern C — Plain web app, no MCP semantics
-
-When the service doesn't speak MCP at all (no `/.well-known/oauth-*`, no streaming `/mcp`), the cleanest thing is **don't render through `mcp.subdomain.conf.j2`** — just write a vanilla LinuxServer-style subdomain conf. swag-mcp's template adds dead routes for non-MCP apps; harmless, but noisy.
-
-If you must use the same template (so swag-mcp can manage the file), the unused `/mcp` and `/session*` blocks just sit there returning 502s nobody calls. Set `mcp_upstream_*` equal to `upstream_*` and `auth_method` to whatever's appropriate.
-
-For new non-MCP services, prefer hand-writing a config based on the upstream LinuxServer.io sample (`/mnt/appdata/swag/nginx/proxy-confs/<name>.subdomain.conf.sample` if one exists), or copy `lab.subdomain.conf` and strip the `/mcp` and `/session*` blocks.
-
-## How the three differ at a glance
-
-|  | syslog | lab | axon |
-|---|---|---|---|
-| `auth_method` | `authelia` | `none` | `authelia` |
-| `authelia-server.conf` include | yes | no | yes |
-| `authelia-location.conf` in `/` | yes | no | yes |
-| `mcp-server.conf` include | yes | yes | yes |
-| `mcp-location.conf` in `/mcp` and `/session*` | yes | yes | yes |
-| Origin guard on `/mcp` | yes | yes | yes |
-| Upstream | `100.88.16.79:3100` | `100.88.16.79:8765` | `100.88.16.79:8001` |
-| OAuth-protected `/mcp`? | yes (via sidecar) | yes (upstream-owned) | yes (via sidecar) |
+Copy that shape, set `server_name SERVICE_NAME.PUBLIC_BASE_DOMAIN`, and proxy
+`location /` to `UPSTREAM_PROTO://UPSTREAM_APP:UPSTREAM_PORT`. Add one auth
+include pair only if the user wants the app protected by that provider.

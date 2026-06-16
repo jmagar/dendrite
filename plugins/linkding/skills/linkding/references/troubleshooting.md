@@ -38,12 +38,14 @@ Common issues and solutions when working with the Linkding API.
    - Log into Linkding web UI
    - Go to Settings → Integrations
    - Generate new API token
-   - Update your `.env` or config file
+   - Update plugin userConfig so the setup hook regenerates local config
 
 4. **Check environment variables:**
    ```bash
-   # Load from .env
-   source ~/.lab/.env
+   # Load generated plugin config
+   set -a
+   source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/config.env"
+   set +a
 
    echo "URL: $LINKDING_URL"
    echo "API Key set: $([ -n "$LINKDING_API_KEY" ] && echo "Yes" || echo "No")"
@@ -134,10 +136,9 @@ Use a URL shortener or trim query parameters before saving. Linkding has a 2048 
 1. **Always check before creating:**
    ```bash
    # Check if URL exists first
-   EXISTING=$(curl -s -X POST "$LINKDING_URL/api/bookmarks/check/" \
+   EXISTING=$(curl -sG "$LINKDING_URL/api/bookmarks/check/" \
      -H "Authorization: Token $LINKDING_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"url": "https://example.com"}' | jq -r '.bookmark.id // empty')
+     --data-urlencode "url=https://example.com" | jq -r '.bookmark.id // empty')
 
    if [ -n "$EXISTING" ]; then
      echo "Already exists: ID $EXISTING"
@@ -355,10 +356,9 @@ curl -s "$LINKDING_URL/api/bookmarks/?limit=100" \
 2. **Check for duplicates first:**
    ```bash
    # Skip if already exists
-   EXISTS=$(curl -s -X POST "$LINKDING_URL/api/bookmarks/check/" \
+   EXISTS=$(curl -sG "$LINKDING_URL/api/bookmarks/check/" \
      -H "Authorization: Token $LINKDING_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d "{\"url\": \"$url\"}" | jq -r '.bookmark.id // empty')
+     --data-urlencode "url=$url" | jq -r '.bookmark.id // empty')
 
    if [ -z "$EXISTS" ]; then
      # Create bookmark
@@ -390,7 +390,7 @@ curl -s "$LINKDING_URL/api/bookmarks/?limit=100" \
     tag_names,
     date_added,
     date_modified,
-    archived,
+    is_archived,
     unread,
     shared
   }'
@@ -557,7 +557,7 @@ curl: (60) SSL certificate problem: unable to get local issuer certificate
 
 3. **Use HTTP for local development:**
    ```bash
-   export LINKDING_URL="http://localhost:9090"
+   export LINKDING_URL="https://linkding.example.com"
    ```
 
 ---

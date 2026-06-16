@@ -28,6 +28,10 @@ Jellyfin HTTP API, Docker/container inspection, or server logs.
 
 ## API Notes
 
+- Prefer `scripts/jellyfin-api.sh` for repeatable API checks. It loads
+  `JELLYFIN_URL` and `JELLYFIN_API_KEY` from the arrs plugin config or
+  `~/.lab/.env`, keeps the token out of output, and provides common commands
+  such as `info`, `users`, `sessions`, `libraries`, `search`, and `item`.
 - Common REST roots are `/System/Info`, `/Users`, `/Sessions`,
   `/Library/VirtualFolders`, `/Items`, `/ScheduledTasks`, and `/Devices`.
 - Jellyfin typically accepts API keys through `X-Emby-Token` or

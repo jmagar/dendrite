@@ -25,7 +25,7 @@ script → run dir → self-verify) with testing-specific instrumentation added.
 ## Prerequisites
 - A Chrome with `--remote-debugging-port` open (default 9222; override `WEBTEST_CDP`).
 - Playwright venv: `uv venv /tmp/pw_venv --python 3.12 && uv pip install --python
-  /tmp/pw_venv/bin/python "playwright>=1.59,<1.60"`.
+  /tmp/pw_venv/bin/python "playwright>=1.59"`.
 
 ## Companion skills
 - `webwright` / `webwright:run` / `webwright:craft` — single-task web automation + reusable scripts.

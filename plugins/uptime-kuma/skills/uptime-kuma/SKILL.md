@@ -28,6 +28,10 @@ URL="${UPTIME_KUMA_URL%/}"
 
 ## Read monitor state via /metrics (needs the API key)
 
+Prefer `scripts/uptime-kuma-api.sh` for common read-only checks. It sources the
+generated plugin config and exposes `metrics`, `down`, `response-times`, `certs`,
+`status-page`, and `heartbeat`.
+
 Uptime Kuma exposes Prometheus metrics. Auth is HTTP Basic with an **empty username** and the API key as the password (create the key under Settings → API Keys in the UI).
 
 ```bash

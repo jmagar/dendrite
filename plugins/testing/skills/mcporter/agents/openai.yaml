@@ -1,4 +1,4 @@
 interface:
   display_name: "Mcporter"
-  short_description: "Mcporter, says \"test an MCP server\", \"smoke-test these..."
-  default_prompt: "Use $mcporter for mcporter, says \"test an MCP server\", \"smoke-test these."
+  short_description: "Use when testing, listing, inspecting, or calling MCP servers with the mcporter CLI."
+  default_prompt: "Use $mcporter to discover MCP tools/resources, call them safely, and build repeatable mcporter smoke tests."

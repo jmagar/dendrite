@@ -9,6 +9,11 @@ Self-hosted photo and video management. Talk to it directly over the Immich REST
 
 ## How to call it
 
+Prefer `scripts/immich-api.sh` for common read-only calls. It sources the
+generated Immich config or `~/.lab/.env`, sends `x-api-key` on each request, and
+exposes `ping`, `version`, `about`, `statistics`, `me`, `albums`, `album`,
+`asset`, and `search`.
+
 Read the base URL and API key from the generated plugin config first, falling
 back to `~/.lab/.env` during migration:
 

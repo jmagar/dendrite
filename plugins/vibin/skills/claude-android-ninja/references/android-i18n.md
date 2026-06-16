@@ -592,7 +592,7 @@ fun ProductsListView(state: ProductsUiState) {
 - Use import aliases (`as CoreUiR`) when a file reads strings from multiple modules.
 - Promote shared copy to `core:common` or `core:ui` when multiple features need the same key.
 - Shared UI chrome strings live in `core:ui`; feature modules depend on that module instead of copying XML.
-- Non-transitive R class wiring: [gradle-setup.md → Non-transitive R classes](/references/gradle-setup.md#non-transitive-r-classes).
+- Non-transitive R class wiring: [gradle-setup.md → Non-transitive R classes](gradle-setup.md#non-transitive-r-classes).
 
 ## Architecture Integration
 

@@ -22,9 +22,9 @@ import caldav
 
 # Connect with username/password
 client = caldav.DAVClient(
-    url='http://localhost:5232',
-    username='admin',
-    password='password'
+    url='https://radicale.example.test',
+    username='<radicale-username>',
+    password='<radicale-password>'
 )
 
 # Test connection

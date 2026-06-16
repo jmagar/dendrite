@@ -5,7 +5,7 @@ description: This skill should be used when the user asks about torrents, downlo
 
 # qBittorrent WebUI API
 
-Manage torrents via qBittorrent's WebUI API (v4.1+).
+Manage torrents via qBittorrent's WebUI API (v4.1+; the helper script maps pause/resume commands to qBittorrent 5.x start/stop endpoints).
 
 ## Purpose
 
@@ -27,7 +27,7 @@ Credentials are configured in the **arrs plugin settings** (userConfig). A `Sess
 ```bash
 QBITTORRENT_URL="http://localhost:8080"
 QBITTORRENT_USERNAME="admin"
-QBITTORRENT_PASSWORD="adminadmin"
+QBITTORRENT_PASSWORD="<configured-password>"
 ```
 
 ## Quick Reference
@@ -126,7 +126,7 @@ When the user asks about torrents:
 ## Notes
 
 - Requires network access to your qBittorrent server
-- Uses qBittorrent WebUI API v4.1+
+- Uses qBittorrent WebUI API v4.1+; qBittorrent 5.x renamed pause/resume API endpoints to stop/start, and the script handles that compatibility detail.
 - All data operations return JSON
 - **Delete operations with --files are permanent** - always confirm before deleting downloaded files
 - Speed limits support units: K (KB/s), M (MB/s), or raw bytes

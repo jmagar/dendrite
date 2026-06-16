@@ -1,42 +1,43 @@
-# Nginx includes used by SWAG configs
+# SWAG Include Files
 
-All of these are deployed in `/mnt/appdata/swag/nginx/` (mapped from the host SWAG appdata mount). Your config just references them via `include /config/nginx/<file>.conf` — that path is the in-container view. Do not re-author them.
+These paths are inside the SWAG container as `/config/nginx/<file>.conf`.
+Confirm they exist on the target host before using a provider-specific include.
 
 ## Always
 
 | Include | Purpose |
 |---|---|
-| `ssl.conf` | TLS termination — listens 443, ALPN, OCSP, wildcard cert for `*.tootie.tv`. Always include at the top of the server block. |
-| `proxy.conf` | Common upstream proxy headers (X-Forwarded-*, Host, Connection, WebSocket upgrade). Include inside every location block that proxies. |
-| `resolver.conf` | Docker DNS resolver — required for in-network upstream resolution. Include inside every proxying location block, before `proxy_pass`. |
+| `ssl.conf` | TLS settings and certificate wiring. |
+| `proxy.conf` | Shared upstream proxy headers and websocket handling. |
+| `resolver.conf` | DNS resolver for container names and upstream hosts. |
 
-## MCP services (`mcp-aware`)
+## MCP-Aware Services
 
 | Include | Purpose |
 |---|---|
-| `mcp-server.conf` | The "Axon Standard" server-side MCP sidecar. Provides `/.well-known/oauth-authorization-server`, `/jwks`, `/register`, `/authorize`, `/token`, `/revoke`, `/_oauth_verify`, `/health`, origin validation (`$origin_valid`), and security headers. Include at the **server level**. Requires `$upstream_*`, `$mcp_upstream_*`, and `$oauth_upstream` to be `set` before the include. |
-| `mcp-location.conf` | Per-location MCP transport: zero-buffering, 24h streaming timeouts, MCP/SSE/CORS headers. Include inside `/mcp` and `/(session|sessions)` location blocks after `proxy.conf`. |
+| `mcp-server.conf` | Server-level MCP/OAuth discovery, origin validation variables, and related routes. |
+| `mcp-location.conf` | Streaming/CORS/proxy settings for `/mcp` and session routes. |
 
-## Authentication overlays (zero or one set per server)
+Only include these when the target SWAG host provides them and the upstream
+service actually exposes MCP/session routes.
 
-Pair the `-server` include at the server level with the `-location` include inside `location /`.
+## Auth Overlays
 
-| Include set | When |
-|---|---|
-| `authelia-server.conf` + `authelia-location.conf` | App at `/` should require Authelia 2FA. Default for most services. |
-| `authentik-server.conf` + `authentik-location.conf` | Alternate IdP — only when explicitly asked. |
-| `tinyauth-server.conf` + `tinyauth-location.conf` | Lightweight auth — only when explicitly asked. |
-| (none) | The upstream handles auth itself end-to-end (e.g. `lab`, anything with built-in OAuth). |
+Use zero or one provider. Pair the server include with its matching location
+include.
 
-## Combinations seen in production
-
-| Service | Includes at server level | Includes in `location /` |
+| Provider | Server include | Location include |
 |---|---|---|
-| `syslog` | `mcp-server.conf`, `authelia-server.conf` | `authelia-location.conf`, `resolver.conf`, `proxy.conf` |
-| `axon` | `mcp-server.conf`, `authelia-server.conf` | `authelia-location.conf`, `resolver.conf`, `proxy.conf` |
-| `lab` | `mcp-server.conf` | `resolver.conf`, `proxy.conf` |
+| Authelia | `authelia-server.conf` | `authelia-location.conf` |
+| Authentik | `authentik-server.conf` | `authentik-location.conf` |
+| Tinyauth | `tinyauth-server.conf` | `tinyauth-location.conf` |
+| LDAP | `ldap-server.conf` | `ldap-location.conf` |
 
-## Avoid
+If the upstream owns auth, use no external auth overlay.
 
-- **`oauth.conf`** — exists as a `.bak.<timestamp>` in `/mnt/appdata/swag/nginx/` from a prior architecture. Don't reintroduce. The current world is `mcp-server.conf` + `mcp-location.conf`.
-- **Re-authoring any of these in-line** in your subdomain conf. Always include, never inline.
+## QUIC / HTTP3
+
+Only add QUIC or HTTP3 directives when nearby configs on the same SWAG host
+already show the supported local pattern. Do not invent `listen ... quic`,
+`http3`, or provider-specific include lines from memory; SWAG image versions and
+site-confs vary.

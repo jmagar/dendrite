@@ -7,8 +7,9 @@ Use the `mcporter` CLI to discover, inspect, and call MCP servers from the shell
 Encodes the working patterns for `mcporter` (the MCP CLI):
 
 - Discover configured servers (`mcporter list --json`)
-- Inspect a server's tools / resources (`mcporter inspect`)
+- Inspect a server's tools (`mcporter list <server> --schema`) and resources (`mcporter resource <server>`)
 - Call a tool ad-hoc with the right arg form (`--args '{...}'` vs positional `k=v`)
+- Read resources with `mcporter resource <server> <uri>`
 - Generate a CLI binding for a server when you'll script against it repeatedly
 - Write a smoke-test harness using `scripts/smoke.sh` as a template
 - Recognize the common failure modes (transport vs tool error, auth state, schema mismatches) and respond without guessing
@@ -28,12 +29,12 @@ Not for designing new MCP servers, writing server-side handlers, or generic API 
 ## Usage — smoke test
 
 ```bash
-cp ~/.agents/src/skills/mcporter/scripts/smoke.sh tests/mcp-smoke.sh
-# edit the TOOLS / RESOURCES arrays for the server under test
+cp plugins/testing/skills/mcporter/scripts/smoke.sh tests/mcp-smoke.sh
+# edit the CASES array for the server under test
 ./tests/mcp-smoke.sh <server-name>
 ```
 
-The script exits 2 if both arrays are empty (so a copy-and-forget doesn't silently report "0 passed").
+The script exits 2 if `CASES` is empty (so a copy-and-forget doesn't silently report "0 passed").
 
 ## Files
 

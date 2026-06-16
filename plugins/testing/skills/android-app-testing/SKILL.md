@@ -14,8 +14,8 @@ share one report format (`references/report-format.md`).
 - **PRIMARY — direct local adb** (`scripts/androidtest.sh`). Fully validated, no gateway needed.
   Everything below uses this.
 - **OPTIONAL — claude-in-mobile** via the Lab gateway (richer semantic locators, autopilot crawler).
-  Currently blocked by a container adb gap — see `references/claude-in-mobile-path.md`. Don't reach
-  for it unless that's been fixed; the adb path covers the full loop.
+  Use it only after confirming the gateway sees a device/emulator; if it does not, follow
+  `references/claude-in-mobile-path.md`. The adb path covers the full loop without the gateway.
 
 ## Prerequisites
 - **Android SDK** with `adb` + `emulator` (default `~/Android/Sdk/...`; override `ADB`/`EMULATOR`).
@@ -34,6 +34,7 @@ androidtest.sh shot   <run_dir> <name>   # screencap -> evidence/<name>.png (pul
 androidtest.sh tree   <run_dir> <name>   # uiautomator dump -> evidence/<name>.xml (host)
 androidtest.sh taptext <run_dir> <text>  # find text in a fresh UI dump, tap its center
 androidtest.sh tapxy  <x> <y>            # input tap
+androidtest.sh swipe  <x1> <y1> <x2> <y2> [ms] # input swipe
 androidtest.sh text   "<string>"         # input text into focused field
 androidtest.sh key    <BACK|HOME|ENTER|…># input keyevent
 androidtest.sh current                   # current focused activity/package
@@ -52,7 +53,7 @@ All primitives are live-validated (2026-05-29) against `axon_test` (Android 15, 
    enumerate clickable elements, text fields, tabs, nav targets. Build the feature checklist (merge
    with any user-supplied spec) — one row per feature in the report. Write `plan.md` in the run dir.
 4. **Exercise each feature.** For each: `logclear` → act (`taptext` for semantic taps, `tapxy` for
-   coords, `text`/`key` for input, `swipe` via the gateway or `input swipe` coords) → `shot` +
+   coords, `text`/`key` for input, `swipe` for gestures) → `shot` +
    `tree` for evidence → check `current` (did navigation happen?) and `crashes` (FATAL/ANR?).
    Classify PASS / PARTIAL / FAIL / BLOCKED.
    - Prefer **`taptext`** over raw coordinates — it survives layout changes (coords don't).
@@ -86,4 +87,4 @@ device to the host run dir automatically.
 
 ## References
 - `references/report-format.md` — shared cross-platform report spec, run-dir layout, verdicts.
-- `references/claude-in-mobile-path.md` — the optional gateway path + its current blocker + fix.
+- `references/claude-in-mobile-path.md` — optional gateway path, checks, and ADB recovery.

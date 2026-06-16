@@ -7,7 +7,7 @@ description: Use when the user asks to drive or test Claude's reserved agent-os 
 
 A real Windows 11 desktop reserved for Claude, running on host `tootie` as the **`agent-os`** VM (container name `agent-os-win11`, image `dockur/windows`). "Winbox" is only the historical nickname; the skill name and official name are **agent-os**. Both `agent-os` and `winbox` remain trigger phrases for compatibility.
 
-Drive it through **Windows-MCP** ([CursorTouch/Windows-MCP](https://github.com/CursorTouch/Windows-MCP)) — an MCP server installed inside the VM that exposes native click/type/shell/clipboard/filesystem/registry tools as `mcp__windows-mcp__*`.
+Drive it through **Windows-MCP** ([CursorTouch/Windows-MCP](https://github.com/CursorTouch/Windows-MCP)) — an MCP server installed inside the VM that exposes native click/type/shell/clipboard/filesystem/registry tools. In Claude Code these usually surface as `mcp__plugin_agent-os_windows-mcp__*`, while older installs may show `mcp__windows-mcp__*`.
 
 The sandbox is Claude's. Install software, write to the registry, kill processes — don't ask first. Only think twice about actions that escape into the Docker host (Docker daemon, mounted volumes, host network).
 
@@ -32,7 +32,7 @@ This skill ships in the `agent-os` plugin. All connection and host details come 
 
 Sensitive values (the token) substitute in configs and reach subprocesses as env vars, but are **not** expanded into skill/agent prose. Commands below read the `$CLAUDE_PLUGIN_OPTION_*` env vars. Any concrete hostnames/IPs/paths shown elsewhere are just the **defaults** — your configured values take precedence. **Never echo** the token.
 
-> **Tool namespace.** Because windows-mcp is provided by this plugin, its tools surface under the plugin's MCP namespace (typically `mcp__plugin_agent-os_windows-mcp__<Tool>`). This skill refers to them by base name (`Screenshot`, `Click`, `PowerShell`, …) and the historical `mcp__windows-mcp__*` form — match whichever your client shows in `/mcp`.
+> **Tool namespace.** Because windows-mcp is provided by this plugin, its tools surface under the plugin's MCP namespace (typically `mcp__plugin_agent-os_windows-mcp__<Tool>`). Older installs may expose the historical `mcp__windows-mcp__<Tool>` form. This skill refers to tools by base name (`Screenshot`, `Click`, `PowerShell`, ...) in examples; match whichever namespace your client shows in `/mcp`.
 
 ## Why Windows-MCP, not noVNC
 
@@ -82,7 +82,7 @@ The bearer token lives in plugin userConfig (secure OS storage) — and, if you 
 
 ## Tool surface
 
-All tools are namespaced `mcp__windows-mcp__<Name>`. Use them directly — they're loaded when the windows-mcp server is up.
+Use the Windows-MCP tools directly once the server is up. In examples below, `Screenshot` means the matching namespaced MCP tool, such as `mcp__plugin_agent-os_windows-mcp__Screenshot` or the legacy `mcp__windows-mcp__Screenshot`.
 
 ### Look at the screen first
 
@@ -221,7 +221,7 @@ These predate Windows-MCP but remain useful where the MCP path is awkward:
 ## Operating notes
 
 - The `agent-os-win11` container persists `/storage` across restarts. Installed software, registry edits, and most filesystem state survive reboots.
-- If a task is GUI-bound and slow, kick it off through `App`/`PowerShell`, then `ScheduleWakeup` or move on. Come back with a `Screenshot` to check progress.
+- If a task is GUI-bound and slow, kick it off through `App`/`PowerShell`, write progress or output to a known path, then move on. Come back with `Screenshot`, `Process`, or a follow-up `PowerShell` poll to check progress.
 - For *anything* expressible as PowerShell, prefer `PowerShell` over clicking. It's faster, more reliable, and leaves a paper trail in the command rather than in pixel coordinates.
 - Don't paste credentials via `Type` — round-trip through `Clipboard` so they don't end up in screenshots or logs of the typing stream.
 

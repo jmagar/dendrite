@@ -51,7 +51,9 @@ curl -I https://bytestash.example.com
 
 ### Checks
 ```bash
-grep '^BYTESTASH_' ~/.lab/.env
+for var in BYTESTASH_URL BYTESTASH_USERNAME BYTESTASH_PASSWORD BYTESTASH_TOKEN; do
+  if [ -n "${!var:-}" ]; then echo "$var=set"; else echo "$var=missing"; fi
+done
 ```
 
 ### Fixes

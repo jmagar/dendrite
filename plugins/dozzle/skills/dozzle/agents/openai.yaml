@@ -1,4 +1,4 @@
 interface:
   display_name: "Dozzle"
-  short_description: "This skill should be used when the user wants to view Docker container logs via Dozzle, check Dozzle health or version, list running containers, troubleshoot a Dozzle 401 or expired session cookie, configure Dozzle authentication, or enable and use Dozzle's native MCP endpoint. Also use when the user asks why mcp__lab__dozzle or lab dozzle does not work \u2014 the Lab command wrapper is stale; the native Dozzle MCP server is the correct path"
-  default_prompt: "Use $dozzle for this skill should be used when the user wants to view Docker container logs via Dozzle, check Dozzle health or version, list running containers, troubleshoot a Dozzle 401 or expired session cookie, configure Dozzle authentication, or enable and use Dozzle's native MCP endpoint. Also use when the user asks why mcp__lab__dozzle or lab dozzle does not work \u2014 the Lab command wrapper is stale; the native Dozzle MCP server is the correct path."
+  short_description: "Use when the user wants Dozzle Docker logs, container log discovery, health/version checks, auth/session troubleshooting, or native Dozzle MCP setup."
+  default_prompt: "Use $dozzle to inspect Dozzle container logs, check health/version, troubleshoot auth, and configure the native Dozzle MCP endpoint."

@@ -18,31 +18,21 @@ Manage Usenet downloads via SABnzbd.
 2. Go to **Config → General → Security**
 3. Copy your **API Key**
 
-### 2. Add Credentials to .env
+### 2. Configure Plugin Settings
 
-Add these lines to `~/.config/lab-arrs/config.env`:
+Set these values in the arrs plugin settings. The plugin `SessionStart` hook
+writes `~/.config/lab-arrs/config.env`; do not commit or hand-edit credentials
+in this repo.
 
 ```bash
 SABNZBD_URL="http://localhost:8080"
 SABNZBD_API_KEY="<your_api_key>"
 ```
 
-Replace:
-- `http://localhost:8080` with your SABnzbd URL
-- `<your_api_key>` with your actual API key
-
-### 3. Secure the .env File
+### 3. Test It
 
 ```bash
-chmod 600 ~/.config/lab-arrs/config.env
-```
-
-**Important:** Never commit the `.env` file to git. It's already in `.gitignore`.
-
-### 4. Test It
-
-```bash
-./skills/sabnzbd/scripts/sab-api.sh status
+./scripts/sab-api.sh status
 ```
 
 ## Usage Examples
@@ -51,44 +41,44 @@ chmod 600 ~/.config/lab-arrs/config.env
 
 ```bash
 # View queue
-sab-api.sh queue
+./scripts/sab-api.sh queue
 
 # Pause/resume all
-sab-api.sh pause
-sab-api.sh resume
+./scripts/sab-api.sh pause
+./scripts/sab-api.sh resume
 
 # Pause specific job
-sab-api.sh pause-job SABnzbd_nzo_xxxxx
+./scripts/sab-api.sh pause-job SABnzbd_nzo_xxxxx
 ```
 
 ### Add downloads
 
 ```bash
 # Add by URL
-sab-api.sh add "https://indexer.com/get.php?guid=..."
+./scripts/sab-api.sh add "https://indexer.com/get.php?guid=..."
 
 # Add with options
-sab-api.sh add "URL" --name "My Download" --category movies --priority high
+./scripts/sab-api.sh add "URL" --name "My Download" --category movies --priority high
 
 # Add local NZB file
-sab-api.sh add-file /path/to/file.nzb --category tv
+./scripts/sab-api.sh add-file /path/to/file.nzb --category tv
 ```
 
 ### Speed control
 
 ```bash
-sab-api.sh speedlimit 50    # 50% of max
-sab-api.sh speedlimit 5M    # 5 MB/s
-sab-api.sh speedlimit 0     # Unlimited
+./scripts/sab-api.sh speedlimit 5120  # 5 MB/s, in KB/s
+./scripts/sab-api.sh speedlimit 5M    # Helper converts M/K suffixes
+./scripts/sab-api.sh speedlimit 0     # Unlimited
 ```
 
 ### History
 
 ```bash
-sab-api.sh history
-sab-api.sh history --limit 20 --failed
-sab-api.sh retry <nzo_id>       # Retry failed
-sab-api.sh retry-all            # Retry all failed
+./scripts/sab-api.sh history
+./scripts/sab-api.sh history --limit 20 --failed
+./scripts/sab-api.sh retry <nzo_id>       # Retry failed
+./scripts/sab-api.sh retry-all            # Retry all failed
 ```
 
 ## Environment Variables
@@ -100,13 +90,8 @@ SABNZBD_URL="http://localhost:8080"
 SABNZBD_API_KEY="your-api-key"
 ```
 
-You can also override these temporarily in your shell:
-
-```bash
-export SABNZBD_URL="http://192.168.1.100:8080"
-export SABNZBD_API_KEY="different-key"
-./scripts/sab-api.sh status
-```
+To change credentials, update the arrs plugin settings so the next
+`SessionStart` hook writes the correct local config file.
 
 ## API Reference
 

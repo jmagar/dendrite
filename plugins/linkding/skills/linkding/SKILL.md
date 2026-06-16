@@ -22,17 +22,11 @@ Operations include both read and write actions. **Always confirm before deleting
 
 ## Setup
 
-Credentials: plugin userConfig writes
-`${XDG_CONFIG_HOME:-~/.config}/lab-linkding/config.env`; `~/.lab/.env` remains a
-fallback during migration.
-
-```bash
-LINKDING_URL="http://localhost:9090"
-LINKDING_API_KEY="your-api-key"
-```
-
-Get your API token from Linkding Settings page. `LINKDING_TOKEN` is accepted as
-a local alias when `LINKDING_API_KEY` is unset.
+Credentials come from plugin userConfig. The hook writes
+`${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/config.env`; `~/.lab/.env`
+remains a fallback during migration. Do not hand-edit committed files or echo
+the API token. `LINKDING_TOKEN` is accepted as a local alias when
+`LINKDING_API_KEY` is unset.
 
 ## Quick Reference
 
@@ -184,8 +178,9 @@ Bundled references (load as needed):
 
 ## Agent Tool Usage
 
-Run this skill's scripts with the Bash tool directly:
+Run this skill's scripts from the skill directory, or use an absolute path when
+the current working directory is elsewhere:
 
 ```bash
-./skills/linkding/scripts/linkding-api.sh [args]
+./scripts/linkding-api.sh [args]
 ```

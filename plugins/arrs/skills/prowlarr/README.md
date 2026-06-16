@@ -18,18 +18,16 @@ Search across all your indexers and manage Prowlarr.
 2. Go to **Settings → General → Security**
 3. Copy your **API Key**
 
-### 2. Add Credentials to .env
+### 2. Configure Credentials
 
-Add the following to `~/.config/lab-arrs/config.env`:
+Set these values in the arrs plugin settings. The plugin `SessionStart` hook writes `~/.config/lab-arrs/config.env` for the helper script; do not commit or manually document real credentials:
 
 ```bash
 PROWLARR_URL="http://localhost:9696"
 PROWLARR_API_KEY="<your_api_key>"
 ```
 
-Replace:
-- `http://localhost:9696` with your Prowlarr URL
-- `<your_api_key>` with your actual API key
+Use your Prowlarr URL and API key from the Web UI.
 
 ### 3. Test It
 
@@ -94,7 +92,7 @@ prowlarr-api.sh sync
 
 ## Environment Variables
 
-The skill loads credentials from `~/.config/lab-arrs/config.env`. You can also override them temporarily:
+The skill loads credentials from the generated `~/.config/lab-arrs/config.env`. You can also override them temporarily:
 
 ```bash
 PROWLARR_URL="https://prowlarr.example.com" \
@@ -113,7 +111,7 @@ Detailed API documentation is available in the `references/` directory:
 ## Troubleshooting
 
 **"Missing URL or API key"**
-→ Check your `.env` file exists at `~/.config/lab-arrs/config.env` and contains `PROWLARR_URL` and `PROWLARR_API_KEY`
+→ Check the arrs plugin settings and restart the session so the hook regenerates `~/.config/lab-arrs/config.env` with `PROWLARR_URL` and `PROWLARR_API_KEY`
 
 **Connection refused**
 → Verify your Prowlarr URL is correct and accessible

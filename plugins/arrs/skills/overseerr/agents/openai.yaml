@@ -1,4 +1,4 @@
 interface:
   display_name: "Overseerr"
-  short_description: "Request movies and TV shows via Overseerr, monitor request..."
-  default_prompt: "Use $overseerr for request movies and TV shows via Overseerr, monitor request."
+  short_description: "Search, request, and monitor Overseerr media requests."
+  default_prompt: "Use $overseerr to search, request, and monitor Overseerr media requests."

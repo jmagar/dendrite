@@ -5,21 +5,35 @@ description: "This skill should be used when the user wants to query a Neo4j gra
 
 # Neo4j
 
-Graph database — nodes, relationships, Cypher queries. Drive it with Cypher over Neo4j's **HTTP transactional API**.
+Graph database — nodes, relationships, Cypher queries. Prefer read-only Cypher over Neo4j's **HTTP transactional API**; use `cypher-shell` only when HTTP is not exposed.
 
 ## How to call it
 
 ```bash
-NEO4J_USER=$(grep -E '^NEO4J_USER='     ~/.lab/.env | cut -d= -f2-)
-NEO4J_PASSWORD=$(grep -E '^NEO4J_PASSWORD=' ~/.lab/.env | cut -d= -f2-)
-NEO4J_DB=$(grep -E '^NEO4J_DB='         ~/.lab/.env | cut -d= -f2-); NEO4J_DB=${NEO4J_DB:-neo4j}
-# NOTE: ~/.lab/.env stores NEO4J_URL as a bolt:// endpoint, which curl cannot speak.
-# The HTTP API listens separately (default port 7474). Set NEO4J_HTTP_URL to it:
-NEO4J_HTTP_URL="http://<neo4j-host>:7474"  # adjust host/port to your HTTP listener
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-neo4j/config.env" 2>/dev/null || source ~/.lab/.env
+
+: "${NEO4J_DB:=neo4j}"
+
+# Prefer an explicit HTTP endpoint. If only the common bolt:// URL is present,
+# derive the default HTTP URL for the same host.
+if [ -z "${NEO4J_HTTP_URL:-}" ] && [ -n "${NEO4J_URL:-}" ]; then
+  NEO4J_HTTP_URL="$(printf '%s\n' "$NEO4J_URL" | sed -E 's#^bolt(s)?://#http://#; s#:7687/?$#:7474#')"
+fi
+
+[ -n "${NEO4J_USER:-}" ] && [ -n "${NEO4J_PASSWORD:-}" ] && [ -n "${NEO4J_HTTP_URL:-}" ] || {
+  echo "neo4j not configured - set NEO4J_USER, NEO4J_PASSWORD, and NEO4J_HTTP_URL (or NEO4J_URL)"
+}
+
 AUTH=(-u "$NEO4J_USER:$NEO4J_PASSWORD")
 ```
 
-Auth is HTTP Basic. The `bolt://` URL in `~/.lab/.env` is for binary Bolt clients (`cypher-shell`, drivers) — for curl you need the HTTP listener URL. Never echo the password.
+Auth is HTTP Basic. `bolt://` URLs are for binary Bolt clients (`cypher-shell`, drivers); curl needs the HTTP listener. Never echo the password.
+
+Configure `neo4j_user`, sensitive `neo4j_password`, optional
+`neo4j_http_url`/`neo4j_url`, and optional `neo4j_db` in Claude plugin settings
+or Gemini extension settings. The SessionStart/ConfigChange hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-neo4j/config.env` with mode `600`. Use
+`~/.lab/.env` only as a local migration fallback.
 
 ## Running Cypher
 
@@ -37,7 +51,6 @@ cypher() {
 | Intent | Cypher (pass to `cypher`) |
 |---|---|
 | Read query | `MATCH (n) RETURN n LIMIT 25` |
-| Write query (**destructive**) | `CREATE (n:Person {name:'Ada'}) RETURN n` |
 | List node labels | `CALL db.labels()` |
 | List relationship types | `CALL db.relationshipTypes()` |
 | List constraints | `SHOW CONSTRAINTS` |
@@ -45,7 +58,17 @@ cypher() {
 | List databases | `SHOW DATABASES` |
 | Server / components info | `CALL dbms.components()` |
 
-Multi-statement transaction: pass several objects in the `statements` array of a single `tx/commit` call. Server discovery (available endpoints) is `GET $NEO4J_HTTP_URL/`.
+Server discovery (available endpoints) is `GET $NEO4J_HTTP_URL/`. Multi-statement transactions are possible by passing several objects in the `statements` array, but do that only when the user explicitly asks.
+
+## Checking the response
+
+The transactional API usually returns HTTP 200 even when Cypher failed. Inspect `.errors` before trusting `.results`:
+
+```bash
+cypher 'MATCH (n) RETURN n LIMIT 5' | jq '{errors, results}'
+```
+
+Any non-empty `errors` array means the query failed; report the code and message instead of treating the result as empty data.
 
 ## Destructive actions
 
@@ -53,13 +76,15 @@ Any write Cypher (`CREATE`, `MERGE`, `SET`, `DELETE`, `DROP`, etc.) mutates the 
 
 ## Configuration
 
-`NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DB`, and `NEO4J_URL` (bolt) live in `~/.lab/.env`. For curl you additionally need the HTTP listener URL (`NEO4J_HTTP_URL`), which is not stored there by default. Verify connectivity:
+`NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DB`, `NEO4J_URL` (bolt), and optionally
+`NEO4J_HTTP_URL` come from generated config, environment variables, or the
+legacy `~/.lab/.env` fallback. Verify connectivity:
 
 ```bash
 curl -sS "${AUTH[@]}" "$NEO4J_HTTP_URL/" -w '\nHTTP %{http_code}\n'
 ```
 
-If only Bolt is exposed, use `cypher-shell -a "$NEO4J_URL" -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"` instead of curl.
+If only Bolt is exposed, use `cypher-shell -a "$NEO4J_URL" -u "$NEO4J_USER" -p "$NEO4J_PASSWORD"` instead of curl. Do not pass mutating Cypher this way unless the user explicitly confirmed the write.
 
 ## When NOT to use this skill
 

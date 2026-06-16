@@ -19,7 +19,7 @@ CLIPBOARD_HOST="${CLIPBOARD_HOST:-${NIRCMD_HOST:-steamy-wsl}}"
 CLIPBOARD_NIRCMD="${CLIPBOARD_NIRCMD:-${NIRCMD_PATH:-/mnt/c/tools/nircmd/nircmd.exe}}"
 CLIPBOARD_POWERSHELL="${CLIPBOARD_POWERSHELL:-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe}"
 CLIPBOARD_TMP_DIR="${CLIPBOARD_TMP_DIR:-/mnt/c/Users/Docker/AppData/Local/Temp}"
-SKILL_DIR=/home/jmagar/.agents/src/skills/clipboard
+SKILL_DIR=<this skill directory>
 ```
 
 The defaults fall through to `nircmd`'s env vars so a user who set `NIRCMD_HOST` for that skill doesn't have to set anything twice.
@@ -41,7 +41,7 @@ cat some-file.md | "$SKILL_DIR/scripts/clip.sh" -
 "$SKILL_DIR/scripts/clip.sh" "résumé with 🎉 émojis"
 ```
 
-The wrapper auto-detects content type, picks the right transport, and reports which one it used. Always tell the user what landed on their clipboard so they know what they're about to paste.
+Resolve `SKILL_DIR` to the directory containing this `SKILL.md` in the active installation before running the helper. The wrapper auto-detects content type, picks the right transport, and reports which one it used. Always tell the user what landed on their clipboard so they know what they're about to paste.
 
 ## Pull — read clipboard contents
 

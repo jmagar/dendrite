@@ -1,4 +1,4 @@
 interface:
   display_name: "Navidrome"
-  short_description: "This skill should be used when the user wants to interact with their Navidrome self-hosted music server \u2014 checking server status, browsing artists or albums, searching the music library, listing playlists, viewing now-playing or recently played tracks, or accessing starred items. Triggers include: \\\"what's playing on Navidrome\\\", \\\"show my playlists\\\", \\\"search for an artist\\\", \\\"recent albums\\\", \\\"Navidrome status\\\""
-  default_prompt: "Use $navidrome for this skill should be used when the user wants to interact with their Navidrome self-hosted music server \u2014 checking server status, browsing artists or albums, searching the music library, listing playlists, viewing now-playing or recently played tracks, or accessing starred items. Triggers include: \\\"what's playing on Navidrome\\\", \\\"show my playlists\\\", \\\"search for an artist\\\", \\\"recent albums\\\", \\\"Navidrome status\\\"."
+  short_description: "Use when the user wants to inspect a Navidrome music server: status, artists, albums, library search, playlists, now-playing, recently played, or starred items."
+  default_prompt: "Use $navidrome to inspect my Navidrome music library, such as server status, playlists, artists, albums, search results, now-playing tracks, or starred items."

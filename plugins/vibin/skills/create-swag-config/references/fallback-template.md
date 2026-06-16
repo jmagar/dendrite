@@ -1,86 +1,89 @@
-# Hand-write fallback
+# Direct SWAG Hand-Write Flow
 
-Use only when swag-mcp is unreachable (container down, gateway errors, network partition). Otherwise call `swag` (`action: "create"`) — it does this for you.
+Use this because the standalone `swag-mcp` marketplace plugin is retired or not
+available. The target host and paths come from the Vibin SWAG variables.
 
-## The real baseline: LinuxServer's `_template.subdomain.conf.sample`
-
-The authoritative baseline lives on squirts at `/mnt/appdata/swag/nginx/proxy-confs/_template.subdomain.conf.sample`. It ships with the SWAG container, gets updated by LinuxServer, and is the right starting point for any **non-MCP** service. Read it first before writing anything:
+## Read the Upstream Sample
 
 ```bash
-ssh squirts cat /mnt/appdata/swag/nginx/proxy-confs/_template.subdomain.conf.sample
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env" 2>/dev/null || true
+ssh "$SWAG_EDGE_HOST" 'bash -s' -- "$SWAG_PROXY_CONFS_PATH" <<'REMOTE'
+set -euo pipefail
+cat "$1/_template.subdomain.conf.sample"
+REMOTE
 ```
 
-(Or via swag-mcp: `swag` `action: "list", list_filter: "samples"` then `action: "view"` on the entry.)
+For a plain web service, start from that sample. For MCP-aware services, use
+`references/examples.md` and compare against similar existing configs:
 
-The baseline shape — strip the `# REMOVE THIS LINE BEFORE SUBMITTING` comments and you get:
-
-```nginx
-## Version 2025/07/18
-
-server {
-    listen 443 ssl;
-#    listen 443 quic;
-    listen [::]:443 ssl;
-#    listen [::]:443 quic;
-
-    server_name <container_name>.*;
-
-    include /config/nginx/ssl.conf;
-
-    client_max_body_size 0;
-
-    # Uncomment ONE of these to gate / with auth:
-    #include /config/nginx/ldap-server.conf;
-    #include /config/nginx/authelia-server.conf;
-    #include /config/nginx/authentik-server.conf;
-    #include /config/nginx/tinyauth-server.conf;
-
-    location / {
-        # Uncomment the matching auth-location include for whichever auth-server you enabled above:
-        #include /config/nginx/ldap-location.conf;
-        #include /config/nginx/authelia-location.conf;
-        #include /config/nginx/authentik-location.conf;
-        #include /config/nginx/tinyauth-location.conf;
-
-        include /config/nginx/proxy.conf;
-        include /config/nginx/resolver.conf;
-        set $upstream_app <container_name>;
-        set $upstream_port <port_number>;
-        set $upstream_proto <http or https>;
-        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
-    }
-}
+```bash
+existing_config="EXISTING_SERVICE.subdomain.conf"
+ssh "$SWAG_EDGE_HOST" 'bash -s' -- "$SWAG_PROXY_CONFS_PATH" "$existing_config" <<'REMOTE'
+set -euo pipefail
+case "$2" in *[!a-z0-9.-]*|*/*|*..*) exit 1 ;; esac
+sed -n '1,220p' "$1/$2"
+REMOTE
 ```
 
-Things worth understanding before you change anything:
+## Write Safely
 
-- **`server_name <container_name>.*`** is the LSIO wildcard convention — it matches `<container_name>` under any base domain (so the same config works across multiple registered domains). The deployed configs on this host use the literal FQDN (`<service>.tootie.tv`) instead. Either form works; if you stick to LSIO style, use the wildcard; if you want to mirror what `syslog`/`lab`/`axon` look like, use the literal FQDN.
-- **`set $upstream_*` lives INSIDE `location /`** in the LSIO baseline. That's correct for single-location services. The deployed MCP configs hoist these into the server block because multiple location blocks share them — that's an MCP-specific deviation, not the default.
-- **Auth includes are commented out.** Uncomment the pair (server-level + matching location-level) for the auth provider you want. Pick zero or one.
-- **`client_max_body_size 0`** disables the upload limit — keep it unless you have a reason to cap.
-- **QUIC lines are commented.** Leave them off unless the user explicitly wants HTTP/3.
+Render locally into a temp file, validate the generated filename, copy to the
+edge host, back up any existing config, and automatically restore the prior
+state if nginx rejects the new file.
 
-## MCP services — diff from the baseline
+```bash
+case "$config_name" in
+  *[!a-z0-9.-]*|*/*|*..*) echo "unsafe config name: $config_name" >&2; exit 1 ;;
+esac
+[[ "$config_name" =~ ^[a-z0-9][a-z0-9-]*\.subdomain\.conf$ ]] || exit 1
 
-The deployed `syslog` / `lab` / `axon` configs add a few things on top of the LSIO baseline. If you're adding an MCP-aware service, layer these in:
+tmp=$(mktemp)
+# render config into "$tmp"
+scp "$tmp" "$SWAG_EDGE_HOST:/tmp/$config_name"
+ssh "$SWAG_EDGE_HOST" 'bash -s' -- \
+  "$SWAG_PROXY_CONFS_PATH" "$config_name" "${SWAG_CONTAINER_NAME:-swag}" <<'REMOTE'
+set -euo pipefail
+proxy_confs_path=$1
+config_name=$2
+container_name=${3:-swag}
+target="$proxy_confs_path/$config_name"
+staged="/tmp/$config_name"
+install_tmp="$proxy_confs_path/.$config_name.new.$$"
+backup=""
 
-1. **Hoist `set $upstream_*` to the server block.** And add a parallel `set $mcp_upstream_*` block. Multiple locations need these vars.
-2. **Use the literal FQDN** for `server_name` (`<service>.tootie.tv`), not the LSIO wildcard. Convention here.
-3. **Add `include /config/nginx/mcp-server.conf;`** at the server level for the Axon Standard sidecar (well-known endpoints, `/_oauth_verify`, `/health`, origin validation, security headers).
-4. **Add a `location /mcp` block** with the origin guard, `mcp-location.conf` include, and `proxy_pass` to `$mcp_upstream_*`.
-5. **Add a `location ~* ^/(session|sessions)` block** that mirrors `/mcp` (also streaming, same includes).
-6. **Keep `location /`** for the human-facing app (with the auth-location include if applicable).
+if [ -e "$target" ]; then
+  backup="$target.backup.$(date +%Y%m%d%H%M%S)"
+  cp -- "$target" "$backup"
+fi
 
-See `references/examples.md` for the result.
+cp -- "$staged" "$install_tmp"
+mv -- "$install_tmp" "$target"
 
-## When you're hand-writing
+if ! docker exec "$container_name" nginx -t; then
+  if [ -n "$backup" ]; then
+    cp -- "$backup" "$target"
+  else
+    rm -f -- "$target"
+  fi
+  docker exec "$container_name" nginx -t >/dev/null 2>&1 || true
+  exit 1
+fi
 
-1. Decide MCP-aware vs plain web.
-2. Plain web → copy `_template.subdomain.conf.sample`, replace tags. Done.
-3. MCP-aware → copy a deployed config (`lab.subdomain.conf` for OAuth-owned services, `syslog.subdomain.conf` or `axon.subdomain.conf` for Authelia-gated), change names/ports. Done.
-4. Save to `/mnt/appdata/swag/nginx/proxy-confs/<service>.subdomain.conf`.
-5. Wait ~30s for SWAG's filewatch. If you can't wait or want fast feedback on parse errors:
-   ```bash
-   ssh squirts 'docker exec swag nginx -t && docker exec swag nginx -s reload'
-   ```
-6. Verify: `curl -sSI https://<service>.tootie.tv`. Tail `docker logs swag --tail 100` on parse errors.
+rm -f -- "$staged"
+REMOTE
+```
+
+## Verify
+
+```bash
+sleep "${SWAG_RELOAD_WAIT_SECONDS:-30}"
+curl -sSI "https://$server_name" | sed -n '1,20p'
+ssh "$SWAG_EDGE_HOST" "docker logs '${SWAG_CONTAINER_NAME:-swag}' --tail 100"
+```
+
+For MCP-aware services, also check the expected well-known endpoint if the
+target architecture supports it:
+
+```bash
+curl -sS "https://$server_name/.well-known/oauth-authorization-server" | jq .
+```

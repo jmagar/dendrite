@@ -4,21 +4,32 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Credentials come from the arrs plugin userConfig (written by its SessionStart hook).
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env"
 [[ -f "$CONFIG_FILE" ]] || { echo "ERROR: $CONFIG_FILE not found — set this service's URL/key in the arrs plugin settings (userConfig)." >&2; exit 1; }
-set -a; source "$CONFIG_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+set +a
 
-# Load credentials from .env
 : "${TAUTULLI_URL:?set it in the arrs plugin settings}"
 : "${TAUTULLI_API_KEY:?set it in the arrs plugin settings}"
 
 # Remove trailing slash from URL
 TAUTULLI_URL="${TAUTULLI_URL%/}"
-TAUTULLI_API_KEY="$TAUTULLI_API_KEY"
+
+urlencode() {
+    jq -nr --arg v "$1" '$v|@uri'
+}
+
+require_value() {
+    local option="$1"
+    local value="${2:-}"
+    if [[ -z "$value" || "$value" == --* ]]; then
+        echo "ERROR: $option requires a value" >&2
+        exit 2
+    fi
+}
 
 # Make authenticated API call to Tautulli
 api_call() {
@@ -26,12 +37,15 @@ api_call() {
     shift
 
     # Build query parameters
-    local params="apikey=${TAUTULLI_API_KEY}&cmd=${cmd}&out_type=json"
+    local params
+    params="apikey=$(urlencode "$TAUTULLI_API_KEY")&cmd=$(urlencode "$cmd")&out_type=json"
 
     # Add additional parameters
-    while [[ $# -gt 0 ]]; do
-        params+="&$1"
-        shift
+    local param key value
+    for param in "$@"; do
+        key="${param%%=*}"
+        value="${param#*=}"
+        params+="&$(urlencode "$key")=$(urlencode "$value")"
     done
 
     # Make request
@@ -111,11 +125,9 @@ cmd_server_info() {
 }
 
 cmd_activity() {
-    local details="0"
-
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --details) details="1"; shift ;;
+            --details) shift ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -129,16 +141,18 @@ cmd_history() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --user) params+=("user=$2"); shift 2 ;;
-            --section-id) params+=("section_id=$2"); shift 2 ;;
-            --media-type) params+=("media_type=$2"); shift 2 ;;
+            --user) require_value "$1" "${2:-}"; params+=("user=$2"); shift 2 ;;
+            --section-id) require_value "$1" "${2:-}"; params+=("section_id=$2"); shift 2 ;;
+            --media-type) require_value "$1" "${2:-}"; params+=("media_type=$2"); shift 2 ;;
             --days)
-                local start_date=$(date -d "$2 days ago" +%s)
+                require_value "$1" "${2:-}"
+                local start_date
+                start_date=$(date -d "$2 days ago" +%s)
                 params+=("start_date=$start_date")
                 shift 2
                 ;;
-            --limit) limit="$2"; shift 2 ;;
-            --search) params+=("search=$2"); shift 2 ;;
+            --limit) require_value "$1" "${2:-}"; limit="$2"; shift 2 ;;
+            --search) require_value "$1" "${2:-}"; params+=("search=$2"); shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -153,11 +167,13 @@ cmd_user_stats() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --user) params+=("user=$2"); shift 2 ;;
-            --sort-by) params+=("order_column=$2"); shift 2 ;;
-            --limit) params+=("length=$2"); shift 2 ;;
+            --user) require_value "$1" "${2:-}"; params+=("user=$2"); shift 2 ;;
+            --sort-by) require_value "$1" "${2:-}"; params+=("order_column=$2"); shift 2 ;;
+            --limit) require_value "$1" "${2:-}"; params+=("length=$2"); shift 2 ;;
             --days)
-                local start_date=$(date -d "$2 days ago" +%s)
+                require_value "$1" "${2:-}"
+                local start_date
+                start_date=$(date -d "$2 days ago" +%s)
                 params+=("start_date=$start_date")
                 shift 2
                 ;;
@@ -181,7 +197,7 @@ cmd_library_stats() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --section-id) section_id="$2"; shift 2 ;;
+            --section-id) require_value "$1" "${2:-}"; section_id="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -198,13 +214,14 @@ cmd_popular() {
     local params=()
     local days="30"
     local limit="10"
+    local media_type="movie"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --section-id) params+=("section_id=$2"); shift 2 ;;
-            --media-type) params+=("media_type=$2"); shift 2 ;;
-            --days) days="$2"; shift 2 ;;
-            --limit) limit="$2"; shift 2 ;;
+            --section-id) require_value "$1" "${2:-}"; params+=("section_id=$2"); shift 2 ;;
+            --media-type) require_value "$1" "${2:-}"; media_type="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
+            --limit) require_value "$1" "${2:-}"; limit="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -212,7 +229,12 @@ cmd_popular() {
     params+=("time_range=$days")
     params+=("length=$limit")
 
-    api_call "get_home_stats" "stat_id=popular_movies" "${params[@]}"
+    case "$media_type" in
+        movie|movies) api_call "get_home_stats" "stat_id=popular_movies" "${params[@]}" ;;
+        episode|show|shows|tv) api_call "get_home_stats" "stat_id=popular_tv" "${params[@]}" ;;
+        track|artist|music) api_call "get_home_stats" "stat_id=popular_music" "${params[@]}" ;;
+        *) echo "ERROR: unsupported --media-type for popular: $media_type" >&2; exit 2 ;;
+    esac
 }
 
 cmd_recent() {
@@ -221,14 +243,16 @@ cmd_recent() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --section-id) params+=("section_id=$2"); shift 2 ;;
-            --media-type) params+=("media_type=$2"); shift 2 ;;
+            --section-id) require_value "$1" "${2:-}"; params+=("section_id=$2"); shift 2 ;;
+            --media-type) require_value "$1" "${2:-}"; params+=("media_type=$2"); shift 2 ;;
             --days)
-                local start=$(date -d "$2 days ago" +%s)
+                require_value "$1" "${2:-}"
+                local start
+                start=$(date -d "$2 days ago" +%s)
                 params+=("start=$start")
                 shift 2
                 ;;
-            --limit) limit="$2"; shift 2 ;;
+            --limit) require_value "$1" "${2:-}"; limit="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -243,7 +267,7 @@ cmd_home_stats() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -256,7 +280,7 @@ cmd_plays_by_stream() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -269,7 +293,7 @@ cmd_plays_by_platform() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -282,7 +306,7 @@ cmd_plays_by_date() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -295,7 +319,7 @@ cmd_plays_by_hour() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -308,7 +332,7 @@ cmd_plays_by_day() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done
@@ -322,7 +346,7 @@ cmd_concurrent_streams() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --days) days="$2"; shift 2 ;;
+            --days) require_value "$1" "${2:-}"; days="$2"; shift 2 ;;
             --peak) peak="1"; shift ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
@@ -341,8 +365,8 @@ cmd_metadata() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --rating-key) rating_key="$2"; shift 2 ;;
-            --guid) guid="$2"; shift 2 ;;
+            --rating-key) require_value "$1" "${2:-}"; rating_key="$2"; shift 2 ;;
+            --guid) require_value "$1" "${2:-}"; guid="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; exit 1 ;;
         esac
     done

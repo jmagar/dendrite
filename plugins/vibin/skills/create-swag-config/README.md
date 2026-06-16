@@ -1,40 +1,33 @@
 # create-swag-config
 
-Add a new reverse proxy entry to **SWAG** (LinuxServer.io) on host `squirts` — the proxy that fronts every `*.tootie.tv` subdomain (~128 active configs).
+Add or update a LinuxServer.io SWAG reverse-proxy config through Vibin. This
+skill is intentionally independent of the retired `swag-mcp` marketplace plugin:
+it uses configurable deployment variables and direct SSH/file operations.
 
-## What it does
+## Configuration
 
-- **Preferred path:** call the `swag-mcp` MCP server (registered as `swag` at `https://swag.tootie.tv/mcp`) through its single action-routed `swag` tool. Actions: `list`, `create`, `view`, `edit`, `update`, `remove`, `logs`, `backups`, `health_check`.
-- **Fallback path:** hand-write the file at `/mnt/appdata/swag/nginx/proxy-confs/<service>.subdomain.conf` using the canonical template (`references/fallback-template.md`).
+Set these through Vibin plugin settings, Gemini extension settings, environment
+variables, or the generated
+`${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env` file:
 
-## When to invoke
+| Variable | Purpose |
+|---|---|
+| `SWAG_EDGE_HOST` | SSH host that owns SWAG config storage. |
+| `SWAG_PUBLIC_BASE_DOMAIN` | Base domain for generated subdomains. |
+| `SWAG_PROXY_CONFS_PATH` | Host path to `nginx/proxy-confs`. |
+| `SWAG_CONTAINER_NAME` | Container name for validation/logs, default `swag`. |
+| `SWAG_DEFAULT_AUTH_METHOD` | Default auth provider, default `authelia`. |
+| `SWAG_DEFAULT_UPSTREAM_PROTO` | Default upstream protocol, default `http`. |
+| `SWAG_DEFAULT_ENABLE_QUIC` | Default QUIC setting, default `false`; only render QUIC lines when the target host already has a confirmed local pattern. |
+| `SWAG_RELOAD_WAIT_SECONDS` | Filewatch wait before verification, default `30`. |
 
-Triggers include "create a swag config", "add X to swag", "add a swag proxy for X", "make a subdomain config", "expose X on tootie.tv", "add reverse proxy for X", "new tootie.tv subdomain", "proxy X through swag", "scaffold a swag entry", "wire up a SWAG mcp config".
-
-Does **not** fire on generic nginx work outside this homelab.
-
-## What it knows
-
-- The three deployed shapes (Authelia + MCP, upstream-OAuth + MCP, plain web) with annotated examples from `syslog`, `lab`, and `axon`
-- Which nginx includes to use and what each provides (`mcp-server.conf`, `mcp-location.conf`, `authelia-*`, `proxy.conf`, `resolver.conf`, `ssl.conf`)
-- That `*.tootie.tv` is a wildcard A/CNAME with a wildcard cert — no DNS or cert work needed per service
-- That SWAG's filewatch picks up new configs in ~30 seconds (wait, don't panic-restart)
-- Verification: use `swag` `action: "health_check"` against the new domain, then `action: "logs"` if it fails
+The Vibin hook writes the generated config from explicit plugin settings or
+environment variables only. It does not read private homelab env files.
 
 ## Files
 
-```
-SKILL.md                          — entry point, decision tree, tool surface, verification
-references/
-  examples.md                     — annotated side-by-side: syslog, lab, axon
-  fallback-template.md            — full nginx template + save/reload procedure when swag-mcp is down
-  includes.md                     — what each include file does and when to use it
-README.md                         — this file
-CHANGELOG.md                      — version history
-```
-
-## Related skills
-
-- `homelab-map` — for the broader squirts/dookie/tootie host inventory
-- `mcp-gateway-tools` — generic mechanics if you reach swag-mcp through the Lab gateway's `code_mode` / `tool_execute` pair instead of the direct registration
-- `create-swag-config` does **not** overlap with `lab:lab-service-onboarding` (which adds Python services to the `lab` codebase) — different layer of the stack
+- `SKILL.md` - agent workflow and trigger guidance.
+- `agents/openai.yaml` - OpenAI/Codex companion metadata.
+- `references/examples.md` - variableized config patterns.
+- `references/fallback-template.md` - direct write and verification flow.
+- `references/includes.md` - SWAG include-file reference.

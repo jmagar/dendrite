@@ -1,455 +1,397 @@
 ---
-name: acp
-version: "1.0.0"
+name: rust
+version: "1.1.0"
 description: >-
-  This skill should be used when implementing an ACP agent or extending the lab ACP runtime in Rust —
-  including using Client.builder()/ByteStreams/attach_session to connect to ACP providers, calling
-  session_config_options() to discover models and config options, switching models via
-  SetSessionConfigOptionRequest, implementing the Agent trait for a new ACP provider (stdio agent),
-  handling session/prompt or session/update wire messages, or debugging JSON-RPC 2.0 stdio transport
-  issues. Also applies when working on crates/lab/src/acp/runtime.rs, the codex-acp reference
-  implementation, or authoring bidirectional stdio agents for Zed or VS Code.
+  Use when working on Rust code in Jacob's repos, especially the rmcp MCP server family and Lab runtime. Covers rmcp-template derived server patterns, action-dispatched MCP tools, CLI/MCP/API parity, service-layer architecture, config/auth/scope contracts, testing strategy, release/build conventions, and ACP runtime/provider work.
 ---
 
-# Agent Client Protocol (ACP) — Rust
+# Rust Patterns
 
-ACP is a JSON-RPC 2.0 protocol for bidirectional communication between AI coding agents and editor clients (Zed, VS Code, etc.). Agents run as subprocesses — clients write to stdin, read from stdout. stderr is for logs only, never protocol data.
+Use this skill for Rust work in the homelab agent ecosystem. The default pattern source is `../rmcp-template`; treat that repo as the canonical reference for MCP server architecture unless the target repo documents a newer local rule.
 
-**Lab version pin:** `agent-client-protocol = { version = "=0.13.1", features = ["unstable"] }` in `crates/lab/Cargo.toml`. When upgrading, pin to an exact version, verify the `unstable` feature still compiles, and re-check `session_config_options()` behavior against the new `SessionConfigOption` / `SessionConfigKind::Select` API.
+## First Step
 
-**Two roles in this codebase:**
-- **Client (lab runtime):** lab is the client; providers (codex-acp, etc.) are the agents. The lab runtime uses `Client.builder()` + `ByteStreams` + `attach_session`. See "Lab ACP Runtime" below.
-- **Agent (providers):** codex-acp and custom providers implement the `Agent` trait and run on stdio. Lab spawns them as subprocesses. See "Implementing an Agent" below.
+Identify the repo family before editing:
 
-**SDK source:** `~/workspace/acp/rust-sdk/` — canonical trait signatures  
-**Production reference:** `~/workspace/acp/codex-acp/` (Rust agent for OpenAI/Codex)  
-**Schema types:** `~/workspace/acp/agent-client-protocol/` — schema crate only (`InitializeRequest`, `AuthMethod`, etc.). Does **not** contain `Agent`/`Client` traits or the runtime layer.
+- `rmcp-template` derived MCP server: `rustifi`, `rustify`, `rustscale`, `unrust`, `rarcane`, `rustarr`, `apprise-mcp`, `cortex`, `synapse2`, and new servers cloned from `rmcp-template`.
+- Lab platform/runtime: `lab`, including Labby gateway, dispatch, marketplace, auth, UI, and snippets.
+- ACP work: `crates/lab/src/acp`, `codex-acp`, Zed/VS Code providers, or Agent Client Protocol stdio integration.
+- Other Rust repo: follow the repo-local `CLAUDE.md`, `docs/`, `Justfile`, and existing module style first.
 
----
+Before changing shared behavior, read the nearest source-of-truth docs:
 
-## Cargo.toml
+```bash
+sed -n '1,220p' ../rmcp-template/docs/PATTERNS.md
+sed -n '1,220p' ../rmcp-template/docs/RUST.md
+sed -n '1,220p' ../rmcp-template/docs/TESTING.md
+sed -n '1,220p' ../rmcp-template/docs/AUTH.md
+```
 
-**Lab binary (pinned, unstable features — use this in crates/lab):**
+Then check the target repo's `CLAUDE.md` and current docs for evolved local
+patterns. Several repos intentionally moved beyond the baseline template; do
+not force them back to the template shape when their local contract is newer.
+
+For ACP-specific work, also read this skill's ACP references:
+
+- `references/wire-format.md`
+- `references/message-reference.md`
+- `references/tool-calls.md`
+- `references/unstable-features.md`
+- `references/codex-patterns.md`
+
+## rmcp Server Architecture
+
+The rmcp family uses one service facade and thin surfaces. Keep business logic out of transports.
+
+Canonical layout:
+
+```text
+src/
+  <service>.rs        # upstream HTTP/API transport only
+  app/                # business logic, validation, defaults, safety gates
+  actions.rs          # action names, scopes, transport availability, param parsing
+  config.rs           # Config structs, env overrides, dotenv loading
+  api.rs or api/      # REST handlers, thin over app/service
+  server.rs           # AppState, AuthPolicy, auth layer construction
+  server/routes.rs    # axum router and mounted auth/public routes
+  mcp.rs              # MCP module entry and re-exports only
+  mcp/tools.rs        # parse args -> call service -> return Value
+  mcp/schemas.rs      # single-tool schema, ACTION_SPECS-backed action enum
+  mcp/rmcp_server.rs  # ServerHandler, resources, prompts, scope enforcement
+  cli.rs              # parse CLI -> call service -> format output
+  main.rs             # mode dispatch only
+```
+
+Hard rule: if you are writing business logic in `mcp/tools.rs`, `api.rs`, `cli.rs`, or `main.rs`, move it into `app/`. Shims may extract typed inputs, call `state.service.*`, and format/return the result. They should not own defaults, retries, destructive gates, domain decisions, or custom error wording.
+
+### Repo-specific architecture deltas
+
+`lab` is not a normal rmcp clone. It uses `crates/lab/src/dispatch/<service>/`
+as the surface-neutral semantic layer between CLI, MCP, API, web, and
+`lab-apis`. Migrated services are directory-first from day one:
+
+```text
+crates/lab/src/dispatch/<service>.rs
+crates/lab/src/dispatch/<service>/catalog.rs
+crates/lab/src/dispatch/<service>/client.rs
+crates/lab/src/dispatch/<service>/params.rs
+crates/lab/src/dispatch/<service>/dispatch.rs
+```
+
+In Lab, `catalog.rs` owns `ActionSpec` / `ParamSpec`; `client.rs` owns env,
+instance, auth, and client construction; `params.rs` owns coercion; and
+`dispatch.rs` owns action routing and help payloads. `node`, `security`,
+`upstream`, `gateway/code_mode`, and `snippets` have documented layout
+exceptions. Do not cite those shared subsystems as precedent for skipping
+`client.rs` or `params.rs` in a normal upstream-backed service.
+
+`rustarr` is descriptor-driven for most domain actions. The generic
+`ACTION_SPECS` set is intentionally small; curated media commands live as
+`CommandDescriptor` const slices under `src/actions/commands/<cap>.rs`, then
+flow through `curated_commands()`, schema generation, help text, CLI usage, and
+the shared `execute_service_action` path. Do not add a giant enum variant and
+match arm for every curated action.
+
+`cortex` keeps the MCP action registry under `src/mcp/actions.rs`, not root
+`src/actions.rs`, and its action metadata includes `Scope`, `Cost`, and an
+`ActionHandler`. That cost metadata is part of agent planning and help/schema
+behavior, so preserve it when adding actions.
+
+`axon` is an application/platform server whose direct REST API is now the
+canonical product API. Its `/v1/actions` action-envelope endpoint has been
+removed. Use typed direct routes, `services::client_contract::*`, OpenAPI
+generation, and `docs/reference/api-parity.md` when changing API-facing
+behavior.
+
+## Surface Parity
+
+Business actions must have MCP + CLI parity. Application/platform servers usually also expose REST/API and web UI; upstream-client MCP servers usually do not need a local REST API unless they own state or workflows.
+
+Allowed exceptions:
+
+- MCP-only protocol features such as elicitation, where there is no honest CLI equivalent.
+- CLI-only operational modes such as `serve`, `mcp`, `doctor`, `watch`, and `setup`.
+
+For a new or changed action, update all relevant surfaces in one pass:
+
+- `src/actions.rs`: `ACTION_SPECS`, scopes, transport availability, parser enum.
+- `src/app/`: service method and validation/defaults/safety gate.
+- `src/mcp/tools.rs`: thin dispatch branch.
+- `src/mcp/schemas.rs`: one-tool schema and conditional requirements.
+- `src/cli.rs`: CLI command or flags.
+- REST/API docs and OpenAPI if the repo exposes REST.
+- Skill/plugin docs and `help` output.
+- Tests for parser, service behavior, schema drift, CLI, and MCP dispatch.
+
+Do not assume parity means the same shape in every repo:
+
+- Lab service actions use dotted `<resource>.<verb>` names, with built-in
+  `help` and `schema` actions and `lab://<service>/actions` catalog resources.
+  Historical bare aliases may exist only as deprecated aliases; new actions must
+  be dotted.
+- Rustarr's MCP grammar is one tool with global snake_case action names, while
+  its CLI grammar is service-grouped (`rustarr <service> <verb>`). The
+  bidirectional parity guard lives in `tests/parity.rs`.
+- Axon tracks CLI/MCP/direct-REST parity in `docs/reference/api-parity.md`.
+  Some local commands (`setup`, `config`, `mcp`, `serve`, `monitor`, `smoke`,
+  etc.) are intentionally deferred from remote REST.
+- Cortex explicitly keeps lifecycle mutations CLI-only while the MCP surface
+  stays query/admin-action oriented.
+
+## Action Dispatch And Schemas
+
+The rmcp pattern is one MCP tool per server with an `action` string, not one MCP tool per endpoint. The schema rejects unknown top-level parameters except reserved response continuation fields.
+
+Use `ACTION_SPECS` in `src/actions.rs` as the source of truth for:
+
+- valid action names
+- required read/write scopes
+- MCP-only vs REST-available transport
+- `help` being public
+- deny-by-default behavior for unknown actions
+
+Expected action parsing pattern:
+
+```rust
+let action = ExampleAction::from_mcp_args(&args)?;
+match action {
+    ExampleAction::Help => Ok(json!({ "help": HELP_TEXT })),
+    other => execute_service_action(&state.service, &other).await,
+}
+```
+
+Do not duplicate action strings in unrelated docs without a check. Template repos use contract checks such as `cargo xtask contract-audit`, schema-doc sync scripts, or `just template-check` to catch drift.
+
+Patterns that are stale or too narrow:
+
+- Do not maintain a static `HELP_TEXT` or static action enum when the repo has
+  a registry-derived help/schema system.
+- Do not assume every action is an enum variant. Rustarr curated commands are
+  descriptor rows plus a single `Curated { name, params }` carrier.
+- Do not assume every repo's action metadata is root `src/actions.rs`. Cortex
+  and Axon use different module ownership.
+- Do not hand-maintain separate action lists for schema, scope gates, docs, and
+  help. Every reviewed repo has moved toward one registry/contract source.
+
+## Auth And Scopes
+
+Use the `AuthPolicy` model from `rmcp-template`:
+
+- `LoopbackDev`: loopback or stdio trust boundary; no auth/scope checks.
+- `TrustedGatewayUnscoped`: upstream gateway enforces auth; local server does not.
+- `Mounted { auth_state: None }`: static bearer token.
+- `Mounted { auth_state: Some(_) }`: OAuth plus optional static bearer token.
+
+Non-loopback HTTP servers must refuse to start without authentication unless the deployment explicitly sets the trusted-gateway override. Public endpoints such as `/health`, `/status`, and `/openapi.json` stay unauthenticated and must redact secrets.
+
+Scope rules belong in `actions.rs` and are enforced in the MCP/REST auth paths. Write scope can satisfy read scope where the repo's `scopes_satisfy()` says so. Unknown actions should map to a deny scope, not accidentally fall through as public.
+
+Repo-specific auth deltas:
+
+- Lab uses `ActionSpec.destructive` as the central dangerous-operation flag.
+  MCP confirms destructive calls through elicitation, CLI requires `-y` /
+  `--yes`, and HTTP callers use an explicit confirmation parameter. New Lab
+  code should not invent a second confirmation policy.
+- Rustarr uses read/write scopes, but curated commands also carry
+  `confirm_required` and `mutates`; `mutates=true` implies
+  `confirm_required=true` and is mechanically tested.
+- Cortex has `cortex:read` plus `cortex:admin`, not just read/write. Static
+  bearer tokens are read-only unless `CORTEX_STATIC_TOKEN_ADMIN=true`.
+- Cortex's `/api/*` router forces mounted bearer auth even when the listener
+  would otherwise be `LoopbackDev`; do not treat LoopbackDev as a universal REST
+  bypass there.
+- Axon has read/write/full-access scopes and protects destructive admin REST
+  routes with an unconditional guard even in LoopbackDev. Write routes may be
+  blocked in local no-auth mode instead of allowed through.
+
+## Config And Secrets
+
+Keep secrets in `.env` or plugin-generated private config files. Keep non-secret settings in `config.toml`.
+
+Common split:
+
+- `.env`: API keys, bearer tokens, service URLs, OAuth client secrets, Docker runtime env, `RUST_LOG`.
+- `config.toml`: bind host/port, server name, OAuth mode, public URL, allowed origins, retention and resource settings.
+
+`main.rs` should load dotenv before config and then dispatch modes only:
+
+```rust
+config::load_dotenv();
+runtime::init_logging(stdio_mode, serve_mode);
+match mode { serve => serve_http_mcp().await, stdio => serve_stdio_mcp().await, cli => run_cli().await }
+```
+
+Do not commit real credentials. Do not print tokens in test output, docs examples, or error messages.
+
+## Testing Pattern
+
+Default verification should prove behavior below the network layer first, then exercise MCP transport when needed.
+
+Use these tiers:
+
+- Service and parser tests: action parsing, validation, defaults, destructive gates.
+- Contract/mock tests: outbound HTTP method/path/query/header/body against a local mock upstream.
+- Schema/static checks: action docs, MCP schema, README/help text, plugin contracts.
+- Live mcporter smoke: read-only MCP calls against a running server.
+
+Preferred commands depend on the repo, but the common set is:
+
+```bash
+cargo check --all-targets --all-features
+cargo nextest run
+cargo test
+cargo xtask contract-audit
+just test-ci
+bash tests/mcporter/test-mcp.sh
+```
+
+Use sidecar test files (`src/foo_tests.rs`) when tests need private items:
+
+```rust
+#[cfg(test)]
+#[path = "foo_tests.rs"]
+mod tests;
+```
+
+Live tests must assert semantic fields, not just `is_error: false`. Never include destructive, notification-sending, delete, update, or authorization-mutating actions in default live smoke tests unless the target is disposable and explicitly gated by env.
+
+Repo-specific checks to look for:
+
+- Lab: architecture/catalog lints, generated action catalog checks, and
+  service-layout tests in `crates/lab/tests/architecture_orchestrator.rs`.
+- Rustarr: `tests/parity.rs` for curated command MCP/CLI coverage and
+  `mutates => confirm_required`.
+- Axon: `cargo test --test http_api_parity_inventory -- --nocapture`,
+  OpenAPI export/checks, and route-contract tests from
+  `services::client_contract`.
+- Cortex: `scripts/smoke-test.sh` and mcporter tests for all MCP actions, plus
+  API auth invariants for forced `/api/*` bearer behavior.
+
+## Build And Release Conventions
+
+The rmcp family assumes host-level Cargo config for fast local builds. Do not add repo-local linker settings unless the repo has a documented exception.
+
+Important conventions from `rmcp-template/docs/RUST.md`:
+
+- Rust stable tracks the family MSRV/current stable policy.
+- `mold`/`clang`, sccache, global job limits, and dev profile tuning live in `~/.cargo/config.toml`.
+- Per-repo `.cargo/config.toml` is minimal: xtask alias and target-specific fallback only.
+- Do not add `[target.x86_64-unknown-linux-gnu].rustflags` in repo config if it would shadow global mold flags.
+- Windows release/cross-compile settings must avoid machine-specific `target-cpu=native`.
+
+Current global Cargo baseline on Jacob's machines:
+
 ```toml
-agent-client-protocol = { version = "=0.13.1", features = ["unstable"] }
-tokio = { version = "1", features = ["full"] }
-tokio-util = { version = "0.7", features = ["compat"] }  # required: .compat() / .compat_write() bridge
+[build]
+# Keep conservative for multiple concurrent agents. Solo builds can override.
+jobs = 4
+rustc-wrapper = "/home/jmagar/.local/bin/sccache-wrapper"
+
+[env]
+CARGO_PROFILE_DEV_CODEGEN_BACKEND = "llvm"
+SCCACHE_SERVER_UDS = "/tmp/sccache-jmagar.sock"
+
+[unstable]
+codegen-backend = true
+
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[profile.dev]
+debug = 1
+codegen-units = 8
+split-debuginfo = "unpacked"
+incremental = false
+opt-level = 0
+
+[profile.test]
+debug = 1
+codegen-units = 8
+
+[profile.dev.package."*"]
+opt-level = 1
 ```
 
-**Standalone ACP agent (new provider binary):**
+Interpretation:
+
+- `rustc -> clang -> mold`: `clang` is the linker driver; `-fuse-ld=mold`
+  chooses the fast linker backend. Prefer this over `linker = "mold"`.
+- Global `jobs = 4` is intentional for many simultaneous agent builds. For a
+  solo local build on the current 20-logical-CPU host, override per command:
+
+  ```bash
+  CARGO_BUILD_JOBS=16 cargo build --release --locked --bin <name>
+  CARGO_BUILD_JOBS=16 cargo build --profile release-fast --locked --bin <name>
+  ```
+
+- Do not make `jobs = 16` global unless the machine is dedicated to one build at
+  a time.
+- Cranelift is not the current default. The config keeps
+  `CARGO_PROFILE_DEV_CODEGEN_BACKEND=llvm` because Cranelift-backed dev/test
+  links have failed in aws-lc-backed binaries in this environment. Consider
+  Cranelift only as a repo-specific experiment after verifying `cargo check`,
+  `cargo test`, and any native TLS/aws-lc/ring paths.
+- sccache is enabled through `/home/jmagar/.local/bin/sccache-wrapper`, not by
+  pointing Cargo directly at `sccache`. The wrapper bypasses clippy, resolves
+  rustup toolchain paths to stable version-pinned paths for sccache-dist safety,
+  exports `SCCACHE_SERVER_UDS=/tmp/sccache-jmagar.sock`, and then execs the
+  mise-pinned `/home/jmagar/.local/sccache`.
+- Some repos add a repo-local rustc wrapper for project-specific side effects.
+  Axon's `.cargo/config.toml` points at `scripts/cargo-rustc-wrapper`, which
+  delegates to sccache and copies completed `axon` binaries into local PATH.
+  Keep that kind of install-copy behavior repo-local or explicitly opt-in; do
+  not make it global for all Rust projects without a collision policy.
+
+Use a repo-local fast release profile when the command should be portable across
+CI, containers, and clean hosts. Example:
+
 ```toml
-agent-client-protocol = "0"               # types + transport (AgentSideConnection, Agent trait)
-async-trait = "0.1"                       # required: Agent trait needs #[async_trait(?Send)]
-tokio = { version = "1", features = ["full"] }
-tokio-util = { version = "0.7", features = ["compat"] }
-futures = "0.3"                           # AsyncRead/AsyncWrite traits expected by AgentSideConnection
-anyhow = "1"
-uuid = { version = "1", features = ["v4"] }
-dashmap = "5"   # preferred over std::sync::Mutex<HashMap> in async contexts
+[profile.release-fast]
+inherits = "release"
+lto = false
+codegen-units = 16
 ```
 
----
+This keeps `opt-level = 3` from `release`, but skips whole-program ThinLTO and
+lets the final crate codegen run with more parallelism. It is appropriate for
+local deployable binaries and smoke testing. Keep full `release` for published
+artifacts, benchmark-sensitive builds, and size-sensitive binaries.
 
-## Session Lifecycle (condensed)
+Benchmark profile changes with warm rebuilds, not the first build of a new
+profile:
 
-```
-initialize  →  authenticate  →  session/new  →  session/prompt (streaming)  →  session/cancel
-```
-
-All streaming happens via `session/update` notifications sent **from agent to client** during prompt execution. The final `PromptResponse` matches the original `session/prompt` request id.
-
-See `references/wire-format.md` for full JSON examples of every message.
-
----
-
-## Lab ACP Runtime — Client-Side API
-
-The lab runtime (`crates/lab/src/acp/runtime.rs`) uses the builder API. Lab is the **client**; ACP providers (codex-acp etc.) are **agents** spawned as subprocesses.
-
-### Connection and Session Start
-
-```rust
-use agent_client_protocol::{Agent, ByteStreams, Client, ConnectionTo, on_receive_request};
-use agent_client_protocol::schema::{
-    InitializeRequest, NewSessionRequest, ProtocolVersion, Implementation,
-    SetSessionConfigOptionRequest, SessionConfigOption, SessionConfigKind, SessionConfigSelectOptions,
-};
-
-// Wrap subprocess stdio in ByteStreams — requires .compat_write() / .compat() bridges.
-let transport = ByteStreams::new(stdin.compat_write(), stdout.compat());
-
-// Client.builder() registers inbound request handlers, then connect_with drives the session.
-// on_receive_request!() is the required second argument — a macro-generated registration handle.
-Client
-    .builder()
-    .on_receive_request(
-        async move |args: RequestPermissionRequest, responder, _cx| {
-            responder.respond(handle_permission(args).await)
-        },
-        on_receive_request!(),
-    )
-    .connect_with(transport, move |connection: ConnectionTo<Agent>| async move {
-        // 1. Initialize — protocol-level, use send_request (NOT send_request_to)
-        let initialized = connection
-            .send_request(
-                InitializeRequest::new(ProtocolVersion::V1)
-                    .client_info(Implementation::new("lab-acp-bridge", env!("CARGO_PKG_VERSION")))
-                    .client_capabilities(lab_client_capabilities()),
-            )
-            .block_task()
-            .await?;
-
-        // 2. Create session — use send_request_to(Agent, ...) NOT send_request(...)
-        //    NewSessionRequest::new(&*cwd) — cwd: String, deref to str
-        let new_session_response = connection
-            .send_request_to(Agent, NewSessionRequest::new(&*cwd))
-            .block_task()
-            .await?;
-
-        // 3. Read config options BEFORE attach_session — it consumes the response
-        let (model_id, models) = session_config_options(
-            new_session_response.config_options.as_deref().unwrap_or_default(),
-        );
-
-        // 4. Attach session — produces the session handle for read_update() and further requests
-        let mut session = connection
-            .attach_session(new_session_response, vec![])
-            .map_err(|e| acp_internal_error(e.to_string()))?;
-
-        // session.session_id()   — provider session ID
-        // session.read_update()  — await next SessionMessage from provider
-        // session.connection()   — get connection back for further send_request_to() calls
-
-        Ok::<(), agent_client_protocol::Error>(())
-    })
-    .await;
+```bash
+touch src/main.rs
+time CARGO_BUILD_JOBS=16 cargo build --profile release-fast --locked --bin <name>
+touch src/main.rs
+time CARGO_BUILD_JOBS=16 cargo build --release --locked --bin <name>
 ```
 
-> **GOTCHA — `send_request_to(Agent, ...)` vs `send_request(...)`:** Session-scoped requests (`NewSessionRequest`, `SetSessionConfigOptionRequest`, `PromptRequest`) must use `.send_request_to(Agent, req)`. Plain `.send_request(req)` is for protocol-level messages only (`InitializeRequest`).
+Release workflows attach built artifacts to GitHub Releases. Do not commit generated binaries or release tarballs back to `main`.
 
-> **GOTCHA — read config_options before attach_session:** `attach_session` consumes the `NewSessionResponse`. Always extract `config_options` from it first.
+## ACP Work
 
-### session_config_options() — Model and Config Discovery
+For ACP-specific Rust work, keep the existing ACP rules:
 
-```rust
-fn session_config_options(raw: &[SessionConfigOption]) -> (Option<String>, Vec<ModelOption>) {
-    let mut model_id = None;
-    let mut models = Vec::new();
+- Agents speak JSON-RPC 2.0 over stdio; stdout/stdin are protocol, stderr is logs only.
+- Lab acts as ACP client when spawning providers such as `codex-acp`.
+- Use `Client.builder()`, `ByteStreams`, `.compat()`/`.compat_write()`, and `attach_session()` in the runtime.
+- Session-scoped requests use `send_request_to(Agent, ...)`; protocol-level initialize uses `send_request(...)`.
+- Read `config_options` before `attach_session()` consumes the `NewSessionResponse`.
+- In ACP SDK `0.13.x`, provider implementations use `#[async_trait::async_trait(?Send)]` for the `Agent` trait.
 
-    for opt in raw {
-        let is_model = opt.category.as_ref() == Some(&SessionConfigOptionCategory::Model);
-        if let SessionConfigKind::Select(select) = &opt.kind {
-            let current = select.current_value.to_string();
-            let opts: Vec<ModelOption> = match &select.options {
-                SessionConfigSelectOptions::Ungrouped(options) => options.iter()
-                    .map(|o| ModelOption { id: o.value.to_string(), name: o.name.clone() })
-                    .collect(),
-                SessionConfigSelectOptions::Grouped(groups) => groups.iter()
-                    .flat_map(|g| g.options.iter()
-                        .map(|o| ModelOption { id: o.value.to_string(), name: o.name.clone() }))
-                    .collect(),
-                _ => Vec::new(),
-            };
-            if is_model { model_id = Some(current); models = opts; }
-        }
-    }
-    (model_id, models)
-}
-```
+When ACP behavior changes, update the ACP reference docs in this skill and verify against the SDK/codex-acp source, not memory.
 
-### Model Switching
+## Review Checklist
 
-Send `SetSessionConfigOptionRequest` before the next prompt turn:
+Before finishing Rust work, check:
 
-```rust
-session
-    .connection()
-    .send_request_to(
-        Agent,
-        SetSessionConfigOptionRequest::new(session.session_id().clone(), "model", model_id),
-    )
-    .block_task()
-    .await?;
-```
-
-### Prompt Loop Pattern
-
-```rust
-// Start prompt asynchronously; StopReason arrives via on_receiving_result callback.
-session
-    .connection()
-    .send_request_to(Agent, PromptRequest::new(session.session_id().clone(), content_blocks))
-    .on_receiving_result(async move |result| {
-        drop(prompt_response_tx.send(result.map(|r| r.stop_reason).map_err(|e| e.to_string())));
-        Ok(())
-    })
-    .map_err(|e| acp_internal_error(e.to_string()))?;
-
-// biased select! ensures StopReason is preferred over a simultaneous idle timeout.
-loop {
-    tokio::select! {
-        biased;
-        stop = &mut prompt_response_rx => { /* handle StopReason, break */ }
-        update = session.read_update() => { /* handle SessionMessage */ }
-        () = tokio::time::sleep(idle_timeout), if saw_assistant_output => { /* idle_completion, break */ }
-    }
-}
-```
-
-### Environment Variables
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `LAB_ACP_PROMPT_IDLE_TIMEOUT_MS` | 5000 | Idle timeout after last assistant chunk |
-| `LAB_ACP_TURN_DRAIN_TIMEOUT_MS` | 300000 | Max wait draining late StopReason after idle_completion |
-| `LAB_ACP_PERMISSION_TIMEOUT_MS` | 60000 | Permission request decision window |
-
----
-
-## Implementing an Agent
-
-Implement the `Agent` trait to build an ACP provider that runs on stdio:
-
-```rust
-// The Agent trait uses ?Send bounds. In the =0.13.x SDK, implement with
-// #[async_trait::async_trait(?Send)] — native async fn in trait does NOT work here.
-#[async_trait::async_trait(?Send)]
-impl Agent for MyAgent {
-    async fn initialize(&self, req: InitializeRequest) -> acp::Result<InitializeResponse>;
-    async fn authenticate(&self, req: AuthenticateRequest) -> acp::Result<AuthenticateResponse>;
-    async fn new_session(&self, req: NewSessionRequest) -> acp::Result<NewSessionResponse>;
-
-    // prompt() takes ONLY PromptRequest — there is NO SessionNotifier parameter.
-    // Streaming updates are sent via conn.session_notification() from a background task.
-    // See "Streaming Notifications" section below for the required mpsc channel pattern.
-    async fn prompt(&self, req: PromptRequest) -> acp::Result<PromptResponse>;
-
-    // Method name is cancel (NOT on_cancel). Returns Result<()>.
-    async fn cancel(&self, notification: CancelNotification) -> acp::Result<()>;
-
-    // Optional methods (default: Err(Error::method_not_found())):
-    //   load_session, set_session_mode, set_session_config_option, list_sessions
-    // UNSTABLE (behind feature flags): close_session, fork_session, resume_session, set_session_model
-}
-
-// Entry point — use current_thread flavor (?Send trait requires LocalSet).
-// MUST use .compat() / .compat_write() — AgentSideConnection expects futures::AsyncRead/AsyncWrite,
-// NOT tokio::io traits. These are different trait families.
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> anyhow::Result<()> {
-    use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
-
-    let (notif_tx, mut notif_rx) = tokio::sync::mpsc::unbounded_channel::<NotifMsg>();
-    let agent = Arc::new(MyAgent { notif_tx, sessions: Arc::new(DashMap::new()) });
-
-    tokio::task::LocalSet::new().run_until(async move {
-        // conn implements Client — use it to call session_notification, request_permission, etc.
-        // io_task drives the stdio read/write loop.
-        let (conn, io_task) = AgentSideConnection::new(
-            agent,
-            tokio::io::stdout().compat_write(), // outgoing
-            tokio::io::stdin().compat(),         // incoming
-            |fut| { tokio::task::spawn_local(fut); },
-        );
-
-        // Background task: receive (notification, done_tx) from agent, send via conn.
-        tokio::task::spawn_local(async move {
-            while let Some((notif, done_tx)) = notif_rx.recv().await {
-                if conn.session_notification(notif).await.is_err() { break; }
-                let _ = done_tx.send(());
-            }
-        });
-
-        io_task.await
-    }).await
-}
-```
-
-> **GOTCHA — no SessionNotifier in prompt():** `SessionNotifier` does **not** exist in the SDK. `prompt()` receives only `PromptRequest`. Send streaming updates via `conn.session_notification()` called from a background task. The agent communicates with the background task via an mpsc channel stored in `self`.
-
-> **GOTCHA — will not compile without compat:** `tokio::io::stdin()` does NOT implement `futures::AsyncRead`. Always use `.compat()` (read) and `.compat_write()` (write) from `tokio_util::compat`. Without `?Send` and `LocalSet`, the runtime panics on `!Send` types.
-
-For a complete working skeleton see **`examples/agent-impl.rs`**.
-
-Key points:
-- Advertise only capabilities the agent actually supports in `InitializeResponse`
-- Use `ProtocolVersion::V1` (not `LATEST`) in `InitializeResponse::new()`
-- Return `Err(acp::Error::auth_required())` explicitly on auth failure (maps to JSON-RPC -32000)
-- Use `tokio::io::stdin/stdout()` with `.compat()` — never `std::io` in an async context (blocks executor)
-- Use `DashMap` for session state, not `std::sync::Mutex<HashMap>` (deadlock risk under Tokio)
-- Add `#![deny(clippy::print_stdout, clippy::print_stderr)]` — one stray `println!` corrupts the binary protocol stream
-
----
-
-## Streaming Notifications Pattern
-
-The `prompt()` method has no access to the connection. To stream updates during a prompt turn, use an mpsc channel:
-
-```rust
-// In the agent struct:
-type NotifMsg = (SessionNotification, tokio::sync::oneshot::Sender<()>);
-struct MyAgent {
-    notif_tx: tokio::sync::mpsc::UnboundedSender<NotifMsg>,
-    sessions: Arc<DashMap<String, SessionState>>,
-}
-
-// Helper method for sending updates from prompt():
-async fn send_update(&self, session_id: &str, update: SessionUpdate) -> acp::Result<()> {
-    let (done_tx, done_rx) = tokio::sync::oneshot::channel();
-    let notif = SessionNotification::new(session_id.to_string(), update);
-    self.notif_tx.send((notif, done_tx)).map_err(|_| acp::Error::internal_error())?;
-    done_rx.await.map_err(|_| acp::Error::internal_error())
-}
-
-// In prompt() — use self.send_update() to stream:
-async fn prompt(&self, req: PromptRequest) -> acp::Result<PromptResponse> {
-    self.send_update(&req.session_id, SessionUpdate::AgentMessageChunk(
-        ContentChunk::new("Thinking...".into())  // .into() converts &str → ContentBlock
-    )).await?;
-    Ok(PromptResponse::new(StopReason::EndTurn))
-}
-
-// In main() — background task owns conn, drains the channel:
-tokio::task::spawn_local(async move {
-    while let Some((notif, done_tx)) = notif_rx.recv().await {
-        if conn.session_notification(notif).await.is_err() { break; }
-        let _ = done_tx.send(());
-    }
-});
-```
-
-> **GOTCHA — ContentChunk::new takes ContentBlock:** `ContentChunk::new(content: ContentBlock)` — NOT a bare `&str`. Use `ContentChunk::new("text".into())` which works because `From<T: Into<String>> for ContentBlock` is implemented — `"text".into()` becomes `ContentBlock::Text(TextContent::new("text"))`. `ContentChunk::new("text")` is a compile error.
-
----
-
-## Implementing a Client (generic)
-
-For generic client implementations not using the lab runtime's `Client.builder()` pattern:
-
-```rust
-// The Client trait also requires #[async_trait::async_trait(?Send)] in this SDK version.
-#[async_trait::async_trait(?Send)]
-impl Client for MyClient {
-    // REQUIRED: receives session/update notifications (streaming chunks, tool calls, etc.).
-    async fn session_notification(&self, args: SessionNotification) -> acp::Result<()>;
-
-    // REQUIRED: agent calls this before any destructive operation.
-    // Returns RequestPermissionResponse (wraps outcome), NOT RequestPermissionOutcome directly.
-    // Outcome: Cancelled | Selected(SelectedPermissionOutcome::new(option_id))
-    async fn request_permission(&self, args: RequestPermissionRequest) -> acp::Result<RequestPermissionResponse>;
-
-    // Optional (default: Err(method_not_found)) — only needed if you advertise fs capability:
-    async fn read_text_file(&self, args: ReadTextFileRequest) -> acp::Result<ReadTextFileResponse>;
-    async fn write_text_file(&self, args: WriteTextFileRequest) -> acp::Result<WriteTextFileResponse>;
-    // Optional terminal methods: create_terminal, terminal_output, release_terminal,
-    //                            wait_for_terminal_exit, kill_terminal
-}
-
-// Spawn agent subprocess and connect.
-// Arg order: (client_handler, outgoing→agent_stdin, incoming←agent_stdout, spawner)
-// conn implements Agent — call conn.initialize(), conn.prompt(), etc. to drive the session.
-let (conn, io_task) = ClientSideConnection::new(
-    MyClient,
-    agent_stdin.compat_write(),  // outgoing
-    agent_stdout.compat(),       // incoming
-    |fut| { tokio::task::spawn_local(fut); },
-);
-// Drive session in a spawned task; await io_task to run until connection closes.
-```
-
-For a complete working skeleton see **`examples/client-impl.rs`**.
-
----
-
-## Tool Calls (streaming)
-
-Send `ToolCall` before executing a tool, then `ToolCallUpdate` with the result. Use `self.send_update()` from the streaming pattern above.
-
-```rust
-// Before tool execution — builder pattern, no Default impl
-self.send_update(&req.session_id, SessionUpdate::ToolCall(
-    ToolCall::new("tc-1", "Read src/main.rs")
-        .kind(ToolKind::Read)
-        .status(ToolCallStatus::InProgress)
-        .locations(vec![ToolCallLocation::new("src/main.rs")]),
-)).await?;
-
-// After tool execution — ToolCallUpdateFields builder, #[serde(flatten)] in wire format
-self.send_update(&req.session_id, SessionUpdate::ToolCallUpdate(ToolCallUpdate::new(
-    "tc-1",
-    ToolCallUpdateFields::new()
-        .status(ToolCallStatus::Completed)
-        .content(vec![ToolCallContent::Content(Content::new(
-            ContentBlock::Text { text: result },
-        ))]),
-))).await?;
-```
-
-> **GOTCHA — no struct literals:** `ToolCall` and `ToolCallUpdate` have no `Default` impl. Use the builder pattern — `ToolCall::new(id, title).kind(...).status(...)`. `ToolCallStatus::Started` does **not** exist; use `InProgress`. The enum is `ToolKind` (not `ToolCallKind`).
-
-For all 10 `ToolKind` variants, JSON wire format, streaming deduplication, and `_meta` extensibility see **`references/tool-calls.md`**.
-
----
-
-## Reference Files
-
-- **`references/wire-format.md`** — Full JSON-RPC examples for every message type. Reach for this when debugging wire format mismatches or building a client from scratch.
-- **`references/message-reference.md`** — Complete table of all 24 ACP methods, all 11 `SessionUpdate` variants, session modes, and error codes.
-- **`references/tool-calls.md`** — Tool call kinds table, full JSON wire examples, streaming deduplication pattern, `_meta` extensibility, terminal tool lifecycle.
-- **`references/codex-patterns.md`** — Production patterns extracted from codex-acp: `OnceLock` global client, `SessionClient` error-tolerant notification wrapper, `DashMap` session state, `LocalSet` + compat wiring, filesystem sandboxing, auth guard, graceful cancellation.
-- **`references/unstable-features.md`** — All 9 unstable feature flags with Cargo.toml activation syntax and stability tracking.
-
----
-
-## Examples
-
-- **`examples/agent-impl.rs`** — Complete `Agent` trait implementation skeleton with `DashMap` session state, mpsc notification channel, tool call notifications, and correct `tokio::io` usage.
-- **`examples/client-impl.rs`** — Complete `Client` trait implementation skeleton with subprocess spawning, `session_notification` handler, file I/O handlers, and permission handling.
-
----
-
-## Quick Checklists
-
-### Extending the Lab ACP Runtime (crates/lab/src/acp/runtime.rs)
-
-- [ ] Use `Client.builder().on_receive_request(..., on_receive_request!()).connect_with(transport, ...)` — not `ClientSideConnection`
-- [ ] `transport = ByteStreams::new(stdin.compat_write(), stdout.compat())`
-- [ ] Use `send_request_to(Agent, NewSessionRequest::new(&*cwd))` — not `send_request()`
-- [ ] Extract `config_options` from `NewSessionResponse` **before** calling `attach_session` (which consumes it)
-- [ ] Use `session_config_options()` to parse `SessionConfigKind::Select` into current model + available models
-- [ ] Model switching: `send_request_to(Agent, SetSessionConfigOptionRequest::new(session_id, "model", model_id))`
-- [ ] Use `biased` select! in the prompt loop — prevents idle timeout from winning over a simultaneous StopReason
-- [ ] Spawn provider subprocess with `env_clear()` + explicit allowlist — never forward the full environment
-- [ ] Use `process_group(0)` on Unix — enables SIGTERM to the entire process group on shutdown
-
-### New Rust ACP Agent (standalone provider binary)
-
-- [ ] `#![deny(clippy::print_stdout, clippy::print_stderr)]` in crate root — one stray `println!` corrupts the binary protocol stream
-- [ ] Add `async-trait = "0.1"` to Cargo.toml — `Agent` trait requires `#[async_trait::async_trait(?Send)]` in this SDK version
-- [ ] Run `AgentSideConnection` inside `tokio::task::LocalSet` — required for `!Send` types
-- [ ] Use `#[tokio::main(flavor = "current_thread")]` — matches the `?Send` trait requirement
-- [ ] Add `use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt}` — call `.compat()` / `.compat_write()` on tokio IO types (they do NOT implement `futures::AsyncRead/Write` natively)
-- [ ] `AgentSideConnection::new` returns `(conn, io_task)` — **use `conn`** for `session_notification`; don't discard it
-- [ ] Store an `mpsc::UnboundedSender<NotifMsg>` in the agent — this is how `prompt()` sends streaming updates
-- [ ] Spawn a background task that drains the channel and calls `conn.session_notification()`
-- [ ] `initialize` — advertise only capabilities the agent actually supports; use `ProtocolVersion::V1`
-- [ ] `authenticate` — validate credentials; return `Err(acp::Error::auth_required())` on failure
-- [ ] `new_session` — generate UUID, store state in `DashMap`; `req.cwd` is `PathBuf` (not `Option<PathBuf>`)
-- [ ] `prompt` — only takes `PromptRequest` (no SessionNotifier!); use `send_update()` helper for streaming
-- [ ] `cancel` (not `on_cancel`) — store a `watch::Sender<bool>` in session state, signal it; race with `biased tokio::select!` in prompt loop
-- [ ] Keep stderr for logs only — never write protocol data to stderr
-- [ ] Sandbox file paths to session `cwd` — reject `../` escapes using `std::path::absolute()`
-
-### New Rust ACP Client (generic, not lab runtime)
-
-- [ ] Add `async-trait = "0.1"` — `Client` trait requires `#[async_trait::async_trait(?Send)]`
-- [ ] Spawn agent binary with `tokio::process::Command`, pipe stdio
-- [ ] `ClientSideConnection::new` arg order: `(client, outgoing→agent_stdin, incoming←agent_stdout, spawner)`
-- [ ] `ClientSideConnection::new` returns `(conn, io_task)` — use `conn.initialize()` etc. to drive the session
-- [ ] Implement `session_notification` — **required**; route `SessionUpdate` variants to render in UI
-- [ ] Implement `request_permission` — **required**; return `Cancelled` or `Selected(SelectedPermissionOutcome::new(option_id))`
-- [ ] Implement `read_text_file`/`write_text_file` only if you advertise `fs` capability in `InitializeRequest`
-- [ ] Handle all `SessionUpdate` variants (chunk, tool_call, tool_call_update, thought)
-- [ ] Send `session/cancel` via `conn.cancel(CancelNotification::new(session_id))` on user interrupt
-- [ ] Render tool calls using `kind` to pick appropriate UI (diff, file path, terminal)
-- [ ] Gracefully degrade for capabilities the agent doesn't advertise
+- Business logic is in `app/`, not transports.
+- New actions have MCP + CLI parity or a documented exception.
+- `ACTION_SPECS`, schemas, help text, docs, and tests agree.
+- Auth startup guards still block unsafe non-loopback no-auth binds.
+- Scope checks deny unknown actions and keep `help` public only by design.
+- Config examples keep secrets out of committed files.
+- Tests include the narrow behavior touched and any cross-surface contract impacted.
+- Live verification, when run, is read-only or explicitly disposable.

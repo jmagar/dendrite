@@ -1,7 +1,7 @@
 # Linkding API Reference
 
 **API Version:** v1
-**Base URL:** `http://localhost:9090/api`
+**Base URL:** `$LINKDING_URL/api`
 **Authentication:** Token authentication
 **Last Updated:** 2026-02-01
 
@@ -15,16 +15,14 @@ Linkding uses token-based authentication. Generate a token from the Settings pag
 
 ## Quick Start
 
-Add credentials to `~/.lab/.env`:
-```bash
-LINKDING_URL="http://localhost:9090"
-LINKDING_API_KEY="your-api-token"
-```
-
-Then test connection:
+Plugin userConfig writes credentials to
+`${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/config.env`; legacy
+`~/.lab/.env` is accepted only as a migration fallback. Then test connection:
 ```bash
 # Load credentials
-source ~/.lab/.env
+set -a
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-linkding/config.env"
+set +a
 
 # Test connection - list bookmarks
 curl -s "$LINKDING_URL/api/bookmarks/" \
@@ -45,7 +43,7 @@ List all bookmarks.
 | q (query) | string | No | Search query |
 | limit (query) | integer | No | Number of results (default: 100) |
 | offset (query) | integer | No | Pagination offset |
-| archived (query) | boolean | No | Filter by archived status |
+| — | — | — | Use `/bookmarks/archived/` to list archived bookmarks |
 
 **Example Request:**
 ```bash
@@ -70,7 +68,7 @@ curl -s "$LINKDING_URL/api/bookmarks/" \
       "tag_names": ["example", "demo"],
       "date_added": "2026-01-15T10:30:00Z",
       "date_modified": "2026-01-15T10:30:00Z",
-      "archived": false,
+      "is_archived": false,
       "unread": false,
       "shared": false
     }
@@ -117,7 +115,7 @@ Create a new bookmark.
 | title (body) | string | No | Custom title (auto-fetched if empty) |
 | description (body) | string | No | Description/notes |
 | tag_names (body) | array | No | List of tag names |
-| archived (body) | boolean | No | Archive status (default: false) |
+| is_archived (body) | boolean | No | Archive status (default: false) |
 | unread (body) | boolean | No | Unread status (default: false) |
 | shared (body) | boolean | No | Share publicly (default: false) |
 
@@ -153,7 +151,7 @@ Update an existing bookmark.
 | title (body) | string | No | New title |
 | description (body) | string | No | New description |
 | tag_names (body) | array | No | New tags (replaces all) |
-| archived (body) | boolean | No | Archive status |
+| is_archived (body) | boolean | No | Archive status |
 | unread (body) | boolean | No | Unread status |
 | shared (body) | boolean | No | Share status |
 
@@ -198,21 +196,19 @@ curl -X DELETE "$LINKDING_URL/api/bookmarks/1/" \
 
 ---
 
-#### POST /bookmarks/archive/
+#### POST /bookmarks/{id}/archive/
 
 Archive a bookmark.
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| id (body) | integer | Yes | Bookmark ID to archive |
+| id (path) | integer | Yes | Bookmark ID to archive |
 
 **Example Request:**
 ```bash
-curl -X POST "$LINKDING_URL/api/bookmarks/archive/" \
-  -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"id": 1}'
+curl -X POST "$LINKDING_URL/api/bookmarks/1/archive/" \
+  -H "Authorization: Token $LINKDING_API_KEY"
 ```
 
 **Response Codes:**
@@ -223,21 +219,19 @@ curl -X POST "$LINKDING_URL/api/bookmarks/archive/" \
 
 ---
 
-#### POST /bookmarks/unarchive/
+#### POST /bookmarks/{id}/unarchive/
 
 Unarchive a bookmark.
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| id (body) | integer | Yes | Bookmark ID to unarchive |
+| id (path) | integer | Yes | Bookmark ID to unarchive |
 
 **Example Request:**
 ```bash
-curl -X POST "$LINKDING_URL/api/bookmarks/unarchive/" \
-  -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"id": 1}'
+curl -X POST "$LINKDING_URL/api/bookmarks/1/unarchive/" \
+  -H "Authorization: Token $LINKDING_API_KEY"
 ```
 
 **Response Codes:**
@@ -247,21 +241,20 @@ curl -X POST "$LINKDING_URL/api/bookmarks/unarchive/" \
 
 ---
 
-#### POST /bookmarks/check/
+#### GET /bookmarks/check/
 
 Check if a URL is already bookmarked.
 
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| url (body) | string | Yes | URL to check |
+| url (query) | string | Yes | URL to check |
 
 **Example Request:**
 ```bash
-curl -X POST "$LINKDING_URL/api/bookmarks/check/" \
+curl -G "$LINKDING_URL/api/bookmarks/check/" \
   -H "Authorization: Token $LINKDING_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com"}'
+  --data-urlencode "url=https://example.com"
 ```
 
 **Example Response:**
@@ -420,17 +413,13 @@ curl -s "$LINKDING_URL/api/bookmarks/?q=python" \
 **Filter by archived status:**
 ```bash
 # Only archived bookmarks
-curl -s "$LINKDING_URL/api/bookmarks/?archived=true" \
-  -H "Authorization: Token $LINKDING_API_KEY"
-
-# Only non-archived bookmarks
-curl -s "$LINKDING_URL/api/bookmarks/?archived=false" \
+curl -s "$LINKDING_URL/api/bookmarks/archived/" \
   -H "Authorization: Token $LINKDING_API_KEY"
 ```
 
 **Combine filters:**
 ```bash
-curl -s "$LINKDING_URL/api/bookmarks/?q=github&archived=false&limit=50" \
+curl -s "$LINKDING_URL/api/bookmarks/?q=github&limit=50" \
   -H "Authorization: Token $LINKDING_API_KEY"
 ```
 

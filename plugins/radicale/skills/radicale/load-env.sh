@@ -3,7 +3,7 @@
 # Loads the generated Radicale plugin config with legacy env fallbacks.
 #
 # In skill scripts, source as:
-#   source "$HOME/.claude-homelab/load-env.sh"
+#   source "load-env.sh"
 
 # Prevent direct execution
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

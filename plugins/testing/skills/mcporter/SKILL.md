@@ -25,19 +25,22 @@ mcporter list <server> --schema --all-parameters --json
 mcporter call <server>.<tool> k=v ...  # invoke a tool
 mcporter call <server>.<tool> --args '{"k":"v"}'      # JSON payload
 mcporter call <server>.<tool> --output json           # machine-readable
+mcporter resource <server>             # list resources
+mcporter resource <server> <uri>        # read a resource
 mcporter auth <server>                 # OAuth handshake only (no listing)
 mcporter config doctor                 # validate all configs
 ```
 
-Selectors are `server.tool`. The argument is `server` or a full `https://host/mcp` URL.
+Tool selectors are `server.tool`. The server argument is a configured server name or a full `https://host/mcp` URL.
 
 ## Calling resources & prompts
 
-`mcporter call` overloads on the second segment:
+Use `mcporter resource` for MCP resources:
 
 ```bash
 mcporter call <server>.<tool> k=v               # tool call
-mcporter call <server>.<resource-uri>           # resource read (URI contains ://)
+mcporter resource <server>                      # list resources
+mcporter resource <server> <resource-uri>       # resource read
 mcporter call <server> --tool <prompt-name> ... # prompt fetch
 ```
 
@@ -138,7 +141,7 @@ If you copy snippets out of `smoke.sh`, two patterns will bite you under `set -e
 
 ### Resources
 
-Same loop — URI is the `label`, `args` is empty:
+Same loop — URI is the `label`, `args` is empty. The harness routes URI labels through `mcporter resource`, not `mcporter call`.
 
 ```bash
 "ui://server/status||contains: ok"

@@ -4,13 +4,13 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Credentials come from the arrs plugin userConfig (written by its SessionStart hook).
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/lab-arrs/config.env"
 [[ -f "$CONFIG_FILE" ]] || { echo "ERROR: $CONFIG_FILE not found — set this service's URL/key in the arrs plugin settings (userConfig)." >&2; exit 1; }
-set -a; source "$CONFIG_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
+set +a
 
 # Load credentials from .env
 : "${SABNZBD_URL:?set it in the arrs plugin settings}"
@@ -74,7 +74,7 @@ Commands:
   retry <nzo_id>                 Retry failed job
   retry-all                      Retry all failed
   
-  speedlimit <value>             Set speed (50 = 50%, 5M = 5MB/s, 0 = unlimited)
+  speedlimit <value>             Set speed in KB/s (5120 = 5MB/s, 5M also accepted, 0 = unlimited)
   
   change-category <nzo_id> <cat>
   change-script <nzo_id> <script>
@@ -189,7 +189,7 @@ cmd_add() {
     done
     
     local encoded_url
-    encoded_url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$url', safe=''))")
+    encoded_url=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$url")
     
     local params=("name=$encoded_url")
     [[ -n "$name" ]] && params+=("nzbname=$name")
@@ -299,14 +299,21 @@ cmd_retry_all() {
 }
 
 cmd_speedlimit() {
-    local value="$1"
-    api_call "config" "name=speedlimit" "value=$value"
+    local raw_value="$1"
+    local value="$raw_value"
+
+    case "$raw_value" in
+        *[mM]) value="$((${raw_value%[mM]} * 1024))" ;;
+        *[kK]) value="${raw_value%[kK]}" ;;
+    esac
+
+    api_call "speedlimit" "value=$value"
 }
 
 cmd_change_category() {
     local nzo_id="$1"
     local category="$2"
-    api_call "change_cat" "value=$nzo_id" "value2=$category"
+    api_call "set_cat" "value=$nzo_id" "value2=$category"
 }
 
 cmd_change_script() {
@@ -317,7 +324,8 @@ cmd_change_script() {
 
 cmd_change_priority() {
     local nzo_id="$1"
-    local priority=$(priority_to_num "$2")
+    local priority
+    priority=$(priority_to_num "$2")
     api_call "queue" "name=priority" "value=$nzo_id" "value2=$priority"
 }
 

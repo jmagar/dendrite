@@ -30,7 +30,7 @@ This skill provides **read-write** access to a self-hosted Memos instance for qu
 
 Configure these values in plugin userConfig. The hook writes
 `${XDG_CONFIG_HOME:-~/.config}/lab-memos/config.env` with mode `600`.
-`~/.lab/.env` remains a fallback during migration:
+Legacy env files are fallback-only during migration:
 
 ```bash
 # Memos - Self-hosted note-taking service
@@ -46,7 +46,7 @@ MEMOS_API_TOKEN="<your_api_token>"
 
 **Security:**
 - Generated config and `.env` files are local-only (never commit)
-- Set permissions: `chmod 600 ~/.lab/.env`
+- The plugin-generated config is written with mode `600`
 - Token has same permissions as your user account
 
 ## Commands
@@ -106,7 +106,7 @@ bash scripts/tag-api.sh list                    # List all tags
 bash scripts/tag-api.sh search "project-x"      # Find memos with tag
 ```
 
-### Resource (Attachment) Operations
+### Attachment Operations
 
 **Upload file:**
 ```bash

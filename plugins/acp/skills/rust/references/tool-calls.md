@@ -173,31 +173,40 @@ use agent_client_protocol::types::{
     ToolCallLocation, ToolKind, ToolCallStatus, ContentBlock, Content,
 };
 
+// prompt() receives only PromptRequest. It does not receive a SessionNotifier.
+// Use the mpsc-backed send_update() helper from SKILL.md / examples/agent-impl.rs.
 async fn prompt(
     &self,
     req: PromptRequest,
-    notifier: SessionNotifier,
-) -> anyhow::Result<PromptResponse> {
+) -> acp::Result<PromptResponse> {
     // 1. Announce before tool execution
-    notifier.send(SessionUpdate::ToolCall(
-        ToolCall::new("tc-1", "Read src/lib.rs")
-            .kind(ToolKind::Read)
-            .status(ToolCallStatus::InProgress)
-            .locations(vec![ToolCallLocation::new("src/lib.rs")]),
-    )).await?;
+    self.send_update(
+        &req.session_id,
+        SessionUpdate::ToolCall(
+            ToolCall::new("tc-1", "Read src/lib.rs")
+                .kind(ToolKind::Read)
+                .status(ToolCallStatus::InProgress)
+                .locations(vec![ToolCallLocation::new("src/lib.rs")]),
+        ),
+    )
+    .await?;
 
-    // 2. Execute (e.g. call fs/readTextFile via client handle)
+    // 2. Execute (e.g. call fs/read_text_file via client handle)
 
     // 3. Notify completion with result
-    notifier.send(SessionUpdate::ToolCallUpdate(ToolCallUpdate::new(
-        "tc-1",
-        ToolCallUpdateFields::new()
-            .status(ToolCallStatus::Completed)
-            .content(vec![ToolCallContent::Content(Content::new(
-                ContentBlock::Text { text: "fn main() { ... }".into() }
-            ))]),
-    ))).await?;
+    self.send_update(
+        &req.session_id,
+        SessionUpdate::ToolCallUpdate(ToolCallUpdate::new(
+            "tc-1",
+            ToolCallUpdateFields::new()
+                .status(ToolCallStatus::Completed)
+                .content(vec![ToolCallContent::Content(Content::new(
+                    ContentBlock::Text { text: "fn main() { ... }".into() }
+                ))]),
+        )),
+    )
+    .await?;
 
-    Ok(PromptResponse { stop_reason: "end_turn".into(), usage: None })
+    Ok(PromptResponse::new(StopReason::EndTurn))
 }
 ```

@@ -40,16 +40,28 @@ use the direct backend `http://10.1.0.2:4533` for API calls.
 
 ## Authentication (do this first, every session)
 
-Subsonic auth is token-based: generate a random `salt`, then `token = md5(password + salt)`. The raw password never goes over the wire. Build the shared auth query once and reuse it:
+Prefer `scripts/navidrome-api.sh` for common read-only requests. It sources the
+generated Navidrome config or `~/.lab/.env`, derives salted Subsonic auth for
+each call, and exposes `ping`, `artists`, `albums`, `album`, `artist`, `search`,
+`playlists`, `playlist`, `now-playing`, `starred`, and `scan-status`.
+
+Subsonic auth is token-based: generate a random `salt`, then `token = md5(password + salt)`. The raw password never goes over the wire. Build shared auth args once and reuse them with `curl --get`; this keeps usernames and query terms URL-encoded safely:
 
 ```bash
 URL="${NAVIDROME_URL%/}"
 SALT="$(openssl rand -hex 8)"
 TOKEN="$(printf '%s%s' "$NAVIDROME_PASSWORD" "$SALT" | md5sum | cut -d' ' -f1)"
-AUTH="u=${NAVIDROME_USERNAME}&t=${TOKEN}&s=${SALT}&v=1.16.1&c=lab&f=json"
+AUTH_ARGS=(
+  --data-urlencode "u=${NAVIDROME_USERNAME}"
+  --data-urlencode "t=${TOKEN}"
+  --data-urlencode "s=${SALT}"
+  --data-urlencode "v=1.16.1"
+  --data-urlencode "c=lab"
+  --data-urlencode "f=json"
+)
 ```
 
-`v` is the Subsonic protocol version, `c` is the client name (any string), `f=json` requests JSON. Every call below appends `?$AUTH`.
+`v` is the Subsonic protocol version, `c` is the client name (any string), `f=json` requests JSON. Every call below passes `"${AUTH_ARGS[@]}"`.
 
 > Never echo `$NAVIDROME_PASSWORD` or the derived `$TOKEN`. A fresh salt+token per session is fine; you do not need a new one per request.
 
@@ -57,17 +69,17 @@ AUTH="u=${NAVIDROME_USERNAME}&t=${TOKEN}&s=${SALT}&v=1.16.1&c=lab&f=json"
 
 | Intent | Request |
 |---|---|
-| Health / auth check | `curl -sS "$URL/rest/ping.view?$AUTH"` |
-| List all artists | `curl -sS "$URL/rest/getArtists.view?$AUTH"` |
-| List albums (newest 20) | `curl -sS "$URL/rest/getAlbumList2.view?type=newest&size=20&$AUTH"` |
-| Album details + tracks | `curl -sS "$URL/rest/getAlbum.view?id=<albumId>&$AUTH"` |
-| Search everything | `curl -sS "$URL/rest/search3.view?query=<term>&$AUTH"` |
-| List playlists | `curl -sS "$URL/rest/getPlaylists.view?$AUTH"` |
-| Playlist contents | `curl -sS "$URL/rest/getPlaylist.view?id=<playlistId>&$AUTH"` |
-| Now playing | `curl -sS "$URL/rest/getNowPlaying.view?$AUTH"` |
-| Starred items | `curl -sS "$URL/rest/getStarred2.view?$AUTH"` |
+| Health / auth check | `curl -sS --get "$URL/rest/ping.view" "${AUTH_ARGS[@]}"` |
+| List all artists | `curl -sS --get "$URL/rest/getArtists.view" "${AUTH_ARGS[@]}"` |
+| List albums (newest 20) | `curl -sS --get "$URL/rest/getAlbumList2.view" "${AUTH_ARGS[@]}" --data-urlencode type=newest --data-urlencode size=20` |
+| Album details + tracks | `curl -sS --get "$URL/rest/getAlbum.view" "${AUTH_ARGS[@]}" --data-urlencode "id=<albumId>"` |
+| Search everything | `curl -sS --get "$URL/rest/search3.view" "${AUTH_ARGS[@]}" --data-urlencode "query=<term>"` |
+| List playlists | `curl -sS --get "$URL/rest/getPlaylists.view" "${AUTH_ARGS[@]}"` |
+| Playlist contents | `curl -sS --get "$URL/rest/getPlaylist.view" "${AUTH_ARGS[@]}" --data-urlencode "id=<playlistId>"` |
+| Now playing | `curl -sS --get "$URL/rest/getNowPlaying.view" "${AUTH_ARGS[@]}"` |
+| Starred items | `curl -sS --get "$URL/rest/getStarred2.view" "${AUTH_ARGS[@]}"` |
 
-`getAlbumList2` `type` accepts `newest`, `recent`, `frequent`, `random`, `alphabeticalByName`, `starred`, etc. URL-encode user-supplied query terms.
+`getAlbumList2` `type` accepts `newest`, `recent`, `frequent`, `random`, `alphabeticalByName`, `starred`, etc. Keep user-supplied IDs and query terms in `--data-urlencode` args.
 
 Full endpoint and response reference: [`references/api.md`](references/api.md).
 

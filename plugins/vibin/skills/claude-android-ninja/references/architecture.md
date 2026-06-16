@@ -560,7 +560,7 @@ dependencies {
 }
 ```
 
-`androidx.compose.runtime` is Kotlin-only despite its namespace. Use it from `core/domain` to access `@Immutable` and `@Stable` without pulling in Android dependencies. See [compose-patterns.md](/references/compose-patterns.md#stability-annotations-immutable-vs-stable).
+`androidx.compose.runtime` is Kotlin-only despite its namespace. Use it from `core/domain` to access `@Immutable` and `@Stable` without pulling in Android dependencies. See [compose-patterns.md](compose-patterns.md#stability-annotations-immutable-vs-stable).
 
 ### Dependency Injection Setup
 
@@ -767,7 +767,7 @@ sealed class ValidationError : Exception() {
 
 Default: one ViewModel per screen, scoped to the back stack entry via `NavEntryDecorator`. Reusable composables stay stateless and hoist state to the parent screen.
 
-Escape hatch: scope a ViewModel to a composable's call site with `rememberViewModelStoreOwner()` only for genuinely complex, single-instance, non-screen composables (media-player widget, multi-step wizard, in-page editor) - see [android-navigation.md → Scoping to a non-screen composable](/references/android-navigation.md#scoping-to-a-non-screen-composable).
+Escape hatch: scope a ViewModel to a composable's call site with `rememberViewModelStoreOwner()` only for genuinely complex, single-instance, non-screen composables (media-player widget, multi-step wizard, in-page editor) - see [android-navigation.md → Scoping to a non-screen composable](android-navigation.md#scoping-to-a-non-screen-composable).
 
 Forbidden: a ViewModel inside `LazyColumn` items, list cells, or any reusable component.
 

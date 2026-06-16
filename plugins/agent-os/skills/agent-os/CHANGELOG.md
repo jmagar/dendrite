@@ -9,14 +9,15 @@ All notable changes to this skill are recorded here. Format roughly follows [Kee
 - Renamed the skill from `winbox` to `agent-os`; `winbox` remains a legacy trigger phrase only.
 - Added the shared web-dev priority ladder: CDP on agent-os, agent-browser, claude-in-chrome on agent-os, agent-os Windows-MCP, then claude-in-chrome on steamy.
 - Updated docs and examples to use `agent-os` as the primary name.
+- Updated current operational host references to `tootie`; older `dookie` references below are historical migration notes.
 
 ## 2026-05-17 (later — naming + side-channel correction)
 
 ### Changed
 
-- **Clarified the VM's official name.** The sandbox is officially the **`agent-os`** VM (container `agent-os-win11`, image `dockur/windows`) on host `dookie`. At the time, `winbox` remained the skill name; on 2026-05-23 the skill was renamed to `agent-os` and `winbox` became a legacy trigger phrase only.
+- **Clarified the VM's official name.** The sandbox is officially the **`agent-os`** VM (container `agent-os-win11`, image `dockur/windows`). At the time it ran on host `dookie`; it later moved to `tootie`. At the time, `winbox` remained the skill name; on 2026-05-23 the skill was renamed to `agent-os` and `winbox` became a legacy trigger phrase only.
 - Replaced all `docker ps | grep windows` / `docker inspect windows` references with the correct container name, `agent-os-win11`.
-- Promoted **SSH on `dookie:2222`** (host → guest port 22) from "not verified" to "confirmed exposed by the container" in the side-channel list. Whether sshd is actually answering inside the guest depends on first-boot provisioning, but the port forward is real.
+- Promoted host-forwarded SSH (then `dookie:2222`, now `tootie:2222`) from "not verified" to "confirmed exposed by the container" in the side-channel list. Whether sshd is actually answering inside the guest depends on first-boot provisioning, but the port forward is real.
 
 ## 2026-05-17
 
@@ -36,8 +37,8 @@ All notable changes to this skill are recorded here. Format roughly follows [Kee
 ### Kept (still relevant)
 
 - Notes about the `/oem` SMB drop folder (install-time only — gone after first boot).
-- RDP on `dookie:33890` as a future option if heavy interactive sessions are ever needed (now a weaker case since Windows-MCP exists).
-- noVNC at `http://dookie:8006` retained as a visual debugging fallback only.
+- RDP on the VM host's forwarded port `33890` as a future option if heavy interactive sessions are ever needed (now a weaker case since Windows-MCP exists).
+- noVNC on the VM host's forwarded port `8006` retained as a visual debugging fallback only.
 
 ### Migration note
 

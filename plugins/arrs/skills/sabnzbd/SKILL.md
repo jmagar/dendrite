@@ -77,8 +77,8 @@ Priority: `force`, `high`, `normal`, `low`, `paused`, `duplicate`
 ### Speed Control
 
 ```bash
-./scripts/sab-api.sh speedlimit 50      # 50% of max
-./scripts/sab-api.sh speedlimit 5M      # 5 MB/s
+./scripts/sab-api.sh speedlimit 5120    # 5 MB/s, in KB/s
+./scripts/sab-api.sh speedlimit 5M      # Helper also accepts M/K suffixes
 ./scripts/sab-api.sh speedlimit 0       # Unlimited
 ```
 
@@ -132,7 +132,7 @@ When the user asks about Usenet downloads:
 4. **"Resume downloads"** → Run `resume`
 5. **"Show download history"** → Run `history`
 6. **"Retry failed downloads"** → Run `retry-all` or `retry <nzo_id>`
-7. **"Slow down downloads"** → Run `speedlimit <percentage>` or `speedlimit <MB>M`
+7. **"Slow down downloads"** → Run `speedlimit <KB/s>` or use the helper's `M`/`K` suffix
 
 ## Notes
 
@@ -140,7 +140,7 @@ When the user asks about Usenet downloads:
 - Uses SABnzbd API (v2+)
 - All data operations return JSON
 - **Delete operations with --files are permanent** - always confirm before deleting downloaded files
-- Speed limits can be percentage (of configured max) or absolute values
+- Speed limits are sent to SABnzbd in KB/s; the helper converts values like `5M` to KB/s
 - NZB files can be added by URL (indexer links) or local file upload
 - Post-processing scripts are executed after download completion
 

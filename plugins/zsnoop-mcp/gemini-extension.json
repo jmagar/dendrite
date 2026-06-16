@@ -1,0 +1,27 @@
+{
+  "name": "zsnoop-mcp",
+  "version": "0.1.0",
+  "description": "ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server.",
+  "mcpServers": {
+    "zsnoop": {
+      "command": "uvx",
+      "args": [
+        "zsnoop-mcp"
+      ]
+    }
+  },
+  "settings": [
+    {
+      "name": "Zsnoop Config",
+      "description": "Optional path to hosts.toml. If unset, zsnoop-mcp uses $XDG_CONFIG_HOME/zsnoop-mcp/hosts.toml or ~/.config/zsnoop-mcp/hosts.toml.",
+      "envVar": "ZSNOOP_CONFIG",
+      "sensitive": false
+    },
+    {
+      "name": "Zsnoop Log Level",
+      "description": "Optional zsnoop-mcp stderr log level: DEBUG, INFO, WARNING, or ERROR.",
+      "envVar": "ZSNOOP_LOG_LEVEL",
+      "sensitive": false
+    }
+  ]
+}

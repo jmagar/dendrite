@@ -1,0 +1,5 @@
+{
+  "name": "acp",
+  "version": "0.1.0",
+  "description": "Agent Client Protocol skills for Rust, Python, and TypeScript implementations."
+}

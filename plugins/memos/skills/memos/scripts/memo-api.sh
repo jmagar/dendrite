@@ -5,12 +5,9 @@
 
 set -euo pipefail
 
-# Load credentials from .env
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
-[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
+_LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
+[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
 # shellcheck source=/dev/null
 source "$_LOAD_ENV" || { echo "ERROR: load-env.sh not found. Run /homelab-core:setup" >&2; exit 1; }
 load_service_credentials "memos" "MEMOS_URL" "MEMOS_API_TOKEN"
@@ -180,6 +177,19 @@ cmd_update() {
         esac
     done
 
+    if [[ -n "$add_tags" ]]; then
+        local existing="$content"
+        if [[ -z "$existing" ]]; then
+            existing=$(api_call GET "/memos/${memo_id}" | jq -r '.content // empty')
+        fi
+        IFS=',' read -ra tag_array <<< "$add_tags"
+        for tag in "${tag_array[@]}"; do
+            tag="${tag#\#}"
+            [[ -n "$tag" && "$existing" != *"#${tag}"* ]] && existing+=" #${tag}"
+        done
+        content="$existing"
+    fi
+
     # Build update payload
     local update_mask=""
     local payload="{"
@@ -238,8 +248,8 @@ cmd_archive() {
     # Strip "memos/" prefix if present
     memo_id="${memo_id#memos/}"
 
-    local payload='{"rowStatus": "ARCHIVED"}'
-    api_call PATCH "/memos/${memo_id}?updateMask=rowStatus" "$payload"
+    local payload='{"state": "ARCHIVED"}'
+    api_call PATCH "/memos/${memo_id}?updateMask=state" "$payload"
 }
 
 # Usage message

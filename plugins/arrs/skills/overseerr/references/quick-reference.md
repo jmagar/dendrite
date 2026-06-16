@@ -4,14 +4,14 @@ Common operations for quick copy-paste usage.
 
 ## Setup
 
-Add to `~/.config/lab-arrs/config.env`:
+Configure these values in the arrs plugin settings (`userConfig`). The plugin hook writes `~/.config/lab-arrs/config.env` automatically:
 
 ```bash
 OVERSEERR_URL="http://localhost:5055"
 OVERSEERR_API_KEY="your-api-key"
 ```
 
-Scripts automatically load credentials from `.env` file.
+Scripts automatically load credentials from that generated file. Direct edits are only for advanced troubleshooting and may be overwritten.
 
 ## User Authentication
 
@@ -34,42 +34,22 @@ curl -s "$OVERSEERR_URL/api/v1/search?query=inception&page=1" \
 ### Request Movie
 
 ```bash
-curl -X POST "$OVERSEERR_URL/api/v1/request" \
-  -H "X-Api-Key: $OVERSEERR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "mediaType": "movie",
-    "mediaId": 27205,
-    "is4k": false
-  }'
+# Search first, confirm the intended result, then request by mediaId.
+node ../scripts/search.mjs "Inception" --type movie
+node ../scripts/request.mjs "Inception" --type movie --mediaId 27205
 ```
 
 ### Request TV Show (Entire Series)
 
 ```bash
-curl -X POST "$OVERSEERR_URL/api/v1/request" \
-  -H "X-Api-Key: $OVERSEERR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "mediaType": "tv",
-    "mediaId": 1396,
-    "seasons": "all",
-    "is4k": false
-  }'
+node ../scripts/search.mjs "Breaking Bad" --type tv
+node ../scripts/request.mjs "Breaking Bad" --type tv --mediaId 1396 --seasons all
 ```
 
 ### Request Specific TV Season
 
 ```bash
-curl -X POST "$OVERSEERR_URL/api/v1/request" \
-  -H "X-Api-Key: $OVERSEERR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "mediaType": "tv",
-    "mediaId": 1396,
-    "seasons": [1, 2],
-    "is4k": false
-  }'
+node ../scripts/request.mjs "Breaking Bad" --type tv --mediaId 1396 --seasons 1,2
 ```
 
 ### Get All Requests
@@ -89,22 +69,19 @@ curl -s "$OVERSEERR_URL/api/v1/request/123" \
 ### Approve Request
 
 ```bash
-curl -X POST "$OVERSEERR_URL/api/v1/request/123/approve" \
-  -H "X-Api-Key: $OVERSEERR_API_KEY"
+node ../scripts/approve-request.mjs 123
 ```
 
 ### Decline Request
 
 ```bash
-curl -X POST "$OVERSEERR_URL/api/v1/request/123/decline" \
-  -H "X-Api-Key: $OVERSEERR_API_KEY"
+node ../scripts/decline-request.mjs 123
 ```
 
 ### Delete Request
 
 ```bash
-curl -X DELETE "$OVERSEERR_URL/api/v1/request/123" \
-  -H "X-Api-Key: $OVERSEERR_API_KEY"
+node ../scripts/delete-request.mjs 123
 ```
 
 ## Media Information
