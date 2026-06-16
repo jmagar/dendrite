@@ -5,17 +5,32 @@
 set -euo pipefail
 
 load_config() {
+  local config="${TEI_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/lab-tei/config.env}"
+  if [[ -f "$config" ]]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$config"
+    set +a
+  fi
   if [[ -z "${TEI_URL:-}" && -f "$HOME/.lab/.env" ]]; then
     TEI_URL="$(grep -E '^TEI_URL=' "$HOME/.lab/.env" 2>/dev/null | cut -d= -f2- || true)"
   fi
-  : "${TEI_URL:?set TEI_URL in environment or ~/.lab/.env}"
+  if [[ -z "${TEI_AUTH_HEADER:-}" && -f "$HOME/.lab/.env" ]]; then
+    TEI_AUTH_HEADER="$(grep -E '^TEI_AUTH_HEADER=' "$HOME/.lab/.env" 2>/dev/null | cut -d= -f2- || true)"
+  fi
+  : "${TEI_URL:?set TEI_URL in generated config, environment, or ~/.lab/.env}"
   TEI_URL="${TEI_URL%/}"
+  CURL_ARGS=()
+  if [[ -n "${TEI_AUTH_HEADER:-}" ]]; then
+    CURL_ARGS=(-H "$TEI_AUTH_HEADER")
+  fi
 }
 
 post_json() {
   local endpoint="$1"
   local payload="$2"
   curl -sS -X POST "${TEI_URL}${endpoint}" \
+    "${CURL_ARGS[@]}" \
     -H "Content-Type: application/json" \
     -d "$payload"
 }
@@ -44,8 +59,8 @@ esac
 load_config
 
 case "$cmd" in
-  health) curl -sS "${TEI_URL}/health" -w '\nHTTP %{http_code}\n' ;;
-  info) curl -sS "${TEI_URL}/info" ;;
+  health) curl -sS "${CURL_ARGS[@]}" "${TEI_URL}/health" -w '\nHTTP %{http_code}\n' ;;
+  info) curl -sS "${CURL_ARGS[@]}" "${TEI_URL}/info" ;;
   embed)
     text="${1:?text required}"
     post_json "/embed" "$(jq -n --arg inputs "$text" '{inputs:$inputs}')"

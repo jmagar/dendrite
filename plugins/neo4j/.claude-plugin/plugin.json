@@ -15,5 +15,39 @@
     "database",
     "cypher",
     "homelab"
-  ]
+  ],
+  "userConfig": {
+    "neo4j_user": {
+      "type": "string",
+      "title": "Username",
+      "description": "Neo4j username used for HTTP Basic authentication and cypher-shell.",
+      "required": true
+    },
+    "neo4j_password": {
+      "type": "string",
+      "title": "Password",
+      "description": "Neo4j password used for HTTP Basic authentication and cypher-shell.",
+      "sensitive": true,
+      "required": true
+    },
+    "neo4j_http_url": {
+      "type": "string",
+      "title": "HTTP URL",
+      "description": "Neo4j HTTP transactional API base URL, usually http://host:7474. Recommended for curl-based workflows.",
+      "required": false
+    },
+    "neo4j_url": {
+      "type": "string",
+      "title": "Bolt URL",
+      "description": "Optional Neo4j Bolt URL, usually bolt://host:7687. Used by cypher-shell and as a fallback to derive the default HTTP URL.",
+      "required": false
+    },
+    "neo4j_db": {
+      "type": "string",
+      "title": "Database",
+      "description": "Neo4j database name for transactional API calls.",
+      "required": false,
+      "default": "neo4j"
+    }
+  }
 }

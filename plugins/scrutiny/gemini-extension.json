@@ -1,5 +1,13 @@
 {
   "name": "scrutiny",
   "version": "0.1.0",
-  "description": "Skill for operating scrutiny via the lab MCP server / CLI."
+  "description": "Skill for operating scrutiny via the lab MCP server / CLI.",
+  "settings": [
+    {
+      "name": "Scrutiny URL",
+      "description": "Base URL of the Scrutiny web UI/API, including scheme. Do not include a trailing /api path.",
+      "envVar": "SCRUTINY_URL",
+      "sensitive": false
+    }
+  ]
 }

@@ -16,5 +16,20 @@
     "search",
     "ai",
     "homelab"
-  ]
+  ],
+  "userConfig": {
+    "qdrant_url": {
+      "type": "string",
+      "title": "Qdrant URL",
+      "description": "Base URL of the Qdrant REST API, including scheme and port. Do not include a trailing slash.",
+      "required": true
+    },
+    "qdrant_api_key": {
+      "type": "string",
+      "title": "API Key",
+      "description": "Optional Qdrant API key. Leave blank for unauthenticated local deployments.",
+      "sensitive": true,
+      "required": false
+    }
+  }
 }

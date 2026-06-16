@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zsnoop MCP"
+  short_description: "Explore ZFS snapshots and recover files through zsnoop-mcp."
+  default_prompt: "Use $zsnoop-mcp to inspect ZFS snapshots, compare versions, fetch files, or perform an explicitly confirmed restore."

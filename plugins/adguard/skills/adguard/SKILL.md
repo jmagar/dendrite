@@ -9,26 +9,30 @@ DNS-level ad blocking and network filtering. Talk to it directly over the AdGuar
 
 ## How to call it
 
-Prefer `scripts/adguard-api.sh` for common read-only calls. It sources
-`~/.lab/.env`, keeps the Basic auth password out of output, and exposes
+Prefer `scripts/adguard-api.sh` for common read-only calls. It sources the
+plugin-generated config first, then the environment and legacy `~/.lab/.env`,
+keeps the Basic auth password out of output, and exposes
 `status`, `stats`, `querylog`, `filtering`, and `check-host`.
 
-Read the base URL and credentials from `~/.lab/.env` without printing secrets:
+Configure `adguard_url`, `adguard_username`, and the sensitive
+`adguard_password` in Claude plugin settings or Gemini extension settings. The
+SessionStart/ConfigChange hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-adguard/config.env` with mode `600`.
+
+Read the base URL and credentials without printing secrets:
 
 ```bash
-set -a
-. ~/.lab/.env
-set +a
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-adguard/config.env" 2>/dev/null || source ~/.lab/.env
 
-: "${ADGUARD_URL:?missing ADGUARD_URL in ~/.lab/.env}"
-: "${ADGUARD_USERNAME:?missing ADGUARD_USERNAME in ~/.lab/.env}"
-: "${ADGUARD_PASSWORD:?missing ADGUARD_PASSWORD in ~/.lab/.env}"
+: "${ADGUARD_URL:?missing ADGUARD_URL}"
+: "${ADGUARD_USERNAME:?missing ADGUARD_USERNAME}"
+: "${ADGUARD_PASSWORD:?missing ADGUARD_PASSWORD}"
 AUTH=(-u "$ADGUARD_USERNAME:$ADGUARD_PASSWORD")
 ```
 
 Auth is HTTP Basic (`-u user:pass`). Never echo the password.
 
-> `ADGUARD_*` may be unset in `~/.lab/.env` — populate them before use.
+> Use `~/.lab/.env` only as a local migration fallback; prefer Claude/Gemini settings.
 
 ## Common operations
 
@@ -44,7 +48,9 @@ The version string and running state are fields inside `GET /control/status` (th
 
 ## Configuration
 
-`ADGUARD_URL`, `ADGUARD_USERNAME`, and `ADGUARD_PASSWORD` live in `~/.lab/.env`. Verify connectivity:
+`ADGUARD_URL`, `ADGUARD_USERNAME`, and `ADGUARD_PASSWORD` come from plugin
+settings, environment variables, or the legacy `~/.lab/.env` fallback. Verify
+connectivity:
 
 ```bash
 curl -sS -o /dev/null -w 'HTTP %{http_code}\n' "${AUTH[@]}" "$ADGUARD_URL/control/status"

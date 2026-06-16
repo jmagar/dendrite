@@ -15,29 +15,6 @@
     "status-page",
     "homelab"
   ],
-  "userConfig": {
-    "uptime_kuma_url": {
-      "type": "string",
-      "title": "Uptime Kuma URL",
-      "description": "Base URL of your Uptime Kuma instance, including scheme and (if non-default) port. Example: https://status.example.com or http://localhost:3001. No trailing slash needed.",
-      "required": true,
-      "default": "http://localhost:3001"
-    },
-    "uptime_kuma_metrics_api_key": {
-      "type": "string",
-      "title": "Metrics API key",
-      "description": "Uptime Kuma API key used to read the Prometheus /metrics endpoint via HTTP Basic auth (username blank, key as password). Create one under Settings → API Keys in the Uptime Kuma UI. Stored in secure OS storage, not settings.json.",
-      "sensitive": true,
-      "required": false
-    },
-    "uptime_kuma_status_slug": {
-      "type": "string",
-      "title": "Status page slug",
-      "description": "Optional slug of a published status page (the part after /status/ in its URL). Enables reading public status + heartbeat JSON without auth. Leave empty if you only use /metrics.",
-      "required": false,
-      "default": ""
-    }
-  },
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
   "interface": {

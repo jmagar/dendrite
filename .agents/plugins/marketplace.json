@@ -615,36 +615,6 @@
       }
     },
     {
-      "name": "swag-mcp",
-      "description": "SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration.",
-      "source": {
-        "source": "local",
-        "path": "./plugins/swag"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_USE"
-      },
-      "category": "Network",
-      "interface": {
-        "displayName": "SWAG MCP",
-        "shortDescription": "Manage SWAG reverse-proxy configuration through MCP workflows.",
-        "longDescription": "SWAG MCP helps create, edit, view, back up, and validate SWAG nginx reverse-proxy configs with auth integration and local or SSH-backed storage.",
-        "developerName": "Jacob Magar",
-        "category": "Network",
-        "capabilities": [
-          "Read",
-          "Write"
-        ],
-        "defaultPrompt": [
-          "Use SWAG MCP to create a proxy config.",
-          "Validate this nginx proxy configuration.",
-          "Inspect existing SWAG configs for a service."
-        ],
-        "brandColor": "#10B981"
-      }
-    },
-    {
       "name": "superpowers",
       "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques.",
       "source": {
@@ -2215,6 +2185,67 @@
           "Run a homelab action through the gateway."
         ],
         "brandColor": "#29B6F6"
+      }
+    },
+    {
+      "name": "aurora",
+      "description": "Aurora design system \u2014 dark-first navy/cyan/rose/violet operator and agent control-plane UI across web (the @aurora shadcn registry, var(--aurora-*) tokens), Android (the tv.tootie.aurora Jetpack Compose library), and CLI/editor themes.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/jmagar/aurora-design-system.git",
+        "path": "plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Design",
+      "interface": {
+        "displayName": "Aurora",
+        "shortDescription": "Aurora design system for web, Android, CLI, and editor surfaces.",
+        "longDescription": "Aurora packages Jacob's dark-first navy/cyan/rose/violet design system across the shadcn-compatible web registry, Android Compose library, and CLI/editor theme tokens.",
+        "developerName": "Jacob Magar",
+        "category": "Design",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "defaultPrompt": [
+          "Use Aurora tokens for this UI.",
+          "Install Aurora components from the registry.",
+          "Apply the Aurora design system to this interface."
+        ],
+        "brandColor": "#29B6F6"
+      }
+    },
+    {
+      "name": "zsnoop-mcp",
+      "description": "ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server.",
+      "source": {
+        "source": "local",
+        "path": "./plugins/zsnoop-mcp"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Operations",
+      "interface": {
+        "displayName": "Zsnoop MCP",
+        "shortDescription": "Explore ZFS snapshots and recover files through zsnoop-mcp.",
+        "longDescription": "Zsnoop MCP packages the upstream zsnoop-mcp stdio server and a skill for ZFS pool health, snapshot inventory, file history, local fetch recovery, and explicitly confirmed restore workflows over SSH or local transport.",
+        "developerName": "Mark Hellewell / Jacob Magar",
+        "category": "Operations",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "defaultPrompt": [
+          "Use Zsnoop MCP to list configured ZFS hosts.",
+          "Find when this file disappeared from ZFS snapshots.",
+          "Recover a file from a ZFS snapshot with zsnoop-mcp."
+        ],
+        "brandColor": "#2563EB"
       }
     }
   ]

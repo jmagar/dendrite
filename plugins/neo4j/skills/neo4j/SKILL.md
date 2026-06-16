@@ -10,9 +10,7 @@ Graph database — nodes, relationships, Cypher queries. Prefer read-only Cypher
 ## How to call it
 
 ```bash
-if [ -f "$HOME/.lab/.env" ]; then
-  set -a; . "$HOME/.lab/.env"; set +a
-fi
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-neo4j/config.env" 2>/dev/null || source ~/.lab/.env
 
 : "${NEO4J_DB:=neo4j}"
 
@@ -23,13 +21,19 @@ if [ -z "${NEO4J_HTTP_URL:-}" ] && [ -n "${NEO4J_URL:-}" ]; then
 fi
 
 [ -n "${NEO4J_USER:-}" ] && [ -n "${NEO4J_PASSWORD:-}" ] && [ -n "${NEO4J_HTTP_URL:-}" ] || {
-  echo "neo4j not configured - set NEO4J_USER, NEO4J_PASSWORD, and NEO4J_HTTP_URL (or NEO4J_URL) in ~/.lab/.env"
+  echo "neo4j not configured - set NEO4J_USER, NEO4J_PASSWORD, and NEO4J_HTTP_URL (or NEO4J_URL)"
 }
 
 AUTH=(-u "$NEO4J_USER:$NEO4J_PASSWORD")
 ```
 
 Auth is HTTP Basic. `bolt://` URLs are for binary Bolt clients (`cypher-shell`, drivers); curl needs the HTTP listener. Never echo the password.
+
+Configure `neo4j_user`, sensitive `neo4j_password`, optional
+`neo4j_http_url`/`neo4j_url`, and optional `neo4j_db` in Claude plugin settings
+or Gemini extension settings. The SessionStart/ConfigChange hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-neo4j/config.env` with mode `600`. Use
+`~/.lab/.env` only as a local migration fallback.
 
 ## Running Cypher
 
@@ -72,7 +76,9 @@ Any write Cypher (`CREATE`, `MERGE`, `SET`, `DELETE`, `DROP`, etc.) mutates the 
 
 ## Configuration
 
-`NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DB`, `NEO4J_URL` (bolt), and optionally `NEO4J_HTTP_URL` live in `~/.lab/.env`. Verify connectivity:
+`NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DB`, `NEO4J_URL` (bolt), and optionally
+`NEO4J_HTTP_URL` come from generated config, environment variables, or the
+legacy `~/.lab/.env` fallback. Verify connectivity:
 
 ```bash
 curl -sS "${AUTH[@]}" "$NEO4J_HTTP_URL/" -w '\nHTTP %{http_code}\n'

@@ -10,6 +10,7 @@ All notable changes to Dendrite are recorded here.
 - Added a curated-plugin inventory to the root `README.md`, including marketplace coverage and repo counts.
 - Added Gemini CLI extension manifests for every local plugin directory.
 - Added `plugins/scripts/generate-gemini-extensions` to regenerate Gemini manifests from plugin metadata, user config, and MCP snippets.
+- Added the `zsnoop-mcp` plugin and skill for ZFS snapshot exploration, file recovery, and guarded restore workflows.
 - Added Memos API helper coverage for current Memos v1 workflows, including authentication, memo updates, and attachment operations.
 - Added dedicated Overseerr request-moderation helpers for common approve, decline, retry, and listing workflows.
 - Added repeatable helper scripts for Jellyfin, Tracearr, Navidrome, AdGuard, Immich, Qdrant, TEI, Uptime Kuma, and MCPJam UI testing.
@@ -30,6 +31,6 @@ All notable changes to Dendrite are recorded here.
 ### Removed
 
 - Removed the Bitwarden plugin from Dendrite and from both marketplace manifests.
-- Removed duplicate or superseded Vibin skills now owned by dedicated plugins, including Agent OS, desktop app testing, SWAG config creation, and MCPJam inspection.
+- Removed duplicate or superseded Vibin skills now owned by dedicated plugins, including Agent OS, desktop app testing, and MCPJam inspection.
 - Removed the duplicate Vibin `yt-dlp` skill; `ytdl-mcp` now owns that marketplace capability.
 - Removed the obsolete Bitwarden-only `plugins/scripts/ensure-host-dirs` helper.

@@ -57,8 +57,10 @@ Install as a Claude Code plugin. You will be prompted for:
 
 - **SWAG Proxy Configs Path** -- local path to proxy-confs directory
 - **SWAG Proxy Configs URI** -- SSH URI for remote access (key-auth only)
+- **Remote SWAG MCP URL** -- optional HTTP MCP endpoint for remote mode
+- **Remote SWAG MCP Bearer Token** -- optional bearer token for remote mode
 
-One of the two is required.
+One of the proxy config location fields is required for stdio mode.
 
 ```bash
 /plugin marketplace add jmagar/claude-homelab
@@ -92,7 +94,7 @@ Two deployment paths are supported:
 | Path | Transport | Credentials | Auth |
 |------|-----------|-------------|------|
 | **Plugin (stdio)** | stdio | `userConfig` in plugin settings | None |
-| **Plugin (mcp-remote)** | HTTP gateway | Manual config | Bearer token |
+| **Plugin (mcp-remote)** | HTTP gateway | `userConfig` in plugin settings | Bearer token |
 | **Docker (HTTP)** | http | `.env` file | Bearer token |
 
 See [docs/CONFIG.md](docs/CONFIG.md) for full variable reference. All variables use the `SWAG_MCP_` prefix.

@@ -16,6 +16,7 @@
     "homelab"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Neo4j",
     "shortDescription": "Run Neo4j graph queries and inspect graph schema.",

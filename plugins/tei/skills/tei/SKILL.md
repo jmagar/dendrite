@@ -9,18 +9,28 @@ Hugging Face Text Embeddings Inference server: embed text, rerank candidates, an
 
 ## How to call it
 
-Prefer `scripts/tei-api.sh` for common TEI requests. It resolves `TEI_URL` from
-the environment or `~/.lab/.env` and exposes `health`, `info`, `embed`,
+Prefer `scripts/tei-api.sh` for common TEI requests. It resolves `TEI_URL` and
+optional `TEI_AUTH_HEADER` from the plugin-generated config first, then the
+environment or legacy `~/.lab/.env`, and exposes `health`, `info`, `embed`,
 `embed-batch`, `sparse`, `rerank`, `tokenize`, and `openai-embed`.
 
-Use the TEI base URL from the runtime environment or plugin/lab configuration. If `TEI_URL` is not already exported, read it from the configured lab env file without editing that file:
+Configure `tei_url` and optional sensitive `tei_auth_header` in Claude plugin
+settings or Gemini extension settings. The hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-tei/config.env` with mode `600`.
+
+Use the TEI base URL from plugin config, the runtime environment, or legacy lab
+configuration:
 
 ```bash
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-tei/config.env" 2>/dev/null || true
 TEI_URL=${TEI_URL:-$(grep -E '^TEI_URL=' ~/.lab/.env 2>/dev/null | cut -d= -f2-)}
 test -n "$TEI_URL" || echo "TEI_URL is not configured"
 ```
 
-TEI often runs unauthenticated on trusted networks. If the deployment is behind auth, use the configured header from plugin/server settings; do not put real tokens in examples or committed files.
+TEI often runs unauthenticated on trusted networks. If the deployment is behind
+auth, set `tei_auth_header` to the full header, for example
+`Authorization: Bearer <token>`. Do not put real tokens in examples or committed
+files.
 
 ## Common operations
 

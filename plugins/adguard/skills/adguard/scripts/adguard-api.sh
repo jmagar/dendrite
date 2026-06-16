@@ -4,16 +4,24 @@
 
 set -euo pipefail
 
+read_lab_env() {
+  awk -F= -v key="$1" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' "$HOME/.lab/.env" 2>/dev/null
+}
+
 load_config() {
-  if [[ -f "$HOME/.lab/.env" ]]; then
+  local config="${ADGUARD_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/lab-adguard/config.env}"
+  if [[ -f "$config" ]]; then
     set -a
     # shellcheck source=/dev/null
-    source "$HOME/.lab/.env"
+    source "$config"
     set +a
   fi
-  : "${ADGUARD_URL:?set ADGUARD_URL in ~/.lab/.env}"
-  : "${ADGUARD_USERNAME:?set ADGUARD_USERNAME in ~/.lab/.env}"
-  : "${ADGUARD_PASSWORD:?set ADGUARD_PASSWORD in ~/.lab/.env}"
+  ADGUARD_URL="${ADGUARD_URL:-$(read_lab_env ADGUARD_URL)}"
+  ADGUARD_USERNAME="${ADGUARD_USERNAME:-$(read_lab_env ADGUARD_USERNAME)}"
+  ADGUARD_PASSWORD="${ADGUARD_PASSWORD:-$(read_lab_env ADGUARD_PASSWORD)}"
+  : "${ADGUARD_URL:?set ADGUARD_URL in generated config, environment, or ~/.lab/.env}"
+  : "${ADGUARD_USERNAME:?set ADGUARD_USERNAME in generated config, environment, or ~/.lab/.env}"
+  : "${ADGUARD_PASSWORD:?set ADGUARD_PASSWORD in generated config, environment, or ~/.lab/.env}"
   ADGUARD_URL="${ADGUARD_URL%/}"
 }
 

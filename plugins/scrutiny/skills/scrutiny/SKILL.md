@@ -10,15 +10,14 @@ served under `/api`.
 
 ## How to call it
 
-Use an existing `SCRUTINY_URL` environment variable, or load it from the legacy
-Lab env file if present:
+Configure `scrutiny_url` in Claude plugin settings or Gemini extension settings.
+The SessionStart/ConfigChange hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-scrutiny/config.env` with mode `600`.
+Use an existing `SCRUTINY_URL` environment variable, or load it from generated
+plugin config with legacy Lab env as a fallback:
 
 ```bash
-if [ -z "${SCRUTINY_URL:-}" ] && [ -f "$HOME/.lab/.env" ]; then
-  set -a
-  . "$HOME/.lab/.env"
-  set +a
-fi
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-scrutiny/config.env" 2>/dev/null || source ~/.lab/.env
 
 : "${SCRUTINY_URL:?Set SCRUTINY_URL to the Scrutiny base URL}"
 ```

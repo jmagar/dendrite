@@ -11,23 +11,28 @@ direct collection, point, and search operations.
 ## How to call it
 
 Prefer `scripts/qdrant-api.sh` for common collection and point operations. It
-loads `QDRANT_URL` and optional `QDRANT_API_KEY` from the environment or
-`~/.lab/.env`, adds the API key header only when present, and exposes `health`,
+loads `QDRANT_URL` and optional `QDRANT_API_KEY` from the plugin-generated
+config first, then the environment or legacy `~/.lab/.env`, adds the API key
+header only when present, and exposes `health`,
 `collections`, `collection`, `create`, `scroll`, `query`, `upsert`, and
 `delete-collection`.
 
-Read connection settings from the environment first, then from `~/.lab/.env` if
-present. Do not print secrets, and do not add real API keys to repo examples or
-committed files.
+Configure `qdrant_url` and optional sensitive `qdrant_api_key` in Claude plugin
+settings or Gemini extension settings. The hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-qdrant/config.env` with mode `600`.
+
+Read connection settings without printing secrets, and do not add real API keys
+to repo examples or committed files.
 
 ```bash
 read_lab_env() {
   awk -F= -v key="$1" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' ~/.lab/.env 2>/dev/null
 }
 
+source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-qdrant/config.env" 2>/dev/null || true
 QDRANT_URL=${QDRANT_URL:-$(read_lab_env QDRANT_URL)}
 QDRANT_API_KEY=${QDRANT_API_KEY:-$(read_lab_env QDRANT_API_KEY)}
-: "${QDRANT_URL:?Set QDRANT_URL in the environment or ~/.lab/.env}"
+: "${QDRANT_URL:?Set QDRANT_URL in generated config, environment, or ~/.lab/.env}"
 AUTH=(); [ -n "$QDRANT_API_KEY" ] && AUTH=(-H "api-key: $QDRANT_API_KEY")
 ```
 
@@ -58,9 +63,9 @@ recreation.
 
 ## Configuration
 
-`QDRANT_URL` is required. `QDRANT_API_KEY` is optional. Prefer existing
-environment/plugin settings; use `~/.lab/.env` only as a local runtime source,
-not as committed configuration. Verify connectivity:
+`QDRANT_URL` is required. `QDRANT_API_KEY` is optional. Prefer Claude/Gemini
+settings; use `~/.lab/.env` only as a local runtime fallback, not as committed
+configuration. Verify connectivity:
 
 ```bash
 curl -sS "${AUTH[@]}" "$QDRANT_URL/" -w '\nHTTP %{http_code}\n'

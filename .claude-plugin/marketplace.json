@@ -212,11 +212,6 @@
       "description": "CalDAV and CardDAV workflow skills for Radicale."
     },
     {
-      "name": "swag-mcp",
-      "source": "./plugins/swag",
-      "description": "SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration."
-    },
-    {
       "name": "vibin",
       "source": "./plugins/vibin",
       "description": "Session, repo status, GitHub review, and CI workflow skills for branch/worktree readiness audits, quick push, session documentation, PR comments, and CI debugging."
@@ -574,7 +569,12 @@
         "url": "https://github.com/jmagar/aurora-design-system.git",
         "path": "plugin"
       },
-      "description": "Aurora design system — dark-first navy/cyan/rose/violet operator and agent control-plane UI across web (the @aurora shadcn registry, var(--aurora-*) tokens), Android (the tv.tootie.aurora Jetpack Compose library), and CLI/editor themes."
+      "description": "Aurora design system \u2014 dark-first navy/cyan/rose/violet operator and agent control-plane UI across web (the @aurora shadcn registry, var(--aurora-*) tokens), Android (the tv.tootie.aurora Jetpack Compose library), and CLI/editor themes."
+    },
+    {
+      "name": "zsnoop-mcp",
+      "source": "./plugins/zsnoop-mcp",
+      "description": "ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server."
     }
   ]
 }

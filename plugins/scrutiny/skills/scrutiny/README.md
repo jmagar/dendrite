@@ -6,6 +6,13 @@ Use when checking Scrutiny SMART drive health, disk failures, temperatures, and 
 
 Invoke this skill when the user request matches the trigger conditions in `SKILL.md`. The skill body is the source of truth for workflow steps, safety rules, and operational constraints.
 
+## Configuration
+
+Configure `scrutiny_url` in Claude plugin settings or Gemini extension settings.
+The plugin hook writes
+`${XDG_CONFIG_HOME:-~/.config}/lab-scrutiny/config.env`; legacy `~/.lab/.env`
+remains a local fallback during migration.
+
 ## Files
 
 - `SKILL.md` - agent workflow and trigger guidance

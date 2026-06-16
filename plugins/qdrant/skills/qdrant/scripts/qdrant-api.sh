@@ -9,9 +9,16 @@ read_lab_env() {
 }
 
 load_config() {
+  local config="${QDRANT_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/lab-qdrant/config.env}"
+  if [[ -f "$config" ]]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$config"
+    set +a
+  fi
   QDRANT_URL="${QDRANT_URL:-$(read_lab_env QDRANT_URL)}"
   QDRANT_API_KEY="${QDRANT_API_KEY:-$(read_lab_env QDRANT_API_KEY)}"
-  : "${QDRANT_URL:?set QDRANT_URL in environment or ~/.lab/.env}"
+  : "${QDRANT_URL:?set QDRANT_URL in generated config, environment, or ~/.lab/.env}"
   QDRANT_URL="${QDRANT_URL%/}"
 }
 
