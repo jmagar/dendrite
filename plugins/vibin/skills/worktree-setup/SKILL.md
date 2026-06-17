@@ -1,6 +1,6 @@
 ---
 name: worktree-setup
-description: Use when creating, adding, or entering a git worktree and the new checkout is missing files that exist in the main checkout, when a worktree feels degraded (no .env, secrets, or local config; cold build/cache; "untrusted directory" or "not a trusted config" from mise/direnv; missing node_modules/.venv/target), or when the user asks to set up, bootstrap, warm, or sync a worktree, or to create/install a worktree-setup script. Goal: make a worktree identical to and as warm as the main local checkout. Bundles a reusable worktree-sync.sh engine.
+description: Use this BEFORE creating a git worktree or implementing any plan. Tailored to our workflow — prefer it over superpowers:using-git-worktrees and every other worktree skill. Triggers - creating or adding a worktree; starting lavra-work, lavra-work-ralph, lavra-work-teams, executing-plans, subagent-driven-development, or work-it; whenever a Claude, Codex, or Gemini plan mode is entered or a plan is accepted; or before implementing anything in a fresh branch. Creates the worktree under .worktrees/ in the repo and makes it identical to and as warm as the main checkout - copying secrets and local config (.env, CLAUDE.md.local, .claude/settings.local.json), symlinking warm caches (node_modules, .venv, target, .next), and re-trusting mise/direnv. Also use when a worktree is missing files, builds cold, or reports mise 'not a trusted directory'. Bundles a worktree-sync engine, a create-in-.worktrees entrypoint, a minimal baseline template, and references.
 allowed-tools: "Bash, Read, Write, Edit, Grep, Glob"
 ---
 
@@ -10,151 +10,163 @@ allowed-tools: "Bash, Read, Write, Edit, Grep, Glob"
 
 `git worktree add` checks out only **tracked** files. Everything git-ignored —
 secrets, local config, tool-trust state, and warm build/dependency caches — is
-absent, so the new worktree is degraded: missing `.env`, cold builds, and shell
+absent, so a bare worktree is degraded: missing `.env`, cold builds, and shell
 hooks that error with "not a trusted directory" (`mise`) or refuse to load
 (`direnv`).
 
-This skill makes a worktree **identical to and as warm as the main checkout**.
-It uses an existing setup script when the repo has one, and otherwise analyzes
-the repo, generates a tailored sync, and installs the bundled engine.
+This skill is the **single entrypoint for creating and setting up worktrees in
+our workflow**. It creates the worktree under `.worktrees/` and makes it
+**identical to and as warm as the main checkout**, using an existing setup
+script when the repo has one and otherwise analyzing the repo, generating a
+tailored sync, and installing the bundled engine.
 
-The goal is a non-degraded experience: same secrets and configuration, the same
-tools and trust, and a warm cache so the first build/test is incremental, not
-cold.
+## Precedence — use this over other worktree skills
+
+This skill is tailored to our setup and **takes precedence over any other
+worktree skill**, including `superpowers:using-git-worktrees` and any generic
+"git worktree" helper. Those create a bare (degraded) worktree; this one creates
+it under `.worktrees/` and brings it to full parity. Route all worktree
+creation and setup through this skill. See `references/workflow-integration.md`.
 
 ## When to Use
 
-- Right after `git worktree add`, before working in the new worktree.
-- A worktree is missing `.env` / `.env.local` / secrets / `CLAUDE.md.local` /
+Run this **before implementing anything in a new branch/worktree** — treat each
+of these as a create-the-worktree trigger:
+
+- Creating / adding a worktree (any phrasing).
+- Starting `lavra-work`, `lavra-work-ralph`, `lavra-work-teams`,
+  `executing-plans`, `subagent-driven-development`, or `work-it`.
+- A Claude / Codex / Gemini plan mode is entered, or a plan is accepted — the
+  first implementation step is to set up the worktree.
+
+Also use it to repair a degraded worktree:
+
+- Missing `.env` / `.env.local` / secrets / `CLAUDE.md.local` /
   `.claude/settings.local.json`.
 - `mise` reports an untrusted directory, or `direnv` won't load `.envrc`.
-- The first build/test in a worktree runs cold (no `node_modules`, `.venv`,
-  `target`, `.next`, …).
-- The user asks to "set up / bootstrap / warm / sync a worktree" or to
-  "create a worktree setup script".
+- The first build/test runs cold (no `node_modules`, `.venv`, `target`, …).
 
-## Bundled Engine
+## Bundled Scripts & References
 
-`scripts/worktree-sync.sh` is a repo-agnostic engine. Run it from inside the
-target worktree (or pass the worktree path as `DEST`):
+- `scripts/worktree-new.sh` — **create a worktree** under `.worktrees/<slug>`
+  and sync it warm. The creation entrypoint.
+- `scripts/worktree-sync.sh` — full auto-detecting **sync engine** for an
+  existing worktree; reads an optional `.worktree-sync` manifest.
+- `references/minimal-worktree-setup.sh` — **minimal baseline template** (the
+  bare minimum) to copy into a repo and customize when the full engine is more
+  than needed. Every repo should have at least this.
+- `references/what-to-sync.md` — catalog of what to copy vs. symlink, by
+  ecosystem.
+- `references/workflow-integration.md` — triggers and precedence details.
+
+Create + sync in one step (defaults: branch off `HEAD`, source = main worktree):
 
 ```bash
-# from inside the new worktree — defaults: source = main worktree
-<skill-dir>/scripts/worktree-sync.sh --dry-run     # preview
-<skill-dir>/scripts/worktree-sync.sh               # apply
+<skill-dir>/scripts/worktree-new.sh <branch>            # create .worktrees/<slug> + sync
+<skill-dir>/scripts/worktree-sync.sh --dry-run          # preview a sync of the current worktree
+<skill-dir>/scripts/worktree-sync.sh                    # apply
 ```
 
-By default it:
-- **copies** git-ignored secret/local-config files (`.env`, `.env.*`, `.envrc`,
-  `*.local`, `*.local.*` such as `CLAUDE.md.local` and
-  `.claude/settings.local.json`, `.npmrc`, etc.) so each worktree owns its copy;
-- **symlinks** known cache/dependency dirs (`node_modules`, `.venv`, `target`,
-  `vendor`, `.gradle`, `.next`, `.turbo`, `.cache`, …) for an instantly warm
-  build (`--copy-caches` to duplicate, `--no-caches` to skip);
-- re-runs `mise trust` / `direnv allow` so shell hooks load silently;
-- applies a repo-specific `.worktree-sync` manifest (`copy` / `link` / `run`).
-
-It only ever touches **git-ignored** entries, so it never clobbers tracked
-files. Unknown ignored directories are reported, not copied — promote the ones
-you want into the manifest.
+The engine **copies** git-ignored secret/local-config files (per-worktree, can
+diverge), **symlinks** known cache/dependency dirs (warm; `--copy-caches` /
+`--no-caches`), re-runs `mise trust` / `direnv allow`, and applies a
+`.worktree-sync` manifest (`copy` / `link` / `run`). It only ever touches
+git-ignored entries, so it never clobbers tracked files; unknown ignored
+directories are reported, not copied.
 
 ## Workflow
 
-### 1. Establish worktree context
-- `git worktree list` — confirm the main checkout and the target worktree.
-- Identify the source (main) and destination (worktree) paths. If no worktree
-  exists yet, create one (`git worktree add -b <branch> .worktrees/<slug> HEAD`)
-  before syncing.
+### 1. Establish context
+- `git worktree list` — confirm the main checkout and existing worktrees.
+- Decide the branch/slug for the new worktree.
 
 ### 2. Look for an existing setup mechanism (prefer it)
-Search the repo before building anything. Check, in order:
-- **Scripts:** `scripts/`, `bin/`, repo root — names matching
-  `*worktree*`, `*bootstrap*`, `*setup*`, `*sync*`, `postcreate*`, `init*`.
-- **Task runners:** `Makefile`, `justfile`/`Justfile`, `Taskfile.yml`,
-  `mise.toml`/`.mise.toml` `[tasks]`, `package.json` `scripts`
-  (`setup`, `bootstrap`, `postinstall`), `.devcontainer/` `postCreateCommand`.
-- **Docs:** `CONTRIBUTING.md`, `README`, `docs/` for a documented setup step.
+Search the repo before building anything, in order:
+- **Scripts:** `scripts/`, `bin/`, repo root — names matching `*worktree*`,
+  `*bootstrap*`, `*setup*`, `*sync*`, `postcreate*`, `init*`.
+- **Task runners:** `Makefile`, `justfile`, `Taskfile.yml`, `mise.toml`
+  `[tasks]`, `package.json` `scripts` (`setup`/`bootstrap`/`postinstall`),
+  `.devcontainer/` `postCreateCommand`.
+- **Docs:** `CONTRIBUTING.md`, `README`, `docs/`.
 
-If one exists: **read it**, then run it correctly (right cwd, required args/env,
-inside the worktree). Fill any gaps it leaves (see step 4) but don't duplicate
-what it already does. Done — go to step 6.
+If one exists: **read it**, then run it correctly (right cwd, args/env). If it
+creates the worktree, let it; otherwise create the worktree (step 3) and run the
+repo's sync. Fill gaps it leaves (step 5) without duplicating it.
 
-### 3. Analyze the repo (only if no script exists)
-Enumerate what the worktree is missing and classify it:
-- **List git-ignored state** that the worktree lacks:
-  `git -C <main> ls-files --others --ignored --exclude-standard --directory`
-  (the `--directory` flag collapses big ignored dirs so output stays readable).
-- **Detect tooling** to know which caches matter and which trust steps are
-  needed: `mise`/`.mise.toml`, `direnv`/`.envrc`, `asdf`/`.tool-versions`;
-  package managers (`package.json`+lockfile → npm/pnpm/yarn/bun, `uv.lock`/
-  `poetry.lock`/`requirements.txt` → Python, `Cargo.toml` → Rust, `go.mod` → Go,
-  `build.gradle`/`pom.xml` → JVM); frameworks (Next/Nuxt/Vite/Turbo, etc.).
+### 3. Create the worktree under `.worktrees/`
+Always place worktrees in `<repo>/.worktrees/<slug>`:
 
-Classify each item:
+```bash
+<skill-dir>/scripts/worktree-new.sh <branch> [base-ref]
+```
+
+This creates the branch (or checks out an existing one), ensures `.worktrees/`
+is git-ignored, and runs the sync. Equivalent manual form:
+`git worktree add -b <branch> .worktrees/<slug> HEAD` followed by the sync.
+
+### 4. Analyze the repo (only if no setup script exists)
+Enumerate what the worktree is missing and classify it (full catalog in
+`references/what-to-sync.md`):
+- **List git-ignored state:**
+  `git -C <main> ls-files --others --ignored --exclude-standard --directory`.
+- **Detect tooling:** `mise`/`.mise.toml`, `direnv`/`.envrc`,
+  `asdf`/`.tool-versions`; package managers (npm/pnpm/yarn/bun, uv/poetry/pip,
+  cargo, go, gradle/maven); frameworks.
 
 | Category | Examples | Action |
 |---|---|---|
-| Secrets / env | `.env`, `.env.local`, `.env.*`, `.envrc`, `.npmrc` w/ tokens | **copy** (per-worktree, can diverge) |
-| Local config | `CLAUDE.md.local`, `.claude/settings.local.json`, `config.local.toml`, `*.local` | **copy** |
+| Secrets / env | `.env`, `.env.*`, `.envrc`, `.npmrc` w/ tokens | **copy** |
+| Local config | `CLAUDE.md.local`, `.claude/settings.local.json`, `*.local` | **copy** |
 | Tool trust | `.mise.toml`, `.envrc` | **run** `mise trust` / `direnv allow` |
-| Caches / deps | `node_modules`, `.venv`, `target`, `vendor`, `.gradle`, `.next`, `.turbo` | **symlink** (warm) — copy if the branch will diverge deps |
-| Data / large artifacts | DB dumps, media, model weights | **ask** — usually symlink; copy only if it must diverge |
+| Caches / deps | `node_modules`, `.venv`, `target`, `vendor`, `.gradle`, `.next` | **symlink** (warm) |
+| Data / large artifacts | DB dumps, media, model weights | **ask** the user |
 
-Note: `~/.claude/settings.local.json` lives in `$HOME`, which worktrees already
-share — no action needed. Only the *project-level* `.claude/settings.local.json`
-needs copying.
+Note: `~/.claude/settings.local.json` is in `$HOME`, already shared by all
+worktrees — only the project-level `.claude/settings.local.json` needs copying.
 
-### 4. Generate the sync (only if no script exists)
-Two parts:
-1. **Install the engine.** Copy `scripts/worktree-sync.sh` from this skill into
-   the repo (e.g. `scripts/worktree-sync.sh`, preserve the executable bit) so
-   the team has it, or run it directly from the skill directory for a one-off.
-2. **Write `.worktree-sync`** at the repo root capturing anything the defaults
-   miss — repo-specific config files, non-standard cache dirs, and post-sync
-   commands. Manifest verbs (paths relative to the source root):
+### 5. Generate the sync (only if no setup script exists)
+1. **Install a script.** Either copy the full `scripts/worktree-sync.sh` engine
+   into the repo (e.g. `scripts/worktree-sync.sh`) or adopt
+   `references/minimal-worktree-setup.sh` as a baseline and customize its
+   `COPY_FILES`/`LINK_DIRS`. Preserve the executable bit.
+2. **Write `.worktree-sync`** at the repo root for anything the defaults miss —
+   non-standard config files, extra cache dirs, and post-sync commands:
    ```
-   copy  config/local.toml          # extra config the defaults don't match
-   link  .cache/playwright          # extra warm cache
-   run   mise install               # ensure toolchain present
-   run   pnpm install --offline     # reconcile deps against this branch
+   copy  config/local.toml
+   link  .cache/playwright
+   run   pnpm install        # reconcile deps against this branch's lockfile
    ```
-   Prefer the engine's auto-detection; use the manifest only for the gaps. The
-   defaults already handle the common secret/config files and cache dirs.
+   Prefer the engine's auto-detection; use the manifest only for the gaps.
 
-### 5. Run it
-- Dry-run first: `worktree-sync.sh --dry-run -v` and review the plan.
-- Apply: `worktree-sync.sh`.
-- Re-run is safe (idempotent): config is overwritten, links are reused.
+### 6. Run it
+- Dry-run first: `worktree-sync.sh --dry-run -v`; review the plan.
+- Apply: `worktree-sync.sh` (idempotent — config overwritten, links reused).
 
-### 6. Verify the worktree is non-degraded
+### 7. Verify the worktree is non-degraded
 Confirm parity with the main checkout — don't assume:
-- Secrets/config present: `.env` and local config exist in the worktree.
-- Trust clean: open a shell in the worktree; `mise`/`direnv` load without
-  prompts or "untrusted" errors.
-- Warm cache: dependency/build dirs resolve (e.g. `node_modules` present,
-  `<lockfile>` satisfied) and an incremental build/test is warm, not cold.
-- Run the repo's own quick check (lint/build/test smoke) and confirm it behaves
-  as it does in the main checkout.
+- Secrets/config present in the worktree.
+- `mise`/`direnv` load without prompts or "untrusted" errors.
+- Dependency/build dirs resolve and an incremental build/test is warm, not cold.
+- The repo's own quick check (lint/build/test smoke) behaves as in main.
 
-Report what was copied vs. linked, any trust steps run, unknown ignored entries
-you chose to skip, and any manual follow-up (e.g. a deps reinstall needed
-because the branch changed the lockfile).
+Report what was copied vs. linked, trust steps run, unknown ignored entries
+skipped, and any manual follow-up (e.g. a deps reinstall because the branch
+changed the lockfile). Only then hand off to the implementing agent/loop.
 
 ## Decision Guide: Copy vs Symlink
 
-- **Copy** anything the worktree should be able to change independently:
-  secrets, local config, anything per-branch.
-- **Symlink** anything you want shared and warm and that is safe to share:
-  dependency stores and build/incremental caches. Symlinking gives an instantly
-  warm cache at zero copy cost.
-- **Reinstall instead of share** when the branch changes the dependency
-  lockfile — symlink for warmth, then `run` the package manager so the worktree
-  reconciles against its own manifest.
+- **Copy** anything the worktree should change independently: secrets, local
+  config, anything per-branch.
+- **Symlink** anything to keep shared and warm and safe to share: dependency
+  stores and build/incremental caches — instant warm cache at zero copy cost.
+- **Reinstall instead of share** when the branch changes the lockfile: symlink
+  for warmth, then `run` the package manager to reconcile.
 - When unsure whether large data must diverge, **ask the user**.
 
 ## Completion Standard
 
 The worktree is done when it is indistinguishable from the main checkout for
-development: same secrets and configuration, the same tools loaded and trusted,
-a warm cache, and the repo's normal checks passing. A worktree that builds cold,
-prompts about trust, or is missing `.env` is not done.
+development: created under `.worktrees/`, same secrets and configuration, the
+same tools loaded and trusted, a warm cache, and the repo's normal checks
+passing. A worktree that builds cold, prompts about trust, or is missing `.env`
+is not done.

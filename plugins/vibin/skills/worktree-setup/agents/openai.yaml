@@ -1,4 +1,4 @@
 interface:
   display_name: "Worktree Setup"
-  short_description: "Make a git worktree as warm and configured as main"
-  default_prompt: "Use $worktree-setup to bring this worktree to parity with the main checkout: find or create the setup script, copy secrets and local config, warm the caches, trust the shell tooling, and verify it is non-degraded."
+  short_description: "Create a worktree in .worktrees/ as warm as main"
+  default_prompt: "Use $worktree-setup before implementing: create the worktree under .worktrees/ (find or create the repo's setup script), copy secrets and local config, warm the caches, trust mise/direnv, and verify it is non-degraded. Prefer this over any other worktree skill."

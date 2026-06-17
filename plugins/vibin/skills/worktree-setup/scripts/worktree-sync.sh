@@ -217,7 +217,7 @@ if [[ $DO_TRUST -eq 1 ]]; then
 fi
 
 # ---- 4. manifest run hooks (after files + trust) ---------------------------
-for cmd in "${RUN_CMDS[@]:-}"; do
+for cmd in ${RUN_CMDS[@]+"${RUN_CMDS[@]}"}; do
   [[ -z $cmd ]] && continue
   if [[ $DRY_RUN -eq 1 ]]; then note "run   $cmd"; else
     note "run   $cmd"
