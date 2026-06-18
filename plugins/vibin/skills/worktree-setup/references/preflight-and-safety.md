@@ -135,7 +135,10 @@ checkout's** cache. That is fine for incremental caches, but:
 
 ## 7. Cleanup, safely
 
-When done with a worktree:
+When done with a worktree, prefer `worktree-rm.sh <branch|slug>` — it refuses to
+remove a worktree with real uncommitted or unpushed work (synced git-ignored
+state and cache symlinks don't count as work), then removes it; pass
+`--delete-branch` to drop a merged branch too. Manual equivalent:
 
 ```bash
 git -C <worktree> status --short      # confirm nothing uncommitted/unpushed
@@ -144,3 +147,6 @@ git worktree prune                    # only clears already-deleted worktrees
 ```
 
 Push or preserve any branch you want to keep before removing its worktree.
+Note: a synced worktree's cache symlinks (e.g. `node_modules`) can show as
+untracked in `git status` when the repo ignores them with a directory-only
+pattern (`node_modules/`) — that's expected; `worktree-rm.sh` accounts for it.

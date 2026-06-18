@@ -40,7 +40,7 @@ FETCH=0
 while [[ ${1:-} == --* && ${1:-} != "--" ]]; do
   case "$1" in
     --fetch) FETCH=1; shift;;
-    -h|--help) sed -n '2,/^set -Eeuo/{/^set -Eeuo/!p}' "$0" | sed 's/^# \{0,1\}//'; exit 0;;
+    -h|--help) awk 'NR==1{next} /^set -Eeuo/{exit} {sub(/^# ?/,""); print}' "$0"; exit 0;;
     *) die "unknown option: $1 (try --help)";;
   esac
 done

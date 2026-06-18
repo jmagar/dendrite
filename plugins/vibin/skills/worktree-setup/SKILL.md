@@ -51,7 +51,11 @@ Also use it to repair a degraded worktree:
 - `scripts/worktree-new.sh` — **create a worktree** under `.worktrees/<slug>`
   and sync it warm. The creation entrypoint.
 - `scripts/worktree-sync.sh` — full auto-detecting **sync engine** for an
-  existing worktree; reads an optional `.worktree-sync` manifest.
+  existing worktree (`.worktreeinclude` copies, cache symlinks, submodules,
+  Git-LFS, trust). Also `--init` (scaffold config) and `--check` (doctor mode).
+- `scripts/worktree-rm.sh` — **safe teardown**: refuses to remove a worktree
+  with real uncommitted/unpushed work, then removes it (and optionally the
+  branch). Synced state (git-ignored copies, cache symlinks) doesn't block it.
 - `references/minimal-worktree-setup.sh` — **minimal baseline template** (the
   bare minimum) to copy into a repo and customize when the full engine is more
   than needed. Every repo should have at least this.
@@ -60,11 +64,15 @@ Also use it to repair a degraded worktree:
 - `references/what-to-sync.md` — catalog of what to copy vs. symlink, by
   ecosystem.
 - `references/workflow-integration.md` — triggers and precedence details.
+- `tests/smoke.sh` — regression test for the scripts (create/sync/check/init/rm).
 
 Create + sync in one step (defaults: branch off `HEAD`, source = main worktree):
 
 ```bash
 <skill-dir>/scripts/worktree-new.sh <branch>            # create .worktrees/<slug> + sync
+<skill-dir>/scripts/worktree-sync.sh --check            # doctor: report parity gaps
+<skill-dir>/scripts/worktree-sync.sh --init             # scaffold .worktreeinclude/.worktree-sync
+<skill-dir>/scripts/worktree-rm.sh <branch>             # safe teardown when done
 <skill-dir>/scripts/worktree-sync.sh --dry-run          # preview a sync of the current worktree
 <skill-dir>/scripts/worktree-sync.sh                    # apply
 ```
@@ -77,9 +85,12 @@ CLI/agent-created worktrees the parity Claude provides natively for
 `--worktree`/subagent worktrees. When no `.worktreeinclude` exists, a curated
 default set of secret/config files is copied instead. The engine also
 **symlinks** known cache/dependency dirs (warm; `--copy-caches` / `--no-caches`),
+populates **submodules** (`git submodule update --init --recursive`) and
+**Git-LFS** content (`git lfs checkout`) so they aren't empty/pointer files,
 re-runs `mise trust` / `direnv allow`, and applies an optional `.worktree-sync`
-manifest for extras the native file can't express (`link` / `run`). It only ever
-touches git-ignored entries, so it never clobbers tracked files.
+manifest for extras the native file can't express (`link`, plus `run` — which
+executes arbitrary shell commands, same trust as a Makefile target). It only
+ever touches git-ignored entries for copies, so it never clobbers tracked files.
 
 ## Workflow
 
@@ -189,15 +200,24 @@ worktrees — only the project-level `.claude/settings.local.json` needs copying
 - Apply: `worktree-sync.sh` (idempotent — config overwritten, links reused).
 
 ### 7. Verify the worktree is non-degraded
-Confirm parity with the main checkout — don't assume:
-- Secrets/config present in the worktree.
+Run `worktree-sync.sh --check` (doctor mode) — it reports missing config, cold
+caches, uninitialized submodules, un-checked-out LFS files, and stale deps
+without changing anything. Then confirm what it can't:
 - `mise`/`direnv` load without prompts or "untrusted" errors.
-- Dependency/build dirs resolve and an incremental build/test is warm, not cold.
+- An incremental build/test is warm, not cold.
 - The repo's own quick check (lint/build/test smoke) behaves as in main.
 
-Report what was copied vs. linked, trust steps run, unknown ignored entries
-skipped, and any manual follow-up (e.g. a deps reinstall because the branch
-changed the lockfile). Only then hand off to the implementing agent/loop.
+Report what was copied vs. linked, trust/submodule/LFS steps run, unknown
+ignored entries skipped, and any manual follow-up (e.g. a deps reinstall because
+the branch changed the lockfile). Only then hand off to the implementing
+agent/loop.
+
+### 8. Tear down safely when done
+Use `worktree-rm.sh <branch|slug>` — it refuses to remove a worktree with real
+uncommitted or unpushed work (synced git-ignored state and cache symlinks don't
+count), then removes it; add `--delete-branch` to drop a merged branch too. Never
+`rm -rf` a worktree (that bypasses git's bookkeeping) and never destructive-clean
+through a symlinked cache (it deletes the **main** checkout's cache).
 
 ## Decision Guide: Copy vs Symlink
 

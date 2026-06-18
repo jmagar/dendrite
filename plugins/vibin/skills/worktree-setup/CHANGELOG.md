@@ -3,6 +3,26 @@
 All notable changes to the `worktree-setup` skill are recorded here. Format
 roughly follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] - 2026-06-18
+- Submodules + Git-LFS: the engine now runs `git submodule update --init
+  --recursive` when `.gitmodules` is present and `git lfs checkout` when the
+  repo uses LFS, so worktrees aren't left with empty submodules or pointer
+  files. Add `--no-submodules` / `--no-lfs`.
+- Added `scripts/worktree-rm.sh`: safe teardown that refuses to remove a
+  worktree with real uncommitted/unpushed work (synced git-ignored state and
+  cache symlinks don't count), then removes it; `--delete-branch` to drop the
+  branch, `--force` to override.
+- Added `worktree-sync.sh --init`: scaffold a starter `.worktreeinclude` (from
+  detected secret/config files) and `.worktree-sync` (suggested reinstall +
+  non-standard cache dirs).
+- Added `worktree-sync.sh --check` (doctor mode): report missing config, cold
+  caches, uninitialized submodules, un-checked-out LFS files, and stale deps
+  vs. the branch lockfile, without changing anything (exit 1 if gaps).
+- Added `tests/smoke.sh` regression harness (create/sync/check/init/rm/submodules).
+- Portability pass: replaced fragile `sed` help extraction with `awk`; audited
+  for bash-3.2/BSD safety (no `mapfile`/`declare -A`/`${,,}`).
+- Documented that `.worktree-sync` `run` executes arbitrary shell commands.
+
 ## [0.4.0] - 2026-06-18
 - Adopted Claude Code's native **`.worktreeinclude`** file as the primary
   copy mechanism: `worktree-sync.sh` reads it (`.gitignore` syntax) and copies

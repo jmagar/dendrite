@@ -81,6 +81,19 @@ post-sync step (a `.worktree-sync` `run` line or a manual reinstall):
 run pnpm install      # or: uv sync / cargo fetch / go mod download
 ```
 
+## Populate — submodules & Git-LFS
+
+These are tracked, so `git worktree add` records them — but the *content* may be
+missing, which degrades the worktree just like a missing cache:
+
+- **Submodules** (`.gitmodules` present) → submodule directories are empty until
+  `git submodule update --init --recursive` runs. The engine does this
+  automatically (skip with `--no-submodules`).
+- **Git-LFS** (`.gitattributes` has `filter=lfs`) → files may land as pointer
+  text instead of real content. The engine runs `git lfs checkout` (from the
+  shared local LFS store, no network); use `git lfs pull` if objects are missing.
+  Skip with `--no-lfs`.
+
 ## Trust — make shell tooling load silently
 
 Re-run trust so per-directory shell hooks load without prompts or errors:

@@ -85,14 +85,30 @@ into a repo as `scripts/worktree-setup.sh` and edit its `COPY_FILES` /
 - **Reinstall** (a `run` step) when the branch changes the lockfile.
 - **Ask** before sharing large data that may need to diverge.
 
+## Lifecycle commands
+
+```bash
+scripts/worktree-new.sh <branch> [base]   # create .worktrees/<slug> + warm sync
+scripts/worktree-sync.sh                   # (re)sync an existing worktree
+scripts/worktree-sync.sh --check           # doctor: report parity gaps, no changes
+scripts/worktree-sync.sh --init            # scaffold .worktreeinclude + .worktree-sync
+scripts/worktree-rm.sh <branch|slug>       # safe teardown (refuses to lose work)
+```
+
+The engine also populates **submodules** (`git submodule update --init
+--recursive`) and **Git-LFS** content (`git lfs checkout`) so they aren't empty
+or pointer files. The scripts are portable (GNU + BSD/macOS bash 3.2).
+
 ## Files
 
 - `SKILL.md` — workflow, triggers/precedence, classification table
-- `scripts/worktree-new.sh` — create `.worktrees/<slug>` + sync
-- `scripts/worktree-sync.sh` — the reusable sync engine
+- `scripts/worktree-new.sh` — create `.worktrees/<slug>` + sync (with pre-flight)
+- `scripts/worktree-sync.sh` — the sync engine (`--check`, `--init`, submodules/LFS)
+- `scripts/worktree-rm.sh` — safe teardown
 - `references/minimal-worktree-setup.sh` — bare-minimum baseline template
 - `references/preflight-and-safety.md` — dirty state, base choice, conflict
   foresight, and not destroying shared/others' work
 - `references/what-to-sync.md` — copy-vs-symlink catalog by ecosystem
 - `references/workflow-integration.md` — triggers + precedence detail
+- `tests/smoke.sh` — regression test for the scripts
 - `agents/openai.yaml` — OpenAI runtime metadata
