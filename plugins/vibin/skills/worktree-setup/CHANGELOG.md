@@ -3,6 +3,55 @@
 All notable changes to the `worktree-setup` skill are recorded here. Format
 roughly follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] - 2026-06-18
+- Submodules + Git-LFS: the engine now runs `git submodule update --init
+  --recursive` when `.gitmodules` is present and `git lfs checkout` when the
+  repo uses LFS, so worktrees aren't left with empty submodules or pointer
+  files. Add `--no-submodules` / `--no-lfs`.
+- Added `scripts/worktree-rm.sh`: safe teardown that refuses to remove a
+  worktree with real uncommitted/unpushed work (synced git-ignored state and
+  cache symlinks don't count), then removes it; `--delete-branch` to drop the
+  branch, `--force` to override.
+- Added `worktree-sync.sh --init`: scaffold a starter `.worktreeinclude` (from
+  detected secret/config files) and `.worktree-sync` (suggested reinstall +
+  non-standard cache dirs).
+- Added `worktree-sync.sh --check` (doctor mode): report missing config, cold
+  caches, uninitialized submodules, un-checked-out LFS files, and stale deps
+  vs. the branch lockfile, without changing anything (exit 1 if gaps).
+- Added `tests/smoke.sh` regression harness (create/sync/check/init/rm/submodules).
+- Portability pass: replaced fragile `sed` help extraction with `awk`; audited
+  for bash-3.2/BSD safety (no `mapfile`/`declare -A`/`${,,}`).
+- Documented that `.worktree-sync` `run` executes arbitrary shell commands.
+
+## [0.4.0] - 2026-06-18
+- Adopted Claude Code's native **`.worktreeinclude`** file as the primary
+  copy mechanism: `worktree-sync.sh` reads it (`.gitignore` syntax) and copies
+  only files that match a pattern AND are git-ignored, giving CLI/agent-created
+  worktrees parity with Claude's native `--worktree`/subagent behavior. Falls
+  back to curated defaults when no `.worktreeinclude` exists.
+- Added `--force` (and matching no-clobber semantics): an existing destination
+  file is not overwritten unless its contents differ and `--force` is given.
+  Added `--include PATH` to override the include file location.
+- `.worktree-sync` is now positioned for extras the native file can't express
+  (`link` / `run`); docs and the generate-step recommend `.worktreeinclude`
+  first and note `WorktreeCreate`/`WorktreeRemove` hooks (incl. non-git VCS).
+
+## [0.3.0] - 2026-06-18
+- Added a pre-flight & shared-repo safety layer so worktree work never loses
+  uncommitted/unpushed work — yours or anyone else's.
+- `worktree-new.sh`: read-only pre-flight before creating — warns when the
+  current checkout is dirty (with non-destructive recipes to carry changes),
+  lists existing worktrees, and reports how the base diverges from origin's
+  default branch so a rebase/conflict is anticipated, not a surprise. Added
+  `--fetch` to refresh remote-tracking refs first.
+- Added `references/preflight-and-safety.md`: assess dirty state, choose the
+  base ref deliberately, carry uncommitted work safely, anticipate conflicts
+  (divergence + overlapping branches), avoid destructive/global commands on
+  shared state, and clean up worktrees without losing work.
+- SKILL.md step 1 is now "Pre-flight & safety", emphasizing that agents are
+  rarely alone in a repo and must treat others' work with the same care as
+  their own.
+
 ## [0.2.0] - 2026-06-17
 - Made this the single worktree entrypoint for our workflow, with explicit
   precedence over `superpowers:using-git-worktrees` and other worktree skills.
