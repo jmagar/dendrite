@@ -80,6 +80,8 @@ into a repo as `scripts/worktree-setup.sh` and edit its `COPY_FILES` /
 - `scripts/worktree-new.sh` — create `.worktrees/<slug>` + sync
 - `scripts/worktree-sync.sh` — the reusable sync engine
 - `references/minimal-worktree-setup.sh` — bare-minimum baseline template
+- `references/preflight-and-safety.md` — dirty state, base choice, conflict
+  foresight, and not destroying shared/others' work
 - `references/what-to-sync.md` — copy-vs-symlink catalog by ecosystem
 - `references/workflow-integration.md` — triggers + precedence detail
 - `agents/openai.yaml` — OpenAI runtime metadata

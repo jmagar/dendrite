@@ -55,6 +55,8 @@ Also use it to repair a degraded worktree:
 - `references/minimal-worktree-setup.sh` — **minimal baseline template** (the
   bare minimum) to copy into a repo and customize when the full engine is more
   than needed. Every repo should have at least this.
+- `references/preflight-and-safety.md` — assess dirty state, choose the base,
+  anticipate conflicts, and avoid destroying shared/others' work.
 - `references/what-to-sync.md` — catalog of what to copy vs. symlink, by
   ecosystem.
 - `references/workflow-integration.md` — triggers and precedence details.
@@ -76,9 +78,36 @@ directories are reported, not copied.
 
 ## Workflow
 
-### 1. Establish context
-- `git worktree list` — confirm the main checkout and existing worktrees.
-- Decide the branch/slug for the new worktree.
+### 1. Pre-flight & safety (assess before creating anything)
+You are usually **not alone in this repo** — other agents/people may have
+worktrees, uncommitted work, and in-flight branches. Treat all of it as
+precious. Full detail in `references/preflight-and-safety.md`.
+
+- **Current state:** `git status --short --branch` and `git worktree list`. If
+  the current checkout is dirty, that is safe — creating a worktree never
+  touches it — but its uncommitted changes will **not** appear in the new
+  worktree (it starts from a committed ref). If you need them there, carry them
+  deliberately (commit, or `git stash push -u` then `git stash apply` in the
+  worktree, or a `git diff HEAD` patch). Never silently drop or "tidy" changes
+  you did not create.
+- **Choose the base deliberately:** for fresh work, `git fetch` and base on
+  `origin/main` (not a stale local `main`); to continue work, base on `HEAD`; to
+  build on someone's branch, base on `origin/<their-branch>`.
+- **Anticipate conflicts now, not later:** check how the base diverges from the
+  integration branch and what other branches touch, so a rebase/cherry-pick is
+  planned, not a surprise:
+  ```bash
+  git fetch origin
+  git rev-list --left-right --count HEAD...origin/main   # behind / ahead
+  git log --oneline HEAD..origin/main                    # what landed since
+  ```
+  If your base is behind `origin/main` or overlaps an active branch's files,
+  state the expected rebase/conflict cost up front.
+- **Shared state is shared:** the object store, refs, stash, config, and hooks
+  are common to all worktrees. Avoid destructive/global commands
+  (`reset --hard`, `clean -fdx`, `worktree remove --force`, `branch -D`,
+  force-push, `stash clear`) unless confirmed and tightly scoped — they can
+  destroy others' work. Decide the branch/slug for the new worktree.
 
 ### 2. Look for an existing setup mechanism (prefer it)
 Search the repo before building anything, in order:

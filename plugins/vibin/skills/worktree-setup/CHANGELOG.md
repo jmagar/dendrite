@@ -3,6 +3,22 @@
 All notable changes to the `worktree-setup` skill are recorded here. Format
 roughly follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] - 2026-06-18
+- Added a pre-flight & shared-repo safety layer so worktree work never loses
+  uncommitted/unpushed work — yours or anyone else's.
+- `worktree-new.sh`: read-only pre-flight before creating — warns when the
+  current checkout is dirty (with non-destructive recipes to carry changes),
+  lists existing worktrees, and reports how the base diverges from origin's
+  default branch so a rebase/conflict is anticipated, not a surprise. Added
+  `--fetch` to refresh remote-tracking refs first.
+- Added `references/preflight-and-safety.md`: assess dirty state, choose the
+  base ref deliberately, carry uncommitted work safely, anticipate conflicts
+  (divergence + overlapping branches), avoid destructive/global commands on
+  shared state, and clean up worktrees without losing work.
+- SKILL.md step 1 is now "Pre-flight & safety", emphasizing that agents are
+  rarely alone in a repo and must treat others' work with the same care as
+  their own.
+
 ## [0.2.0] - 2026-06-17
 - Made this the single worktree entrypoint for our workflow, with explicit
   precedence over `superpowers:using-git-worktrees` and other worktree skills.
