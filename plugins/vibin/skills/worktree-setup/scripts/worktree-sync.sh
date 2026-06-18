@@ -17,8 +17,17 @@
 #                                        to duplicate instead).
 #   - TRUST re-run `mise trust` / `direnv allow` so shell hooks load silently.
 #
-# Repo-specific additions live in a `.worktree-sync` manifest at the repo root
-# (see --help). Defaults cover the common cases with zero configuration.
+# What to copy is driven by `.worktreeinclude` (Claude Code's native file) when
+# present: .gitignore-syntax patterns, and only files that match AND are
+# git-ignored are copied (tracked files are never duplicated). This honors the
+# same file Claude uses for `--worktree`/subagent worktrees, giving CLI/agent
+# parity. Without a `.worktreeinclude`, a curated default set of secret/config
+# files is copied instead. An existing destination file is not overwritten
+# unless its contents differ and --force is given.
+#
+# Symlinked warm caches are auto-detected (zero config). Anything the native
+# file can't express — extra symlinks, post-sync commands — lives in an optional
+# `.worktree-sync` manifest at the repo root (see below).
 #
 # Usage:
 #   worktree-sync.sh [options] [DEST]
@@ -27,7 +36,9 @@
 #
 # Options:
 #   --from PATH         Source checkout to sync from. Default: the main worktree.
+#   --include PATH      .worktreeinclude file. Default: <source>/.worktreeinclude.
 #   --manifest PATH     Manifest file. Default: <source>/.worktree-sync.
+#   --force             Overwrite destination files that differ from the source.
 #   --copy-caches       Copy cache/dependency dirs instead of symlinking them.
 #   --no-caches         Skip cache/dependency dirs entirely.
 #   --no-trust          Skip `mise trust` / `direnv allow`.
@@ -35,10 +46,15 @@
 #   -v, --verbose       Explain skipped candidates too.
 #   -h, --help          Show this help.
 #
-# Manifest format (lines, # for comments). Paths are relative to the source root:
-#   copy  relative/path        # copy file or dir into the worktree
-#   link  relative/path        # symlink file or dir into the worktree
+# .worktreeinclude format (.gitignore syntax), at the source root:
+#   .env
+#   .env.local
+#   .claude/settings.local.json
+#
+# .worktree-sync manifest (lines, # for comments). Paths relative to source root:
+#   link  relative/path        # symlink a cache/dir the auto-detector misses
 #   run   shell command         # run after sync, with cwd = worktree root
+#   copy  relative/path        # copy a file/dir (.worktreeinclude is preferred)
 set -Eeuo pipefail
 
 SELF=$(basename "$0")
@@ -46,11 +62,13 @@ SELF=$(basename "$0")
 # ---- option parsing --------------------------------------------------------
 SOURCE=""
 DEST=""
+INCLUDE=""
 MANIFEST=""
 CACHE_MODE="link"   # link | copy | skip
 DO_TRUST=1
 DRY_RUN=0
 VERBOSE=0
+FORCE=0
 
 die()  { printf '%s: %s\n' "$SELF" "$*" >&2; exit 1; }
 note() { printf '  %s\n' "$*"; }
@@ -61,7 +79,9 @@ usage() { sed -n '2,/^set -Eeuo/{/^set -Eeuo/!p}' "$0" | sed 's/^# \{0,1\}//'; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --from)        SOURCE=${2:?--from needs a path}; shift 2;;
+    --include)     INCLUDE=${2:?--include needs a path}; shift 2;;
     --manifest)    MANIFEST=${2:?--manifest needs a path}; shift 2;;
+    --force)       FORCE=1; shift;;
     --copy-caches) CACHE_MODE="copy"; shift;;
     --no-caches)   CACHE_MODE="skip"; shift;;
     --no-trust)    DO_TRUST=0; shift;;
@@ -94,6 +114,7 @@ SOURCE=$(cd "$SOURCE" && pwd)
 
 [[ $SOURCE != "$DEST" ]] || die "source and destination are the same checkout ($SOURCE)"
 
+[[ -z $INCLUDE ]]  && INCLUDE="$SOURCE/.worktreeinclude"
 [[ -z $MANIFEST ]] && MANIFEST="$SOURCE/.worktree-sync"
 
 printf '%s\n' "worktree-sync: $SOURCE -> $DEST"
@@ -102,8 +123,14 @@ printf '%s\n' "worktree-sync: $SOURCE -> $DEST"
 # ---- helpers ---------------------------------------------------------------
 RSYNC=$(command -v rsync || true)
 
-do_copy() {  # src dest
+do_copy() {  # src dest [trailing-slash-for-dir]
   local s=$1 d=$2
+  # Native .worktreeinclude rule: do not overwrite a differing destination file
+  # unless --force. (Dir copies, signalled by $3, skip this check.)
+  if [[ -f $s && -e $d && -z ${3:-} ]]; then
+    if cmp -s "$s" "$d"; then vnote "copy  $rel (identical)"; return; fi
+    if [[ $FORCE -ne 1 ]]; then note "copy  $rel (exists & differs — use --force)"; return; fi
+  fi
   [[ $DRY_RUN -eq 1 ]] && { note "copy  $rel"; return; }
   mkdir -p "$(dirname "$d")"
   if [[ -n $RSYNC ]]; then
@@ -151,7 +178,24 @@ is_cache_dir() {
   esac
 }
 
-# ---- 1. walk git-ignored entries in the source ----------------------------
+# ---- 1a. copy files named by .worktreeinclude (Claude Code's native file) --
+# Honor the native file when present: copy untracked files that match its
+# patterns AND are git-ignored (so tracked files are never duplicated).
+HAVE_INCLUDE=0
+if [[ -f $INCLUDE ]]; then
+  HAVE_INCLUDE=1
+  echo "applying .worktreeinclude: $INCLUDE"
+  while IFS= read -r rel; do
+    [[ -z $rel ]] && continue
+    [[ -e "$SOURCE/$rel" ]] || continue
+    git -C "$SOURCE" check-ignore -q -- "$rel" || { vnote "file  $rel (matched but not git-ignored — skipped)"; continue; }
+    do_copy "$SOURCE/$rel" "$DEST/$rel"
+  done < <(git -C "$SOURCE" ls-files --others --ignored --exclude-from="$INCLUDE" 2>/dev/null)
+else
+  vnote "no .worktreeinclude at $INCLUDE (using curated config defaults)"
+fi
+
+# ---- 1b. scan git-ignored entries for warm caches (and config fallback) ----
 # --directory collapses ignored directories to a single `dir/` entry so we do
 # not recurse into (huge) node_modules etc.
 echo "scanning git-ignored entries..."
@@ -172,8 +216,12 @@ while IFS= read -r rel; do
       vnote "dir   $rel (not a known cache; add to .worktree-sync if needed)"
     fi
   elif [[ -f $src ]]; then
-    if is_config_file "$base"; then
+    # When a .worktreeinclude exists it is authoritative for copies; otherwise
+    # fall back to the curated secret/config heuristic.
+    if [[ $HAVE_INCLUDE -eq 0 ]] && is_config_file "$base"; then
       do_copy "$src" "$dst"
+    elif [[ $HAVE_INCLUDE -eq 1 ]]; then
+      vnote "file  $rel (copies governed by .worktreeinclude)"
     else
       vnote "file  $rel (not a known config file)"
     fi

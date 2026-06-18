@@ -69,12 +69,17 @@ Create + sync in one step (defaults: branch off `HEAD`, source = main worktree):
 <skill-dir>/scripts/worktree-sync.sh                    # apply
 ```
 
-The engine **copies** git-ignored secret/local-config files (per-worktree, can
-diverge), **symlinks** known cache/dependency dirs (warm; `--copy-caches` /
-`--no-caches`), re-runs `mise trust` / `direnv allow`, and applies a
-`.worktree-sync` manifest (`copy` / `link` / `run`). It only ever touches
-git-ignored entries, so it never clobbers tracked files; unknown ignored
-directories are reported, not copied.
+The engine **copies** the git-ignored files named in **`.worktreeinclude`**
+(Claude Code's native file — `.gitignore` syntax at the repo root; only files
+that match a pattern *and* are git-ignored are copied; a differing destination
+file is not overwritten without `--force`). Honoring the same file gives
+CLI/agent-created worktrees the parity Claude provides natively for
+`--worktree`/subagent worktrees. When no `.worktreeinclude` exists, a curated
+default set of secret/config files is copied instead. The engine also
+**symlinks** known cache/dependency dirs (warm; `--copy-caches` / `--no-caches`),
+re-runs `mise trust` / `direnv allow`, and applies an optional `.worktree-sync`
+manifest for extras the native file can't express (`link` / `run`). It only ever
+touches git-ignored entries, so it never clobbers tracked files.
 
 ## Workflow
 
@@ -142,30 +147,42 @@ Enumerate what the worktree is missing and classify it (full catalog in
   `asdf`/`.tool-versions`; package managers (npm/pnpm/yarn/bun, uv/poetry/pip,
   cargo, go, gradle/maven); frameworks.
 
-| Category | Examples | Action |
-|---|---|---|
-| Secrets / env | `.env`, `.env.*`, `.envrc`, `.npmrc` w/ tokens | **copy** |
-| Local config | `CLAUDE.md.local`, `.claude/settings.local.json`, `*.local` | **copy** |
-| Tool trust | `.mise.toml`, `.envrc` | **run** `mise trust` / `direnv allow` |
-| Caches / deps | `node_modules`, `.venv`, `target`, `vendor`, `.gradle`, `.next` | **symlink** (warm) |
-| Data / large artifacts | DB dumps, media, model weights | **ask** the user |
+| Category | Examples | Action | Where it goes |
+|---|---|---|---|
+| Secrets / env | `.env`, `.env.*`, `.envrc`, `.npmrc` w/ tokens | **copy** | `.worktreeinclude` |
+| Local config | `CLAUDE.md.local`, `.claude/settings.local.json`, `*.local` | **copy** | `.worktreeinclude` |
+| Tool trust | `.mise.toml`, `.envrc` | **run** `mise trust` / `direnv allow` | automatic |
+| Caches / deps | `node_modules`, `.venv`, `target`, `vendor`, `.gradle`, `.next` | **symlink** (warm) | auto-detected |
+| Data / large artifacts | DB dumps, media, model weights | **ask** the user | `.worktree-sync` `link` |
 
 Note: `~/.claude/settings.local.json` is in `$HOME`, already shared by all
 worktrees — only the project-level `.claude/settings.local.json` needs copying.
 
-### 5. Generate the sync (only if no setup script exists)
-1. **Install a script.** Either copy the full `scripts/worktree-sync.sh` engine
-   into the repo (e.g. `scripts/worktree-sync.sh`) or adopt
-   `references/minimal-worktree-setup.sh` as a baseline and customize its
-   `COPY_FILES`/`LINK_DIRS`. Preserve the executable bit.
-2. **Write `.worktree-sync`** at the repo root for anything the defaults miss —
-   non-standard config files, extra cache dirs, and post-sync commands:
+### 5. Generate the config (only if no setup script exists)
+1. **Write `.worktreeinclude`** at the repo root listing the git-ignored files to
+   copy (`.gitignore` syntax). This is Claude Code's native file, so Claude
+   honors it for the worktrees it creates and `worktree-sync.sh` honors it too:
+   ```gitignore
+   .env
+   .env.local
+   .claude/settings.local.json
+   config/secrets.json
    ```
-   copy  config/local.toml
+2. **Install a script** for the parts `.worktreeinclude` can't do (warm caches,
+   trust, reinstall): copy the full `scripts/worktree-sync.sh` engine into the
+   repo, or adopt `references/minimal-worktree-setup.sh` as a baseline. Preserve
+   the executable bit.
+3. **Write `.worktree-sync`** (optional) only for extras the engine's
+   auto-detection misses — non-standard cache dirs and post-sync commands:
+   ```
    link  .cache/playwright
    run   pnpm install        # reconcile deps against this branch's lockfile
    ```
-   Prefer the engine's auto-detection; use the manifest only for the gaps.
+4. **Wire it to run automatically** where possible: register the engine as a
+   Claude Code `WorktreeCreate` hook, or as the repo's existing bootstrap/setup
+   task, so future worktrees are warmed without a manual step. For a non-git VCS,
+   `.worktreeinclude` is not processed — a `WorktreeCreate` hook is the only
+   mechanism.
 
 ### 6. Run it
 - Dry-run first: `worktree-sync.sh --dry-run -v`; review the plan.

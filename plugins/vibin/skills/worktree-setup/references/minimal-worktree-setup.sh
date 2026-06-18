@@ -20,6 +20,9 @@ set -Eeuo pipefail
 
 # --- EDIT THESE for your repo ------------------------------------------------
 # Files copied from the main checkout (each worktree gets its own copy).
+# Tip: Claude Code reads these from a `.worktreeinclude` file (.gitignore syntax)
+# natively. List the same paths there so Claude-created worktrees match; this
+# template is the floor for git worktrees created by hand.
 COPY_FILES=(
   .env
   .env.local

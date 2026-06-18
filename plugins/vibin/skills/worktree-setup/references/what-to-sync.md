@@ -15,8 +15,29 @@ to a single entry so the output stays readable.
 
 ## Copy — secrets and per-worktree config
 
-Copy these so each worktree owns its copy and can diverge safely. Never symlink
-secrets (a symlink shares one file across worktrees and leaks edits).
+**Declare these in `.worktreeinclude`** (Claude Code's native file, repo root,
+`.gitignore` syntax). Claude copies matching **git-ignored** files into worktrees
+it creates (`--worktree`, subagent worktrees, desktop parallel sessions), and
+`worktree-sync.sh` honors the same file so CLI/agent-created worktrees get parity
+([tracking issue](https://github.com/anthropics/claude-code/issues/15327)). Only
+files that match a pattern **and** are git-ignored are copied, so tracked files
+are never duplicated; an existing differing file is not overwritten without
+`--force`. Example `.worktreeinclude`:
+
+```gitignore
+.env
+.env.local
+.claude/settings.local.json
+config/secrets.json
+```
+
+For a non-git VCS, `.worktreeinclude` is not processed — use Claude Code's
+`WorktreeCreate` / `WorktreeRemove` hooks instead (see the worktrees docs).
+
+The categories below are what to put in `.worktreeinclude` (and what
+`worktree-sync.sh` copies by default when no `.worktreeinclude` exists). Copy —
+never symlink — secrets: a symlink shares one file across worktrees and leaks
+edits.
 
 | What | Examples |
 |---|---|

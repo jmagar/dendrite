@@ -3,6 +3,19 @@
 All notable changes to the `worktree-setup` skill are recorded here. Format
 roughly follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] - 2026-06-18
+- Adopted Claude Code's native **`.worktreeinclude`** file as the primary
+  copy mechanism: `worktree-sync.sh` reads it (`.gitignore` syntax) and copies
+  only files that match a pattern AND are git-ignored, giving CLI/agent-created
+  worktrees parity with Claude's native `--worktree`/subagent behavior. Falls
+  back to curated defaults when no `.worktreeinclude` exists.
+- Added `--force` (and matching no-clobber semantics): an existing destination
+  file is not overwritten unless its contents differ and `--force` is given.
+  Added `--include PATH` to override the include file location.
+- `.worktree-sync` is now positioned for extras the native file can't express
+  (`link` / `run`); docs and the generate-step recommend `.worktreeinclude`
+  first and note `WorktreeCreate`/`WorktreeRemove` hooks (incl. non-git VCS).
+
 ## [0.3.0] - 2026-06-18
 - Added a pre-flight & shared-repo safety layer so worktree work never loses
   uncommitted/unpushed work — yours or anyone else's.

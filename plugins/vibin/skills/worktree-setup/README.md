@@ -54,12 +54,23 @@ scripts/worktree-sync.sh --dry-run   # preview
 scripts/worktree-sync.sh             # apply
 ```
 
-- **copies** git-ignored secret/local-config files (per-worktree, can diverge)
+- **copies** the git-ignored files named in **`.worktreeinclude`** (Claude
+  Code's native file, `.gitignore` syntax; only matched *and* git-ignored files,
+  no-clobber without `--force`) — falling back to curated defaults if absent
 - **symlinks** known cache/dependency dirs (warm; `--copy-caches` / `--no-caches`)
 - runs `mise trust` / `direnv allow`
-- applies a `.worktree-sync` manifest: `copy <path>` / `link <path>` / `run <cmd>`
+- applies an optional `.worktree-sync` manifest for extras: `link` / `run`
 
 It only ever touches git-ignored entries, so it never clobbers tracked files.
+
+### `.worktreeinclude` (native) vs `.worktree-sync` (extras)
+
+- **`.worktreeinclude`** — repo root, `.gitignore` syntax, lists git-ignored
+  files to **copy**. Read by Claude Code natively for `--worktree`/subagent
+  worktrees; `worktree-sync.sh` honors the same file for CLI/agent parity.
+- **`.worktree-sync`** — optional, for what the native file can't express:
+  `link <path>` (extra warm cache) and `run <cmd>` (e.g. `mise install`,
+  reinstall deps).
 
 ## Minimal baseline
 

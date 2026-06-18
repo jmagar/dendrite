@@ -59,6 +59,16 @@ degraded checkout.
    `.worktree-sync` manifest for repo-specific extras (see `what-to-sync.md`).
 4. **Verify** parity before handing off to the implementing agent/loop.
 
+## Config files
+
+- **`.worktreeinclude`** (repo root, `.gitignore` syntax) — the git-ignored
+  files to copy into worktrees. This is Claude Code's **native** file: Claude
+  honors it for `--worktree`/subagent/desktop worktrees, and `worktree-sync.sh`
+  honors the same file so worktrees created by the CLI, agents, or plain
+  `git worktree add` get the same copies ([CLI parity issue](https://github.com/anthropics/claude-code/issues/15327)).
+- **`.worktree-sync`** (optional) — extras the native file can't express:
+  `link <path>` for an extra warm cache, `run <cmd>` for post-sync commands.
+
 ## Scripts vs. template
 
 - `scripts/worktree-new.sh` — create `.worktrees/<slug>` + sync. The "create a
