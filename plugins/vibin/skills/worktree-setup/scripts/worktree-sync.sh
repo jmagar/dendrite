@@ -107,7 +107,14 @@ while [[ $# -gt 0 ]]; do
     -v|--verbose)   VERBOSE=1; shift;;
     -h|--help)      usage; exit 0;;
     -*)             die "unknown option: $1 (try --help)";;
-    *)              [[ -z $DEST ]] && DEST=$1 || die "unexpected argument: $1"; shift;;
+    *)
+      if [[ -z $DEST ]]; then
+        DEST=$1
+      else
+        die "unexpected argument: $1"
+      fi
+      shift
+      ;;
   esac
 done
 
@@ -117,10 +124,24 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git rep
 main_worktree() { git worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}'; }
 
 # ---- classifiers (portable: no associative arrays, bash 3.2-safe) ----------
+safe_relative_path() {
+  local p=$1
+  [[ -n $p && $p != /* ]] || return 1
+  case "/$p/" in
+    */../*|*/./*) return 1;;
+  esac
+  return 0
+}
+
+ignored_source_path() {
+  local p=$1
+  git -C "$SOURCE" check-ignore -q -- "$p"
+}
+
 # basename patterns that identify copy-worthy secret / local-config files
 is_config_file() {
   case "$1" in
-    *.example|*.sample|*.template|*.dist|*.md.example) return 1;;
+    *.md.example|*.example|*.sample|*.template|*.dist) return 1;;
   esac
   case "$1" in
     .env|.env.*|.envrc|.npmrc|.yarnrc|.yarnrc.yml|.netrc|.pgpass) return 0;;
@@ -245,7 +266,9 @@ if [[ $CHECK -eq 1 ]]; then
   else
     while IFS= read -r rel; do
       rel=${rel%/}
-      [[ -f "$SOURCE/$rel" ]] && is_config_file "$(basename "$rel")" || continue
+      if ! [[ -f "$SOURCE/$rel" ]] || ! is_config_file "$(basename "$rel")"; then
+        continue
+      fi
       [[ -e "$DEST/$rel" ]] || { echo "  MISSING config: $rel"; gaps=$((gaps+1)); }
     done < <(git -C "$SOURCE" ls-files --others --ignored --exclude-standard --directory 2>/dev/null)
   fi
@@ -382,8 +405,26 @@ if [[ -f $MANIFEST ]]; then
     verb=${line%% *}
     arg=${line#* }
     case "$verb" in
-      copy) rel=$arg; [[ -e "$SOURCE/$arg" ]] && do_copy "$SOURCE/$arg" "$DEST/$arg" || vnote "copy  $arg (missing in source)";;
-      link) rel=$arg; [[ -e "$SOURCE/$arg" ]] && do_link "$SOURCE/$arg" "$DEST/$arg" || vnote "link  $arg (missing in source)";;
+      copy)
+        rel=$arg
+        safe_relative_path "$arg" || die "manifest: '$arg' must be a relative path inside the repo"
+        if [[ -e "$SOURCE/$arg" ]]; then
+          ignored_source_path "$arg" || die "manifest: refusing to copy tracked/non-ignored path '$arg'"
+          do_copy "$SOURCE/$arg" "$DEST/$arg"
+        else
+          vnote "copy  $arg (missing in source)"
+        fi
+        ;;
+      link)
+        rel=$arg
+        safe_relative_path "$arg" || die "manifest: '$arg' must be a relative path inside the repo"
+        if [[ -e "$SOURCE/$arg" ]]; then
+          ignored_source_path "$arg" || die "manifest: refusing to link tracked/non-ignored path '$arg'"
+          do_link "$SOURCE/$arg" "$DEST/$arg"
+        else
+          vnote "link  $arg (missing in source)"
+        fi
+        ;;
       run)  RUN_CMDS+=("$arg");;
       *)    die "manifest: unknown verb '$verb' (use copy|link|run)";;
     esac
@@ -415,14 +456,22 @@ fi
 # ---- 5. trust shell tooling so hooks load without prompts ------------------
 if [[ $DO_TRUST -eq 1 ]]; then
   if command -v mise >/dev/null 2>&1 \
-     && ls "$DEST"/.mise.toml "$DEST"/mise.toml "$DEST"/.config/mise/config.toml >/dev/null 2>&1; then
+     && { [[ -f "$DEST/.mise.toml" ]] || [[ -f "$DEST/mise.toml" ]] || [[ -f "$DEST/.config/mise/config.toml" ]]; }; then
     if [[ $DRY_RUN -eq 1 ]]; then note "trust mise ($DEST)"; else
-      ( cd "$DEST" && mise trust >/dev/null 2>&1 ) && note "trust mise" || note "trust mise (failed — run 'mise trust' manually)"
+      if ( cd "$DEST" && mise trust >/dev/null 2>&1 ); then
+        note "trust mise"
+      else
+        note "trust mise (failed — run 'mise trust' manually)"
+      fi
     fi
   fi
   if command -v direnv >/dev/null 2>&1 && [[ -f "$DEST/.envrc" ]]; then
     if [[ $DRY_RUN -eq 1 ]]; then note "trust direnv ($DEST)"; else
-      ( cd "$DEST" && direnv allow >/dev/null 2>&1 ) && note "trust direnv" || note "trust direnv (failed — run 'direnv allow' manually)"
+      if ( cd "$DEST" && direnv allow >/dev/null 2>&1 ); then
+        note "trust direnv"
+      else
+        note "trust direnv (failed — run 'direnv allow' manually)"
+      fi
     fi
   fi
 fi

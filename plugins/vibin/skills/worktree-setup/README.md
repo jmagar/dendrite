@@ -61,7 +61,9 @@ scripts/worktree-sync.sh             # apply
 - runs `mise trust` / `direnv allow`
 - applies an optional `.worktree-sync` manifest for extras: `link` / `run`
 
-It only ever touches git-ignored entries, so it never clobbers tracked files.
+Auto-detection only touches git-ignored entries. Manifest `copy` / `link` paths
+must be relative paths inside the repo and must be git-ignored; absolute paths,
+`..`, and tracked files are refused. Review manifest `run` lines before applying.
 
 ### `.worktreeinclude` (native) vs `.worktree-sync` (extras)
 

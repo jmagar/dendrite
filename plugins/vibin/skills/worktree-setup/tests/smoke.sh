@@ -28,11 +28,12 @@ no()  { printf 'FAIL: %s\n' "$*"; FAILED=1; }
 check() { if eval "$1"; then ok "$2"; else no "$2 [cond: $1]"; fi; }
 
 TMP=$(mktemp -d)
-cleanup() { cd /; rm -rf "$TMP"; }
+# shellcheck disable=SC2329 # Invoked by the EXIT trap below.
+cleanup() { cd / || exit; rm -rf "$TMP"; }
 trap cleanup EXIT
 
 # --- build a main repo ------------------------------------------------------
-$GIT init -q "$TMP/repo"; cd "$TMP/repo"
+$GIT init -q "$TMP/repo"; cd "$TMP/repo" || exit
 $GIT config user.email t@t.t; $GIT config user.name tester
 printf 'node_modules/\n.env\n*.local\nsecret.json\n.claude/settings.local.json\n' > .gitignore
 echo app > app.txt; mkdir -p .claude; $GIT add -A; $GIT commit -qm init
@@ -80,7 +81,7 @@ check "[[ ! -e '$TMP/repo/.worktrees/wip-x/scratch.note' ]]" "untracked work not
 $GIT checkout -q -- app.txt; rm -f scratch.note
 
 echo "== worktree-sync --init =="
-rm -rf "$TMP/repo2"; $GIT init -q "$TMP/repo2"; cd "$TMP/repo2"
+rm -rf "$TMP/repo2"; $GIT init -q "$TMP/repo2"; cd "$TMP/repo2" || exit
 $GIT config user.email t@t.t; $GIT config user.name tester
 printf 'node_modules/\n.env\n' > .gitignore
 echo '{}' > package-lock.json; echo x > app; $GIT add -A; $GIT commit -qm init
@@ -90,10 +91,10 @@ check "[[ -f .worktreeinclude ]]"                    "--init wrote .worktreeincl
 check "grep -q '^.env$' .worktreeinclude"            "--init listed .env in .worktreeinclude"
 check "[[ -f .worktree-sync ]]"                      "--init wrote .worktree-sync"
 check "grep -q 'npm ci' .worktree-sync"              "--init suggested a reinstall (npm ci)"
-cd "$TMP/repo"
+cd "$TMP/repo" || exit
 
 echo "== submodules =="
-$GIT init -q "$TMP/lib"; ( cd "$TMP/lib"; $GIT config user.email t@t.t; $GIT config user.name t; echo libcode > lib.txt; $GIT add -A; $GIT commit -qm lib )
+$GIT init -q "$TMP/lib"; ( cd "$TMP/lib" || exit; $GIT config user.email t@t.t; $GIT config user.name t; echo libcode > lib.txt; $GIT add -A; $GIT commit -qm lib )
 if $GIT -C "$TMP/repo" submodule add -q "$TMP/lib" vendored-lib >/dev/null 2>&1; then
   $GIT -C "$TMP/repo" commit -qm "add submodule"
   "$NEW" sub/test >/dev/null 2>&1

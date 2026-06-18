@@ -82,9 +82,15 @@ for d in "${LINK_DIRS[@]}"; do
 done
 
 # 3. TRUST shell tooling so hooks load without prompts.
-command -v mise   >/dev/null 2>&1 && [[ -f "$DEST/.mise.toml" || -f "$DEST/mise.toml" ]] \
-  && ( cd "$DEST" && mise trust >/dev/null 2>&1 ) && echo "  trusted mise"
-command -v direnv >/dev/null 2>&1 && [[ -f "$DEST/.envrc" ]] \
-  && ( cd "$DEST" && direnv allow >/dev/null 2>&1 ) && echo "  allowed direnv"
+if command -v mise >/dev/null 2>&1 && [[ -f "$DEST/.mise.toml" || -f "$DEST/mise.toml" ]]; then
+  ( cd "$DEST" && mise trust >/dev/null 2>&1 ) \
+    && echo "  trusted mise" \
+    || echo "  mise trust failed; run 'mise trust' manually"
+fi
+if command -v direnv >/dev/null 2>&1 && [[ -f "$DEST/.envrc" ]]; then
+  ( cd "$DEST" && direnv allow >/dev/null 2>&1 ) \
+    && echo "  allowed direnv" \
+    || echo "  direnv allow failed; run 'direnv allow' manually"
+fi
 
 echo "done: $DEST"

@@ -39,7 +39,14 @@ while [[ $# -gt 0 ]]; do
     -n|--dry-run)    DRY_RUN=1; shift;;
     -h|--help)       usage; exit 0;;
     -*)              die "unknown option: $1 (try --help)";;
-    *)               [[ -z $TARGET ]] && TARGET=$1 || die "unexpected argument: $1"; shift;;
+    *)
+      if [[ -z $TARGET ]]; then
+        TARGET=$1
+      else
+        die "unexpected argument: $1"
+      fi
+      shift
+      ;;
   esac
 done
 
@@ -132,8 +139,11 @@ if [[ $DELETE_BRANCH -eq 1 && -n $BRANCH ]]; then
     if [[ $DRY_RUN -eq 1 ]]; then
       note "git branch $local_flag $BRANCH"
     else
-      git -C "$ROOT" branch "$local_flag" "$BRANCH" && note "deleted branch $BRANCH" \
-        || note "branch $BRANCH not deleted (unmerged — use --force to force)"
+      if git -C "$ROOT" branch "$local_flag" "$BRANCH"; then
+        note "deleted branch $BRANCH"
+      else
+        note "branch $BRANCH not deleted (unmerged — use --force to force)"
+      fi
     fi
   fi
 fi
