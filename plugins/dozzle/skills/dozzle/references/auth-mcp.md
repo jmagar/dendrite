@@ -79,7 +79,7 @@ server:
   "mcpServers": {
     "dozzle": {
       "type": "http",
-      "url": "${userConfig.dozzle_mcp_url}"
+      "url": "${user_config.dozzle_mcp_url}"
     }
   }
 }

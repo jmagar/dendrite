@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-target="plugins/dozzle"
+target="dozzle"
 
 failures=0
 
@@ -31,7 +31,7 @@ if [[ ! -e "$mcp_file" ]]; then
   failures=$((failures + 1))
 elif jq -e '
   .mcpServers.dozzle.type == "http"
-  and .mcpServers.dozzle.url == "${userConfig.dozzle_mcp_url}"
+	  and .mcpServers.dozzle.url == "${user_config.dozzle_mcp_url}"
   and (.mcpServers.dozzle.command | not)
   and (.mcpServers.dozzle.args | not)
 ' "$mcp_file" >/dev/null; then

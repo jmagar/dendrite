@@ -1,5 +1,5 @@
 {
-  "name": "dendrite",
+  "name": "dendrite-no-mcp",
   "owner": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"
@@ -104,7 +104,7 @@
     },
     {
       "name": "agent-os",
-      "description": "Drive the agent-os Windows 11 sandbox VM through its Windows-MCP server. Self-registers the windows-mcp MCP from your configured URL + bearer token, ships the agent-os skill, a /agent-os status command, and a SessionStart health check.",
+      "description": "Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint.",
       "source": {
         "source": "local",
         "path": "./plugins/agent-os"
@@ -227,7 +227,7 @@
     },
     {
       "name": "dozzle",
-      "description": "Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes.",
+      "description": "Real-time Docker container log viewer via direct Dozzle API checks and Labby gateway guidance.",
       "source": {
         "source": "local",
         "path": "./plugins/dozzle"
@@ -256,7 +256,7 @@
     },
     {
       "name": "immich",
-      "description": "Skill for operating immich via the lab MCP server / CLI.",
+      "description": "Self-hosted photo and video management via direct calls to the Immich REST API.",
       "source": {
         "source": "local",
         "path": "./plugins/immich"
@@ -316,7 +316,7 @@
     },
     {
       "name": "loggifly",
-      "description": "Skill for operating loggifly via the lab MCP server / CLI.",
+      "description": "Docker container log alerting via keyword/regex patterns, configured through LoggiFly's config.yaml.",
       "source": {
         "source": "local",
         "path": "./plugins/loggifly"
@@ -437,7 +437,7 @@
     },
     {
       "name": "neo4j",
-      "description": "Skill for operating neo4j via the lab MCP server / CLI.",
+      "description": "Graph database Cypher queries and schema inspection via Neo4j's HTTP transactional Cypher API.",
       "source": {
         "source": "local",
         "path": "./plugins/neo4j"
@@ -518,7 +518,7 @@
           "Automation"
         ],
         "defaultPrompt": [
-          "Use Plexus to inspect squirts before changing it.",
+          "Use Plexus to inspect example-host before changing it.",
           "Load live remote context for dookie.",
           "Summarize recent host activity."
         ],
@@ -587,7 +587,7 @@
     },
     {
       "name": "scrutiny",
-      "description": "Skill for operating scrutiny via the lab MCP server / CLI.",
+      "description": "Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API.",
       "source": {
         "source": "local",
         "path": "./plugins/scrutiny"
@@ -646,7 +646,7 @@
     },
     {
       "name": "tei",
-      "description": "Skill for operating tei via the lab MCP server / CLI.",
+      "description": "Inspect and query a Text Embeddings Inference server through its HTTP API.",
       "source": {
         "source": "local",
         "path": "./plugins/tei"
@@ -960,7 +960,8 @@
       "description": "Precise local semantic code search via MCP. Indexes your codebase with Go AST parsing and vector embeddings \u2014 Ollama, LM Studio, or HuggingFace TEI.",
       "source": {
         "source": "url",
-        "url": "https://github.com/jmagar/lumen.git"
+        "url": "https://github.com/jmagar/lumen.git",
+        "ref": "marketplace-no-mcp"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -986,11 +987,12 @@
     },
     {
       "name": "axon",
-      "description": "Skills and MCP configuration for the Axon crawl, ingest, embed, query, and RAG engine.",
+      "description": "Skills and gateway-oriented guidance for the Axon crawl, ingest, embed, query, and RAG engine.",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/axon.git",
-        "path": "plugins/axon"
+        "path": "plugins/axon",
+        "ref": "marketplace-no-mcp"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1082,7 +1084,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rarcane.git",
-        "path": "plugins/rarcane"
+        "path": "plugins/rarcane",
+        "ref": "marketplace-no-mcp"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1113,7 +1116,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rtemplate-mcp.git",
-        "path": "plugins/rtemplate"
+        "path": "plugins/rtemplate",
+        "ref": "marketplace-no-mcp"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1295,7 +1299,8 @@
       "description": "Download audio/video from any yt-dlp-supported site, embed metadata and cover art, organize by artist, and rsync to an SSH remote with separate audio/video destinations.",
       "source": {
         "source": "url",
-        "url": "https://github.com/jmagar/ytdl-mcp.git"
+        "url": "https://github.com/jmagar/ytdl-mcp.git",
+        "ref": "marketplace-no-mcp"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -2157,11 +2162,12 @@
     },
     {
       "name": "labby",
-      "description": "Skills and MCP configuration for the Lab homelab control plane.",
+      "description": "Skills and gateway-oriented guidance for the Lab homelab control plane.",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/lab.git",
-        "path": "plugins/labby"
+        "path": "plugins/labby",
+        "ref": "marketplace-no-mcp"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -2220,7 +2226,7 @@
     },
     {
       "name": "zsnoop-mcp",
-      "description": "ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server.",
+      "description": "ZFS snapshot exploration and recovery through an already-configured zsnoop-mcp server.",
       "source": {
         "source": "local",
         "path": "./plugins/zsnoop-mcp"

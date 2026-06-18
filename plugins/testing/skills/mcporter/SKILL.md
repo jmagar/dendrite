@@ -24,7 +24,7 @@ mcporter list <server> --schema        # tool docs for one server
 mcporter list <server> --schema --all-parameters --json
 mcporter call <server>.<tool> k=v ...  # invoke a tool
 mcporter call <server>.<tool> --args '{"k":"v"}'      # JSON payload
-mcporter call <server>.<tool> --output json           # machine-readable
+mcporter call <server>.<tool> --output text           # assertion-friendly text
 mcporter resource <server>             # list resources
 mcporter resource <server> <uri>        # read a resource
 mcporter auth <server>                 # OAuth handshake only (no listing)
@@ -54,7 +54,8 @@ If the schema isn't obvious, run `mcporter list <server> --schema --all-paramete
 | `--args '{...}'` | Nested objects, arrays, anything with quoting pain |
 | `'server.tool(key: "value", n: 1)'` | Function-call syntax when you want it self-documenting in a script |
 
-`--output text\|markdown\|json\|raw` controls formatting; always use `json` for scripts.
+`--output text\|markdown\|json\|raw` controls formatting. Use `text` for
+scripted assertions and `raw` only when inspecting the MCP envelope.
 
 ## Ad-hoc servers (one-shot, no config edit)
 
@@ -163,7 +164,7 @@ Same loop — URI is the `label`, `args` is empty. The harness routes URI labels
 ```bash
 mcporter list --json | jq '.servers[] | {name, status}'      # health snapshot
 mcporter list <s> --schema --json | jq '.tools[].name'       # tool names only
-mcporter call <s>.<t> --args "$(cat payload.json)" --output json | jq .
+mcporter call <s>.<t> --args "$(cat payload.json)" --output text
 mcporter generate-cli --server <s> --compile ./bin/<s>       # ship a binary
 ```
 

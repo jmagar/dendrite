@@ -35,12 +35,14 @@ curl "http://localhost:8080/api/v2/torrents/info" \
 QBITTORRENT_URL="http://localhost:8080"
 QBITTORRENT_USERNAME="admin"
 QBITTORRENT_PASSWORD="yourpassword"
+QB_URL="${QBITTORRENT_URL%/}"
 ```
 
 **Manual API Access:**
 ```bash
 # Load credentials from the generated config.
 source ~/.config/lab-arrs/config.env
+QB_URL="${QBITTORRENT_URL%/}"
 
 # Login
 curl -X POST "$QBITTORRENT_URL/api/v2/auth/login" \

@@ -5,7 +5,7 @@ Create a session log before staging, stage all changes from the repo root, optio
 ## What it does
 
 1. **Orient** — read injected git state (branch, dirty files, recent commits).
-2. **Bump** version if changes warrant it (skip with `--no-bump`). Updates `Cargo.toml`, `package.json`s, `pyproject.toml`, plugin manifests, README badges, etc., in sync.
+2. **Bump** version if changes warrant it (skip with `--no-bump`). Update project version files such as `Cargo.toml`, `package.json`, `pyproject.toml`, or README badges only when that repo documents the contract; do not bump plugin manifests by default.
 3. **Changelog** — document prior commits under the new version heading.
 4. **Save session** via `save-to-md` before staging so the generated session doc is included in the commit. If it is ignored, force-add it.
 5. **Stage / commit / push** from the repo root with a meaningful message and Claude trailer.

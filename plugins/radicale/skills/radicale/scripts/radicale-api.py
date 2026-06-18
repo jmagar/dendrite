@@ -20,7 +20,7 @@ Usage:
 
 Credentials:
     Reads from ~/.config/lab-radicale/config.env (plugin hook output), then
-    falls back to ~/.lab/.env and ~/.claude-homelab/.env:
+    falls back to ~/.lab/.env:
         RADICALE_URL="https://radicale.example.test"
         RADICALE_USERNAME="<radicale-username>"
         RADICALE_PASSWORD="<radicale-password>"
@@ -70,7 +70,6 @@ def load_env() -> Dict[str, str]:
         / "lab-radicale"
         / "config.env",
         Path.home() / ".lab" / ".env",
-        Path.home() / ".claude-homelab" / ".env",
     ]
 
     xdg_config_home = Path(os.environ.get("XDG_CONFIG_HOME", str(config_home)))

@@ -9,10 +9,10 @@
 
 set -euo pipefail
 
-HOST="${CLIPBOARD_HOST:-${NIRCMD_HOST:-steamy-wsl}}"
+HOST="${CLIPBOARD_HOST:-${NIRCMD_HOST:?set CLIPBOARD_HOST or NIRCMD_HOST}}"
 NIRCMD="${CLIPBOARD_NIRCMD:-${NIRCMD_PATH:-/mnt/c/tools/nircmd/nircmd.exe}}"
 PS="${CLIPBOARD_POWERSHELL:-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe}"
-TMP_DIR="${CLIPBOARD_TMP_DIR:-/mnt/c/Users/Docker/AppData/Local/Temp}"
+TMP_DIR="${CLIPBOARD_TMP_DIR:-/tmp}"
 
 if [[ $# -eq 0 ]]; then
   echo "usage: clip.sh <text> | clip.sh -" >&2

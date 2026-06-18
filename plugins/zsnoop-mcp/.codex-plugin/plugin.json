@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Zsnoop MCP",
     "shortDescription": "Explore ZFS snapshots and recover files through zsnoop-mcp.",
-    "longDescription": "Zsnoop MCP packages the upstream zsnoop-mcp stdio server plus operating guidance for ZFS snapshot discovery, diffing, file reads, fetches, and opt-in restore workflows over SSH or local transport.",
+    "longDescription": "Zsnoop MCP packages operating guidance for ZFS snapshot discovery, diffing, file reads, fetches, and opt-in restore workflows over SSH or local transport through an already-configured zsnoop-mcp server.",
     "developerName": "Mark Hellewell / Jacob Magar",
     "category": "Operations",
     "capabilities": [
@@ -33,6 +33,5 @@
       "Recover a file from a ZFS snapshot with zsnoop-mcp."
     ],
     "brandColor": "#2563EB"
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

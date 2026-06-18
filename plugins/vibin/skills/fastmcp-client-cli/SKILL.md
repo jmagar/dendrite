@@ -10,18 +10,14 @@ metadata:
     - "maintainers"
   scope: "v0"
   source_of_truth: false
-  upstream_refs:
-    - "docs/references/fastmcp/docs/client.mdx"
-    - "docs/references/fastmcp/docs/overview.mdx"
-    - "docs/references/fastmcp/docs/running.mdx"
-    - "docs/references/fastmcp/repos/prefecthq-fastmcp.xml"
+  upstream_refs: []
   related: []
   last_reviewed: "2026-05-13"
   last_modified: "2026-05-13"
   modified_on_branch: "main"
   modified_at_version: "0.1.0"
   modified_at_commit: "unborn"
-  review_basis: "cross-referenced against local docs/references snapshot"
+  review_basis: "local command guidance; refresh against upstream FastMCP docs before version-sensitive edits"
 ---
 
 # FastMCP CLI: List and Call

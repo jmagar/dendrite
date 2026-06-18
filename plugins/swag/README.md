@@ -4,19 +4,20 @@
 
 [![PyPI](https://img.shields.io/pypi/v/swag-mcp)](https://pypi.org/project/swag-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-jmagar%2Fswag--mcp-blue?logo=docker)](https://github.com/jmagar/swag-mcp/pkgs/container/swag-mcp)
 
-MCP server for managing SWAG reverse-proxy configuration files, backups, logs, and health checks. Uses a single `swag` action router backed by local filesystem or SSH-accessible SWAG config storage.
+Archived MCP server packaging notes for managing SWAG reverse-proxy
+configuration files, backups, logs, and health checks. This standalone MCP
+plugin is intentionally not published in the Dendrite marketplaces right now;
+use Vibin's `create-swag-config` skill for the active SWAG workflow.
 
 ## Overview
 
 SWAG MCP generates and manages nginx subdomain proxy configurations for [SWAG (Secure Web Application Gateway)](https://github.com/linuxserver/docker-swag). Every generated config includes MCP-compatible security headers unconditionally, making configs suitable for both standard web services and MCP/AI services.
 
-## What this repository ships
+## What this plugin directory ships
 
-- `swag_mcp/`: server, config, middleware, models, services, tools, and templates
-- `config/`: local config and test assets
-- `docs/`: template notes, test commands, and design records
-- `.claude-plugin/`, `.codex-plugin/`, `gemini-extension.json`: client manifests
-- `docker-compose.yaml`, `Dockerfile`, `entrypoint.sh`: container deployment
+- `.claude-plugin/`, `.codex-plugin/`, `gemini-extension.json`: archived client manifests
+- `skills/swag/`: usage notes for existing or remote SWAG MCP deployments
+- `.mcp.json`, `hooks/`: historical wiring kept as reference only; the plugin manifests no longer start this broken stdio server
 
 ## MCP surface
 
@@ -51,9 +52,14 @@ SWAG MCP generates and manages nginx subdomain proxy configurations for [SWAG (S
 
 ## Installation
 
-### Plugin (recommended)
+### Plugin status
 
-Install as a Claude Code plugin. You will be prompted for:
+Do not install this plugin from the marketplace. It is not listed there because
+the bundled `swag_mcp` Python package and bootstrap files are not present in
+this repo. If you run `swag-mcp` separately, configure that remote deployment
+directly and use this skill only as protocol/reference material.
+
+Historical Claude Code plugin settings were:
 
 - **SWAG Proxy Configs Path** -- local path to proxy-confs directory
 - **SWAG Proxy Configs URI** -- SSH URI for remote access (key-auth only)
@@ -61,13 +67,6 @@ Install as a Claude Code plugin. You will be prompted for:
 - **Remote SWAG MCP Bearer Token** -- optional bearer token for remote mode
 
 One of the proxy config location fields is required for stdio mode.
-
-```bash
-/plugin marketplace add jmagar/claude-homelab
-/plugin install swag-mcp @jmagar-claude-homelab
-```
-
-The plugin uses stdio transport by default. A `swag-mcp-remote` entry is also available in `.mcp.json` for users who run swag-mcp as a remote Docker service.
 
 ### Docker Compose
 
@@ -97,7 +96,7 @@ Two deployment paths are supported:
 | **Plugin (mcp-remote)** | HTTP gateway | `userConfig` in plugin settings | Bearer token |
 | **Docker (HTTP)** | http | `.env` file | Bearer token |
 
-See [docs/CONFIG.md](docs/CONFIG.md) for full variable reference. All variables use the `SWAG_MCP_` prefix.
+All variables use the `SWAG_MCP_` prefix.
 
 ### Core
 

@@ -169,5 +169,6 @@ OVERSEERR_URL="http://server2:5055" OVERSEERR_API_KEY="key2" node scripts/search
 - `references/quick-reference.md` — curl examples for all common operations
 - `references/troubleshooting.md` — error diagnosis and common failure modes
 - `references/api-endpoints.md` — full API endpoint catalog
+- `references/overseerr-api.yml` — raw OpenAPI source snapshot
 
 ---

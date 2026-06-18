@@ -19,10 +19,6 @@ load_env_file() {
     if [[ ! -f "$env_file" && "$env_file" == "$default_file" && -f "$HOME/.lab/.env" ]]; then
         env_file="$HOME/.lab/.env"
     fi
-    if [[ ! -f "$env_file" && "$env_file" == "$default_file" && -f "$HOME/.claude-homelab/.env" ]]; then
-        env_file="$HOME/.claude-homelab/.env"
-    fi
-
     if [[ ! -f "$env_file" ]]; then
         echo "ERROR: $env_file not found" >&2
         echo "Configure the Memos plugin settings so the hook can write ~/.config/lab-memos/config.env" >&2

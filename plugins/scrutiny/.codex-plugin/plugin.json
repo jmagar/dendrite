@@ -1,6 +1,6 @@
 {
   "name": "scrutiny",
-  "description": "Skill for operating scrutiny via the lab MCP server / CLI.",
+  "description": "Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"

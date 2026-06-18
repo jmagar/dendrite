@@ -1,4 +1,4 @@
 interface:
   display_name: "MCP Gateway Tools"
-  short_description: "Invoking MCP tools through the Lab gateway in code-mode mode —"
-  default_prompt: "Use $mcp-gateway-tools for invoking MCP tools through the Lab gateway in code-mode mode —."
+  short_description: "Discover and call hidden upstream MCP tools through the Lab gateway search/execute surface."
+  default_prompt: "Use $mcp-gateway-tools to search the live Lab gateway catalog and call the returned tool IDs through execute."

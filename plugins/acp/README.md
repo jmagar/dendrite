@@ -1,10 +1,12 @@
 # ACP Plugin
 
-Claude Code plugin providing skills and reference material for building Agent Client Protocol (ACP) integrations.
+Claude Code and Codex plugin providing Rust implementation patterns for the
+homelab agent ecosystem, including Agent Client Protocol (ACP) integrations,
+rmcp-derived MCP servers, and Lab runtime work.
 
 ## What this plugin provides
 
-- **Rust ACP skill** (`skills/rust/SKILL.md`) — triggered when implementing an ACP agent or client in Rust using the `agent-client-protocol` crate. Covers the full session lifecycle (`initialize → authenticate → session/new → session/prompt → session/cancel`), streaming notification patterns, tool call wiring, and the `?Send` + `LocalSet` runtime requirements.
+- **Rust patterns skill** (`skills/rust/SKILL.md`) — triggered for Rust work in Jacob's rmcp-derived MCP servers, Lab runtime code, and ACP agents or clients. Covers service-layer architecture, action-dispatched MCP tools, CLI/MCP/API parity, auth/config contracts, test strategy, and ACP session lifecycle patterns.
 
 - **Reference material** (`skills/rust/references/`) — detailed reference files for wire format, message types, tool calls, Codex production patterns, and unstable feature flags. Intended for use alongside the skill when implementing specific subsystems.
 

@@ -1,7 +1,7 @@
 {
     "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
     "name": "vibin",
-  "description": "Session, GitHub review, CI, repo status, and agent workflow skills for quick push, session documentation, PR comments, CI debugging, and branch/worktree readiness audits.",
+  "description": "Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills.",
     "author": {
         "name": "Jacob Magar",
         "email": "jmagar@users.noreply.github.com"
@@ -21,7 +21,13 @@
     "branches",
     "worktrees",
     "pull-requests",
-    "reviews"
+    "reviews",
+    "paperless",
+    "windows",
+    "nircmd",
+    "mcp",
+    "swag",
+    "jetpack-compose"
     ],
     "userConfig": {
         "paperless_url": {

@@ -1,19 +1,20 @@
-# squirts
+# example-host sample
 
 ## Identity
 
-Squirts is a homelab remote host. Fill in the durable role statement here once
-the live service map is confirmed.
+This is a sample Plexus remote profile. Copy it into the Plexus data directory
+under the real host name, then fill in the durable role statement once the live
+service map is confirmed.
 
 ## Access
 
-- SSH alias: `squirts`
-- Use non-interactive SSH: `ssh -o BatchMode=yes squirts <command>`.
+- SSH alias: `example-host`
+- Use non-interactive SSH: `ssh -o BatchMode=yes example-host <command>`.
 - Prefer read-only inspection before changing services or files.
 
 ## Network
 
-- Tailscale name: `squirts`
+- Tailscale name: `example-host`
 - Record LAN IPs, public routes, and reverse-proxy domains here after verifying
   them live.
 
@@ -33,7 +34,7 @@ the live service map is confirmed.
 
 ### Inspect Host
 
-1. Load Plexus context with `remote-context.py squirts`.
+1. Load Plexus context with `remote-context.py example-host`.
 2. Check uptime, disk, memory, failed systemd units, Docker containers, and
    recent syslog events.
 3. Decide whether a service-specific skill should take over.

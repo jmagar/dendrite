@@ -3,6 +3,8 @@
 ## Current Upstream
 
 Last verified: 2026-05-23 against npm `claude-in-mobile@3.8.1`.
+Before pinning or documenting exact behavior, refresh the current package
+version with `npm view claude-in-mobile version`.
 
 - npm package: `claude-in-mobile`
 - repository: `https://github.com/AlexGladkov/claude-in-mobile`
@@ -19,7 +21,7 @@ adding a duplicate MCP server.
 codex mcp add mobile -- npx -y claude-in-mobile@latest
 
 # MCP for Claude Code, local stdio fallback
-claude mcp add --scope user --transport stdio mobile -- npx claude-in-mobile@latest
+claude mcp add --scope user --transport stdio mobile -- npx -y claude-in-mobile@latest
 
 # Native CLI on macOS
 brew tap AlexGladkov/claude-in-mobile https://github.com/AlexGladkov/claude-in-mobile

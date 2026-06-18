@@ -1,6 +1,6 @@
 # nircmd
 
-Drive a Windows machine over SSH via the NirCmd CLI and its NirSoft companion utilities. **Killer use case:** push text/files to your Windows clipboard from any Claude session so you can `Ctrl+V` long commands, URLs, snippets, etc. anywhere. Plus granular screen capture, audio control, window management, lock, TTS, system dialogs — and a curated set of scriptable NirSoft companions (CurrPorts, LastActivityView, OpenedFilesView, SearchMyFiles, …) for inspecting Windows state from the shell.
+Drive a Windows machine over SSH via the NirCmd CLI and its NirSoft companion utilities: audio control, window management, lock, TTS, system dialogs, granular screen capture, and a curated set of scriptable NirSoft companions (CurrPorts, LastActivityView, OpenedFilesView, SearchMyFiles, ...) for inspecting Windows state from the shell.
 
 Built on [NirSoft NirCmd](https://www.nirsoft.net/utils/nircmd.html) (~120KB binary, 115 commands) plus selected [NirSoft utilities](https://www.nirsoft.net/utils/) (200+ tools, available as a bundle via [NirLauncher](https://launcher.nirsoft.net/)).
 
@@ -8,9 +8,6 @@ Built on [NirSoft NirCmd](https://www.nirsoft.net/utils/nircmd.html) (~120KB bin
 
 | Capability | One-line example |
 |------------|------------------|
-| Push text to your Win clipboard | `clip.sh "the curl command I want you to run"` |
-| Push a file to your clipboard | `clip.sh < generated.sh` |
-| Pull current clipboard back as a file | `clip-grab.sh` (auto-detects text vs image) |
 | Screenshot a specific window | `win-shot.sh "Visual Studio Code"` |
 | Lock the workstation | `lock.sh` |
 | Audio (volume/mute/per-app) | `nircmd setsysvolume 32768` |
@@ -40,7 +37,7 @@ Built on [NirSoft NirCmd](https://www.nirsoft.net/utils/nircmd.html) (~120KB bin
        │                              Windows clipboard / windows /
        │                                  audio / screen / etc.
        ▼
-   `clip.sh` / `win-shot.sh` / etc. wrappers
+   `win-shot.sh` / `lock.sh` / etc. wrappers
 ```
 
 ## Prerequisites
@@ -75,7 +72,7 @@ in `~/.claude/settings.json` (same env-injection pattern as the `screens` skill 
 
 ## Charset gotcha
 
-NirCmd args go through Windows' ANSI codepage. Em-dashes, smart quotes, emoji, non-Latin scripts get mangled (`—` → `-`, `'` → `?`). The `clip.sh` wrapper auto-detects non-ASCII and falls back to a UTF-8 temp file + `clipboard readfile`. For ad-hoc NirCmd calls with non-ASCII args, do the same — see `references/clipboard.md`.
+NirCmd args go through Windows' ANSI codepage. Em-dashes, smart quotes, emoji, and non-Latin scripts can be mangled. For clipboard work, use the separate `clipboard` skill, which routes Unicode text through PowerShell.
 
 ## Safety
 
@@ -93,13 +90,10 @@ nircmd/
 ├── README.md                               This file
 ├── CHANGELOG.md
 ├── scripts/
-│   ├── clip.sh                             Push text to clipboard (UTF-8 safe)
-│   ├── clip-grab.sh                        Pull clipboard back as file (text or image)
 │   ├── win-shot.sh                         Activate window by title, then capture
 │   └── lock.sh                             Lock the workstation
 └── references/
     ├── command-reference.md                All 115 NirCmd commands, categorized
-    ├── clipboard.md                        Clipboard patterns in detail
     ├── window-control.md                   Window matching and manipulation
     ├── safety-boundaries.md                Auto / ask / refuse classification + rationale
     └── nirsoft-tools.md                    NirSoft companion CLIs (CurrPorts, LastActivityView, etc.)

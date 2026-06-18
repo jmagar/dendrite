@@ -1,4 +1,4 @@
 interface:
   display_name: "Screenshots"
-  short_description: "Bridge for viewing the user's own desktop when they're SSH'd..."
-  default_prompt: "Use $screenshots for bridge for viewing the user's own desktop when they're SSH'd."
+  short_description: "Fetch or capture desktop screenshots from a remote Windows target over SSH."
+  default_prompt: "Use $screenshots to fetch an existing screenshot, capture via ShareX, or use the PowerShell fallback."

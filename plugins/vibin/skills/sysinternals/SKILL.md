@@ -66,7 +66,7 @@ Expand-Archive $env:TEMP\sys.zip -DestinationPath C:\tools\sysinternals -Force
 
 | Tool | Useful flags | Example |
 |---|---|---|
-| `sigcheck.exe` | `-h` (hashes), `-c` (CSV), `-v r` (VirusTotal — sends hashes), `-u` (unsigned only), `-e` (executables only) | `sigcheck.exe -e -u -h -c C:\Users\jmaga\Downloads` |
+| `sigcheck.exe` | `-h` (hashes), `-c` (CSV), `-v r` (VirusTotal — sends hashes), `-u` (unsigned only), `-e` (executables only) | `sigcheck.exe -e -u -h -c C:\Users\<user>\Downloads` |
 | `streams.exe` | `-s` (recurse), `-d` (delete — **ask first**) | `streams.exe -s C:\Downloads` |
 | `du.exe` | `-c` (CSV), `-l <levels>`, `-n` (no header) | `du.exe -c -l 2 C:\Users` |
 | `accesschk.exe` | `-u` (no errors), `-w` (write access only), `-s` (recurse), `-q` (quiet) | `accesschk.exe -uw "Authenticated Users" C:\Program Files` |
@@ -91,8 +91,8 @@ Expand-Archive $env:TEMP\sys.zip -DestinationPath C:\tools\sysinternals -Force
 Same as the NirSoft companions — write CSV on Windows, `cat` back over SSH:
 
 ```bash
-WIN_OUT='C:\Users\jmaga\AppData\Local\Temp\handles.csv'
-POSIX_OUT='/mnt/c/Users/jmaga/AppData/Local/Temp/handles.csv'
+WIN_OUT='C:\Users\<user>\AppData\Local\Temp\handles.csv'
+POSIX_OUT='/mnt/c/Users/<user>/AppData/Local/Temp/handles.csv'
 ssh "$SYSINTERNALS_HOST" "$SYSINTERNALS_DIR/handle.exe -a -nobanner /accepteula > '$WIN_OUT'"
 ssh "$SYSINTERNALS_HOST" "cat '$POSIX_OUT'" | grep -i stuck-file
 ```

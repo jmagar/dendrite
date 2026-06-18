@@ -16,7 +16,6 @@ REMOTE_DIR="${SCREENS_REMOTE_DIR:-$SCREENS_BASE/$(date +%Y-%m)}"                
 NATIVE_DIR="${SCREENS_NATIVE_DIR:-C:\\screens}"                                     # same root in native Windows form
 POWERSHELL="${SCREENS_POWERSHELL:-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe}"
 SHAREX="${SCREENS_SHAREX:-/mnt/c/Program Files/ShareX/ShareX.exe}"                  # ShareX CLI path
-SKILL_DIR=/home/jmagar/.agents/src/skills/screenshots
 ```
 
 Variable names match the prior `ss` skill so existing `~/.claude/settings.json` entries keep working. Paste this block at the top of any snippet. If the user mentions a different machine ("check my mac", "look at the work laptop"), set the matching `SCREENS_*` env vars for the session.
@@ -117,9 +116,7 @@ Captures **primary monitor only**, **current contents** — including the termin
 This skill does **not** screenshot Chrome tabs anymore — that moved to the `chrome` skill which uses CDP and works even when the tab is minimized or behind other windows. Use:
 
 ```bash
-# (see chrome skill for setup) — one-liner equivalent of "grab the github tab"
-# Stage cdp-shot.ps1 once, then capture by tab title/URL substring — see chrome skill for full setup.
-/home/jmagar/.agents/src/skills/chrome/scripts/cdp-shot.ps1 -Pattern 'github.com' ...
+# See the chrome skill for CDP setup and `../chrome/scripts/cdp-shot.ps1`.
 ```
 
 ## Adapting to another machine

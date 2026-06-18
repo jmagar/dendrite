@@ -7,9 +7,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _LOAD_ENV="$SCRIPT_DIR/../load-env.sh"
-[[ ! -f "$_LOAD_ENV" ]] && _LOAD_ENV="${HOME}/.claude-homelab/load-env.sh"
+[[ -f "$_LOAD_ENV" ]] || { echo "ERROR: bundled load-env.sh not found at $_LOAD_ENV" >&2; exit 1; }
 # shellcheck source=/dev/null
-source "$_LOAD_ENV" || { echo "ERROR: load-env.sh not found. Run /homelab-core:setup" >&2; exit 1; }
+source "$_LOAD_ENV"
 load_service_credentials "memos" "MEMOS_URL" "MEMOS_API_TOKEN"
 
 # API configuration

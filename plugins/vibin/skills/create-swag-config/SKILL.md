@@ -10,9 +10,10 @@ directly. Do not rely on the retired `swag-mcp` marketplace plugin.
 
 ## Configuration
 
-Resolve these variables before writing. Prefer the generated config file at
-`${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env`, then environment
-variables, then ask the user for anything still missing.
+Resolve these variables before writing. In Claude Code, the Vibin hook writes
+`${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env` from plugin settings.
+In Codex or plain shell use, provide the same `SWAG_*` values in that config
+file or in the environment. Ask the user for anything still missing.
 
 | Variable | Purpose |
 |---|---|
@@ -29,9 +30,9 @@ Use these shell defaults when the generated config is unavailable:
 
 ```bash
 source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-swag/config.env" 2>/dev/null || true
-: "${SWAG_EDGE_HOST:?set SWAG_EDGE_HOST in Vibin plugin settings or environment}"
-: "${SWAG_PUBLIC_BASE_DOMAIN:?set SWAG_PUBLIC_BASE_DOMAIN in Vibin plugin settings or environment}"
-: "${SWAG_PROXY_CONFS_PATH:?set SWAG_PROXY_CONFS_PATH in Vibin plugin settings or environment}"
+: "${SWAG_EDGE_HOST:?set SWAG_EDGE_HOST in ~/.config/lab-swag/config.env or environment}"
+: "${SWAG_PUBLIC_BASE_DOMAIN:?set SWAG_PUBLIC_BASE_DOMAIN in ~/.config/lab-swag/config.env or environment}"
+: "${SWAG_PROXY_CONFS_PATH:?set SWAG_PROXY_CONFS_PATH in ~/.config/lab-swag/config.env or environment}"
 SWAG_CONTAINER_NAME="${SWAG_CONTAINER_NAME:-swag}"
 SWAG_DEFAULT_AUTH_METHOD="${SWAG_DEFAULT_AUTH_METHOD:-authelia}"
 SWAG_DEFAULT_UPSTREAM_PROTO="${SWAG_DEFAULT_UPSTREAM_PROTO:-http}"

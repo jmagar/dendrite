@@ -1,6 +1,6 @@
 ---
 name: uptime-kuma
-description: "This skill should be used when the user asks whether a service or monitor is up or down, wants to view uptime percentages, check response times, inspect a public status page, or see which monitors are currently failing. Triggers include: \"is my site down\", \"check uptime\", \"show monitor status\", \"which monitors are failing\", \"Uptime Kuma status\", or any question about service availability monitoring."
+description: "This skill should be used when the user asks about Uptime Kuma specifically: monitor status, published status pages, incidents, failing monitors, uptime percentages, latency, certificate expiry, or /metrics checks. Do not trigger for generic service monitoring unless Uptime Kuma or its status pages are the target."
 ---
 
 # Uptime Kuma

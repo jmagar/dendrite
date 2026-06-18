@@ -5,7 +5,7 @@
 Requires feature `transport-streamable-http-server`.
 
 ```toml
-rmcp = { version = "1.4", features = [
+rmcp = { version = "1.6", features = [
     "server",
     "transport-streamable-http-server",
 ] }
@@ -121,7 +121,7 @@ The `auth` module provides middleware and helpers for:
 
 For client-credentials flow with JWT signing:
 ```toml
-rmcp = { version = "1.4", features = ["auth", "auth-client-credentials-jwt"] }
+rmcp = { version = "1.6", features = ["auth", "auth-client-credentials-jwt"] }
 ```
 
 Refer to `examples/clients/src/oauth_client.rs` in the rmcp repository for a full

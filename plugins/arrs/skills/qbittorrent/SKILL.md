@@ -133,4 +133,10 @@ When the user asks about torrents:
 - Magnet links and torrent URLs are added without local file upload
 - Categories must exist before assignment (create via WebUI or API)
 
+## Local References
+
+- `references/quick-reference.md` — common qBittorrent curl and helper examples
+- `references/api-endpoints.md` — WebUI API endpoint catalog
+- `references/troubleshooting.md` — login, CSRF, endpoint, and connectivity diagnosis
+
 ---

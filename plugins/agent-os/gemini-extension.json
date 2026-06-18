@@ -1,16 +1,7 @@
 {
   "name": "agent-os",
   "version": "0.1.0",
-  "description": "Drive the agent-os Windows 11 sandbox VM through its Windows-MCP server. Self-registers the windows-mcp MCP from your configured URL + bearer token, ships the agent-os skill, a /agent-os status command, and a SessionStart health check.",
-  "mcpServers": {
-    "windows-mcp": {
-      "type": "http",
-      "url": "${AGENT_OS_MCP_URL}",
-      "headers": {
-        "Authorization": "Bearer ${AGENT_OS_MCP_TOKEN}"
-      }
-    }
-  },
+  "description": "Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check.",
   "settings": [
     {
       "name": "Auto-start the VM if down",

@@ -85,14 +85,6 @@ impl MyServer {
         (p.a + p.b).to_string()
     }
 
-    #[tool(description = "Async tool with proper error handling")]
-    async fn fetch_data(
-        &self,
-        Parameters(req): Parameters<FetchParams>,
-    ) -> Result<CallToolResult, McpError> {
-        // ...
-        Ok(CallToolResult::success(vec![Content::text("result")]))
-    }
 }
 
 #[tokio::main]

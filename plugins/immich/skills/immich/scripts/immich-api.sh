@@ -18,7 +18,7 @@ load_config() {
     set +a
   fi
 
-  IMMICH_URL="${IMMICH_URL:-http://100.120.242.29:2283}"
+  : "${IMMICH_URL:?set IMMICH_URL in plugin settings or ~/.lab/.env}"
   : "${IMMICH_API_KEY:?set IMMICH_API_KEY in plugin settings or ~/.lab/.env}"
   IMMICH_URL="${IMMICH_URL%/}"
 }

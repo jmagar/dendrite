@@ -29,7 +29,7 @@ Credentials are configured in the **arrs plugin settings** (userConfig). A `Sess
 
 ```bash
 # Tautulli Analytics
-TAUTULLI_URL="http://192.168.1.100:8181"
+TAUTULLI_URL="http://localhost:8181"
 TAUTULLI_API_KEY="<your_tautulli_api_key>"
 ```
 

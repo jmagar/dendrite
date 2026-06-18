@@ -249,8 +249,8 @@ ByteStash supports snippets with multiple code fragments (files). Each fragment 
 
 ## Agent Tool Usage
 
-Run this skill's scripts with the **Bash** tool. If using the zsh-tool instead, pass `pty: true` — without it, command output is not returned even though commands execute.
+Run this skill's scripts from this skill directory.
 
 ```bash
-./skills/bytestash/scripts/bytestash-api.sh [args]
+./scripts/bytestash-api.sh [args]
 ```

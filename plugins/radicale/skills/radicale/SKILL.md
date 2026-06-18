@@ -32,7 +32,7 @@ pip install caldav vobject icalendar
 The Python script can be made executable (optional but recommended):
 
 ```bash
-chmod +x skills/radicale/scripts/radicale-api.py
+chmod +x scripts/radicale-api.py
 ```
 
 You can then run it directly:
@@ -49,7 +49,7 @@ python scripts/radicale-api.py --help
 
 Configure these values through plugin userConfig. The setup hook writes
 `${XDG_CONFIG_HOME:-~/.config}/lab-radicale/config.env` with mode `600`.
-Legacy `~/.lab/.env` and `~/.claude-homelab/.env` files remain fallbacks during
+Legacy `~/.lab/.env` remains a fallback during
 migration, but do not ask users to hand-edit them unless plugin config is
 unavailable:
 

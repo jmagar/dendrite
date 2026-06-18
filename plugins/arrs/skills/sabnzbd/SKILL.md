@@ -144,4 +144,10 @@ When the user asks about Usenet downloads:
 - NZB files can be added by URL (indexer links) or local file upload
 - Post-processing scripts are executed after download completion
 
+## Local References
+
+- `references/quick-reference.md` — common SABnzbd curl and helper examples
+- `references/api-endpoints.md` — endpoint catalog and parameters
+- `references/troubleshooting.md` — auth, queue, history, and connectivity diagnosis
+
 ---

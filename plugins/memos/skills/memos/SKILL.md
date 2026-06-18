@@ -147,6 +147,13 @@ When the user asks about memos:
 4. **"Update my memo about Z"** → Search for memo, get ID, update content
 5. **"Delete that memo"** → Confirm with user, then delete by ID
 
+## Destructive and Sensitive Actions
+
+Get explicit user confirmation before deleting memos, deleting attachments,
+deleting access tokens, creating long-lived access tokens, updating profile
+fields, or bulk-renaming tags across memos. Prefer archive over delete when the
+user's intent is cleanup rather than permanent removal.
+
 ## Notes
 
 ### API Details
@@ -199,5 +206,5 @@ External:
 Run this skill's scripts with the Bash tool directly:
 
 ```bash
-./skills/memos/scripts/memo-api.sh [args]
+./scripts/memo-api.sh [args]
 ```

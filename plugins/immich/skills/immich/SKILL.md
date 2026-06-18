@@ -21,14 +21,13 @@ back to `~/.lab/.env` during migration:
 set -a
 source "${XDG_CONFIG_HOME:-$HOME/.config}/lab-immich/config.env" 2>/dev/null || source ~/.lab/.env
 set +a
-IMMICH_URL="${IMMICH_URL:-http://100.120.242.29:2283}"
+: "${IMMICH_URL:?set IMMICH_URL in plugin settings, ~/.config/lab-immich/config.env, or ~/.lab/.env}"
 ```
 
 Authentication is the `x-api-key: <key>` header on every request. Never echo the key.
 
-> `IMMICH_API_KEY` is required. If `IMMICH_URL` is unset, this homelab's direct
-> backend is `http://100.120.242.29:2283`; the public routes are
-> `https://immich.tootie.tv` / `https://photos.tootie.tv`.
+> `IMMICH_URL` and `IMMICH_API_KEY` are required. Use a direct backend URL for
+> scripted API probes when a public route is protected by proxy authentication.
 
 ## Common operations
 

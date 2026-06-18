@@ -1,6 +1,6 @@
 {
   "name": "vibin",
-  "description": "Session, GitHub review, CI, repo status, and agent workflow skills for quick push, session documentation, PR comments, CI debugging, and branch/worktree readiness audits.",
+  "description": "Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"
@@ -20,15 +20,21 @@
     "branches",
     "worktrees",
     "pull-requests",
-    "reviews"
+    "reviews",
+    "paperless",
+    "windows",
+    "nircmd",
+    "mcp",
+    "swag",
+    "jetpack-compose"
   ],
   "skills": "./skills/",
   "commands": "./commands/",
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Vibin",
-    "shortDescription": "Session, repo status, GitHub review, CI, and agent workflow utilities.",
-    "longDescription": "Vibin bundles session documentation, repo status and branch/worktree readiness audits, quick-push, GitHub PR review, CI debugging, Windows VM, screenshot, clipboard, and homelab workflow skills.",
+    "shortDescription": "Workflow, repo, GitHub, Windows, Paperless, MCP gateway, and SWAG utilities.",
+    "longDescription": "Vibin bundles session documentation, repo status and branch/worktree readiness audits, quick-push, GitHub PR review, CI debugging, Windows desktop helpers, screenshot and clipboard workflows, MCP gateway search/execute guidance, Paperless operations, Jetpack Compose guidance, and SWAG config scaffolding.",
     "developerName": "Jacob Magar",
     "category": "Developer Tools",
     "capabilities": [
@@ -40,9 +46,10 @@
       "Use Vibin to quick-push this change.",
       "Use Vibin to audit repo branch and worktree status.",
       "Use Vibin to address PR review comments.",
-      "Save this session to Markdown."
+      "Save this session to Markdown.",
+      "Use Vibin to search the Lab MCP gateway tools.",
+      "Use Vibin to create a SWAG proxy config."
     ],
     "brandColor": "#D946EF"
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

@@ -1,7 +1,3 @@
-<p align="center">
-  <img width="300px" src="/claude-android-ninja.png" />
-</p>
-
 # Android Agent Skill
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.3.21-blue)

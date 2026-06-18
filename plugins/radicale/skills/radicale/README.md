@@ -17,7 +17,7 @@ Configure Radicale through plugin userConfig. The plugin setup hook writes:
 ${XDG_CONFIG_HOME:-~/.config}/lab-radicale/config.env
 ```
 
-The helper also supports legacy `~/.lab/.env` and `~/.claude-homelab/.env`
+The helper also supports legacy `~/.lab/.env`
 fallbacks during migration. Keep all local config files out of git.
 
 Expected variables:

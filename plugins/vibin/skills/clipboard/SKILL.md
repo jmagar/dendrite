@@ -1,6 +1,6 @@
 ---
 name: clipboard
-description: Use when the user wants to push text to or read text from their Windows clipboard over SSH. The killer use case is "copy this to my clipboard" — the agent can't paste images into chat over SSH, but it can shove URLs, commands, code snippets, multi-line text, Unicode, or anything else onto the user's Windows clipboard for Ctrl+V wherever they want it. Triggers include "copy this to my clipboard", "put X on my clipboard", "push this to clipboard", "set my clipboard to", "what's on my clipboard", "read my clipboard", "clipboard contents". Always targets `ssh steamy-wsl` (Jacob's primary Win11 desktop, where he works 99% of the time) — invoke this skill regardless of what host this Claude session is running on. Auto-routes between NirCmd (fast ASCII) and PowerShell `Set-Clipboard` via a UTF-8 temp file (lossless Unicode); degrades gracefully when NirCmd is absent.
+description: Use when the user wants to push text to or read text from a Windows clipboard over SSH. The killer use case is "copy this to my clipboard" — the agent can't paste images into chat over SSH, but it can shove URLs, commands, code snippets, multi-line text, Unicode, or anything else onto the user's Windows clipboard for Ctrl+V wherever they want it. Triggers include "copy this to my clipboard", "put X on my clipboard", "push this to clipboard", "set my clipboard to", "what's on my clipboard", "read my clipboard", "clipboard contents". Requires `CLIPBOARD_HOST` or `NIRCMD_HOST` to identify the target Windows/WSL host. Auto-routes between NirCmd (fast ASCII) and PowerShell `Set-Clipboard` via a UTF-8 temp file (lossless Unicode); degrades gracefully when NirCmd is absent.
 ---
 
 # clipboard
@@ -15,10 +15,10 @@ Reads always go through PowerShell `Get-Clipboard` (NirCmd's reader is ANSI-only
 ## Defaults (override via env vars)
 
 ```bash
-CLIPBOARD_HOST="${CLIPBOARD_HOST:-${NIRCMD_HOST:-steamy-wsl}}"
+CLIPBOARD_HOST="${CLIPBOARD_HOST:-${NIRCMD_HOST:?set CLIPBOARD_HOST or NIRCMD_HOST}}"
 CLIPBOARD_NIRCMD="${CLIPBOARD_NIRCMD:-${NIRCMD_PATH:-/mnt/c/tools/nircmd/nircmd.exe}}"
 CLIPBOARD_POWERSHELL="${CLIPBOARD_POWERSHELL:-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe}"
-CLIPBOARD_TMP_DIR="${CLIPBOARD_TMP_DIR:-/mnt/c/Users/Docker/AppData/Local/Temp}"
+CLIPBOARD_TMP_DIR="${CLIPBOARD_TMP_DIR:-/tmp}"
 SKILL_DIR=<this skill directory>
 ```
 
@@ -56,15 +56,15 @@ If you only want the first line / a single value, append `| head -1` locally. `G
 Useful when the user copies a screenshot and you want to look at it.
 
 ```bash
-WIN_OUT='C:\Users\Docker\AppData\Local\Temp\clip.png'
-POSIX_OUT='/mnt/c/Users/Docker/AppData/Local/Temp/clip.png'
+WIN_OUT="${CLIPBOARD_WIN_TMP:-C:\\Windows\\Temp}\\clip.png"
+POSIX_OUT="${CLIPBOARD_TMP_DIR:-/tmp}/clip.png"
 ssh "$CLIPBOARD_HOST" "$CLIPBOARD_POWERSHELL -NoProfile -Command \"Add-Type -AssemblyName System.Windows.Forms; \\\$i = [Windows.Forms.Clipboard]::GetImage(); if (\\\$i) { \\\$i.Save('$WIN_OUT'); 'ok' } else { 'no_image' }\"" 2>/dev/null | tr -d '\r\n'
 ssh "$CLIPBOARD_HOST" "cat '$POSIX_OUT'" > "${CLAUDE_JOB_DIR:-/tmp}/clip.png"
 ```
 
 The classic NirCmd `clipboard saveimage` works too if NirCmd is installed and the image is in standard formats:
 ```bash
-ssh "$CLIPBOARD_HOST" "$CLIPBOARD_NIRCMD clipboard saveimage 'C:\\Users\\Docker\\AppData\\Local\\Temp\\clip.png'"
+ssh "$CLIPBOARD_HOST" "$CLIPBOARD_NIRCMD clipboard saveimage '$WIN_OUT'"
 ```
 
 ## Clear / replace

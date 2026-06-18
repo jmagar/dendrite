@@ -66,7 +66,7 @@ Set your Tautulli credentials in the arrs plugin settings. The plugin
 commit or edit real credentials into this repository.
 
 ```bash
-TAUTULLI_URL="http://192.168.1.100:8181"
+TAUTULLI_URL="http://localhost:8181"
 TAUTULLI_API_KEY="<your_api_key>"
 ```
 

@@ -230,10 +230,10 @@ These predate Windows-MCP but remain useful where the MCP path is awkward:
 The guest runs its own `tailscaled`, and `ssh agent-os` connects **over that same Tailscale IP** (`100.109.125.128`). That creates a footgun:
 
 - **Never run `tailscale down` (or restart the Tailscale service) over `ssh agent-os`.** The moment Tailscale drops, your SSH session is severed mid-command — so the follow-up `tailscale up` never executes and the node is left **stopped** (no Tailscale, MCP/gateway unreachable).
-- **Do Tailscale maintenance via the host port-forward instead:** `ssh -p 2222 docker@100.120.242.29` (tootie → Docker → guest `:22`). This path goes through Docker, not the guest's Tailscale, so it survives `tailscale down/up`.
+- **Do Tailscale maintenance via the host port-forward instead:** `ssh -p "${CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_PORT:-2222}" "${CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_SSH:?set agent_os_host_forward_ssh in plugin settings}"`. This path goes through Docker/host forwarding, not the guest's Tailscale, so it survives `tailscale down/up`.
 - **Windows `tailscale up` won't run bare** when non-default prefs are set (this VM uses `--exit-node-allow-lan-access --unattended`). It errors and tells you to either re-list every non-default flag or use `tailscale up --reset`. Easiest reliable bounce: `Restart-Service Tailscale -Force` then `tailscale up --reset` (or re-list the flags).
 - **"offline but reachable" is expected here.** The control plane can show the node `offline / not in map poll` while it's still reachable via a direct LAN route (`10.1.0.2`) — fine on-LAN (SSH/MCP work), but unreliable from a remote network. A clean `tailscale up` after a service restart re-establishes the map poll and clears it.
-- If the gateway shows `agent-os_windows-mcp` as `⚠ upstream discovery timed out`, first check the guest's Tailscale is actually up (`ssh -p 2222 docker@100.120.242.29 tailscale status`), then `lab gateway reload`.
+- If the gateway shows `agent-os_windows-mcp` as upstream discovery timed out, first check the guest's Tailscale is actually up with the configured host-forward SSH target, then reload the gateway.
 
 ## Troubleshooting
 
@@ -241,9 +241,9 @@ Work top to bottom — most failures are "the VM/MCP isn't reachable," and the c
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `mcp__windows-mcp__*` tools missing / "server not found" | windows-mcp server or VM container down | On tootie: `docker ps \| grep agent-os-win11`. If absent: `docker compose -f /mnt/cache/compose/windows/docker-compose.yml up -d`. Then `lab gateway reload`. |
-| Gateway shows `agent-os_windows-mcp ⚠ upstream discovery timed out` | guest Tailscale down/flapping, or MCP slow to list tools | `ssh -p 2222 docker@100.120.242.29 tailscale status` (host-forward path). If Tailscale is down, bring it up (see **Tailscale maintenance**). Then `lab gateway reload`. |
-| `ssh agent-os` times out but `ssh -p 2222 docker@100.120.242.29` works | guest Tailscale is stopped/offline | Bring Tailscale up via the host-forward path — see **Tailscale maintenance**. Never `tailscale down` over `ssh agent-os`. |
+| `mcp__windows-mcp__*` tools missing / "server not found" | windows-mcp server or VM container down | On `$CLAUDE_PLUGIN_OPTION_AGENT_OS_VM_HOST`: `docker ps \| grep "$CLAUDE_PLUGIN_OPTION_AGENT_OS_CONTAINER_NAME"`. If absent: `docker compose -f "$CLAUDE_PLUGIN_OPTION_AGENT_OS_COMPOSE_FILE" up -d`. Then reload the gateway. |
+| Gateway shows `agent-os_windows-mcp` upstream discovery timeout | guest Tailscale down/flapping, or MCP slow to list tools | `ssh -p "${CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_PORT:-2222}" "$CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_SSH" tailscale status` (host-forward path). If Tailscale is down, bring it up (see **Tailscale maintenance**). Then reload the gateway. |
+| `ssh agent-os` times out but host-forward SSH works | guest Tailscale is stopped/offline | Bring Tailscale up via the host-forward path — see **Tailscale maintenance**. Never `tailscale down` over `ssh agent-os`. |
 | Node shows `offline` in `tailscale status` but pings/SSH work on-LAN | "not in map poll" — control-plane session not held (NAT churn) | Expected on-LAN; for remote access do a clean `Restart-Service Tailscale -Force` + `tailscale up --reset` via host-forward. |
 | `Snapshot`/`Screenshot` fail (Python `cv2` missing) | Windows-MCP image missing OpenCV | Capture in PowerShell instead: `System.Drawing.Graphics.CopyFromScreen` with the window rect from `user32!GetWindowRect`. |
 | MCP call dies around ~120s on a long op | MCP call layer timeout (not your `timeout` arg) | Split long work into chunks; write a manifest beside outputs. Kick off via `PowerShell`, poll with `Screenshot`. |

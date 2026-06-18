@@ -7,7 +7,10 @@ description: >-
 
 # Rust Patterns
 
-Use this skill for Rust work in the homelab agent ecosystem. The default pattern source is `../rmcp-template`; treat that repo as the canonical reference for MCP server architecture unless the target repo documents a newer local rule.
+Use this skill for Rust work in the homelab agent ecosystem. The default pattern
+source is the sibling workspace repo `../rmcp-template` when it exists relative
+to the target repo's workspace root; treat that repo as the canonical reference
+for MCP server architecture unless the target repo documents a newer local rule.
 
 ## First Step
 
@@ -21,10 +24,11 @@ Identify the repo family before editing:
 Before changing shared behavior, read the nearest source-of-truth docs:
 
 ```bash
-sed -n '1,220p' ../rmcp-template/docs/PATTERNS.md
-sed -n '1,220p' ../rmcp-template/docs/RUST.md
-sed -n '1,220p' ../rmcp-template/docs/TESTING.md
-sed -n '1,220p' ../rmcp-template/docs/AUTH.md
+RMCP_TEMPLATE="${RMCP_TEMPLATE:-$(cd .. && pwd)/rmcp-template}"
+sed -n '1,220p' "$RMCP_TEMPLATE/docs/PATTERNS.md"
+sed -n '1,220p' "$RMCP_TEMPLATE/docs/RUST.md"
+sed -n '1,220p' "$RMCP_TEMPLATE/docs/TESTING.md"
+sed -n '1,220p' "$RMCP_TEMPLATE/docs/AUTH.md"
 ```
 
 Then check the target repo's `CLAUDE.md` and current docs for evolved local
@@ -38,6 +42,8 @@ For ACP-specific work, also read this skill's ACP references:
 - `references/tool-calls.md`
 - `references/unstable-features.md`
 - `references/codex-patterns.md`
+- `examples/agent-impl.rs`
+- `examples/client-impl.rs`
 
 ## rmcp Server Architecture
 

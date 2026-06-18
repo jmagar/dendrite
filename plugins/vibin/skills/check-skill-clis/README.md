@@ -17,7 +17,7 @@ Triggers: "check if my skill CLIs are installed", "audit skill commands", "what 
 ## Usage
 
 ```bash
-python3 ~/.agents/shared/skills/check-skill-clis/scripts/audit_skill_clis.py \
+python3 <skill-dir>/scripts/audit_skill_clis.py \
   --output docs/reports/skill-cli-audit.md
 ```
 

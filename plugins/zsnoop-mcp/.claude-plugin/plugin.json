@@ -15,6 +15,5 @@
     "recovery",
     "ssh",
     "mcp"
-  ],
-  "mcpServers": "./.mcp.json"
+  ]
 }

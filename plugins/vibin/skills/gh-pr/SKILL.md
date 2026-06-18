@@ -23,7 +23,13 @@ Concrete rules:
 
 ## Available CLI Tools
 
-All commands below assume your working directory is the repo root and `SCRIPTS=skills/gh-pr/scripts`.
+All commands below assume your working directory is the target repo root and
+`SCRIPTS` points to this skill's bundled `scripts/` directory. Resolve it from
+the active skill install, not from the target repo:
+
+```bash
+SCRIPTS="<gh-pr-skill-dir>/scripts"
+```
 
 | Command | Purpose |
 |---------|---------|

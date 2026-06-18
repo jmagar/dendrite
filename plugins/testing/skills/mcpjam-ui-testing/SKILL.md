@@ -58,32 +58,11 @@ optional resource/tool/render checks while passing target/auth flags through to
      the tool call exits 0 or `resources/read` returns HTML. If render is skipped, follow
      `inspectorRender.remediation` before retesting.
 
-## Axon Pattern
+## Project Patterns
 
-For Axon, the expected UI contract is:
-
-- UI tool: `axon_status_dashboard`
-- UI resource: `ui://axon/status-dashboard`
-- MIME type: `text/html;profile=mcp-app`
-- Generic routed tool: `axon` should not carry dashboard UI metadata
-- Tool call: `axon_status_dashboard` should return `structuredContent` with status payload data
-
-Run focused checks:
-
-```bash
-mcpjam server doctor --url http://127.0.0.1:8001/mcp
-mcpjam apps conformance --url http://127.0.0.1:8001/mcp
-mcpjam tools list --url http://127.0.0.1:8001/mcp
-mcpjam resources list --url http://127.0.0.1:8001/mcp
-mcpjam resources read --url http://127.0.0.1:8001/mcp --resource-uri ui://axon/status-dashboard
-mcpjam tools call --url http://127.0.0.1:8001/mcp --tool-name axon_status_dashboard --tool-args '{}'
-```
-
-For stdio Axon:
-
-```bash
-mcpjam server doctor --command ./target/debug/axon --args mcp --cwd /home/jmagar/workspace/axon
-```
+Keep this core workflow generic. Load
+[`references/axon.md`](references/axon.md) only when specifically validating
+Axon's MCP-UI dashboard contract.
 
 ## Debugging Failures
 

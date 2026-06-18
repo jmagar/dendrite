@@ -14,7 +14,7 @@ Use this skill to inventory skills across Claude, Codex, and Copilot surfaces, e
 Audit these ecosystems by default:
 
 - `claude`: `~/.claude/**`, plus Claude plugin-cache skill folders when present.
-- `codex`: `~/.codex/skills/**`, `~/.codex/plugins/cache/**/skills/**`, and local authored skills such as `/home/jmagar/.agents/src/skills/**`.
+- `codex`: `~/.codex/skills/**`, `~/.codex/plugins/cache/**/skills/**`, and local authored skills such as `$HOME/.agents/src/skills/**`.
 - `copilot`: GitHub Copilot CLI and extension skill surfaces under `~/.config/github-copilot/**`, `~/.config/gh/**`, or plugin-cache paths when present.
 
 Classify status conservatively:

@@ -88,7 +88,7 @@ Interactive OAuth via `rclone config`.
 [mybox]
 type = sftp
 host = mybox.lan
-user = jmagar
+user = <user>
 port = 22
 key_file = ~/.ssh/id_ed25519
 shell_type = unix                 # or none / cygwin / powershell
@@ -99,7 +99,7 @@ Scriptable:
 
 ```bash
 rclone config create mybox sftp \
-  host=mybox.lan user=jmagar key_file=~/.ssh/id_ed25519
+  host=mybox.lan user=<user> key_file=~/.ssh/id_ed25519
 ```
 
 `rclone` can use SFTP remotes for anything other backends do — including `mount`, `serve`, and crypt overlays.
@@ -109,16 +109,16 @@ rclone config create mybox sftp \
 ```ini
 [nextcloud]
 type = webdav
-url = https://cloud.example.com/remote.php/dav/files/jmagar/
+url = https://cloud.example.com/remote.php/dav/files/<user>/
 vendor = nextcloud                # nextcloud | owncloud | sharepoint | other
-user = jmagar
+user = <user>
 pass = <obscured>                 # set via: rclone obscure 'plaintext'
 ```
 
 ```bash
 rclone config create nextcloud webdav \
-  url=https://cloud.example.com/remote.php/dav/files/jmagar/ \
-  vendor=nextcloud user=jmagar pass="$(rclone obscure 'plaintext')"
+  url=https://cloud.example.com/remote.php/dav/files/<user>/ \
+  vendor=nextcloud user=<user> pass="$(rclone obscure 'plaintext')"
 ```
 
 ## HTTP (read-only static sites)

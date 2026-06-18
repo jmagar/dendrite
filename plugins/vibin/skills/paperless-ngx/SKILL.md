@@ -59,28 +59,35 @@ PAPERLESS_API_TOKEN="<your_api_token>"
 All commands return JSON output for LLM parsing. Scripts source credentials from
 the generated plugin config automatically.
 
+Resolve `SKILL_DIR` to the directory containing this `SKILL.md`, then run the
+helpers through that path:
+
+```bash
+SKILL_DIR="<paperless-ngx-skill-dir>"
+```
+
 ### Document Operations
 
 **Upload a document:**
 ```bash
-bash scripts/paperless-api.sh upload /path/to/document.pdf
-bash scripts/paperless-api.sh upload scan.jpg --title "Receipt" --tags "expense,2024"
-bash scripts/paperless-api.sh upload contract.pdf --correspondent "Acme Corp" --document-type "Contract"
+bash "$SKILL_DIR/scripts/paperless-api.sh" upload /path/to/document.pdf
+bash "$SKILL_DIR/scripts/paperless-api.sh" upload scan.jpg --title "Receipt" --tags "expense,2024"
+bash "$SKILL_DIR/scripts/paperless-api.sh" upload contract.pdf --correspondent "Acme Corp" --document-type "Contract"
 ```
 
 **Search documents:**
 ```bash
-bash scripts/paperless-api.sh search "invoice"
-bash scripts/paperless-api.sh search "meeting notes" --limit 10
-bash scripts/paperless-api.sh search "2024" --tags "tax"
-bash scripts/paperless-api.sh search --correspondent "John Doe"
+bash "$SKILL_DIR/scripts/paperless-api.sh" search "invoice"
+bash "$SKILL_DIR/scripts/paperless-api.sh" search "meeting notes" --limit 10
+bash "$SKILL_DIR/scripts/paperless-api.sh" search "2024" --tags "tax"
+bash "$SKILL_DIR/scripts/paperless-api.sh" search --correspondent "John Doe"
 ```
 
 **List documents:**
 ```bash
-bash scripts/paperless-api.sh list
-bash scripts/paperless-api.sh list --limit 20
-bash scripts/paperless-api.sh list --ordering "-created"
+bash "$SKILL_DIR/scripts/paperless-api.sh" list
+bash "$SKILL_DIR/scripts/paperless-api.sh" list --limit 20
+bash "$SKILL_DIR/scripts/paperless-api.sh" list --ordering "-created"
 ```
 
 **Get document details:**
@@ -337,6 +344,6 @@ Always confirm with user before executing delete operations.
 - **API Reference:** See `references/api-endpoints.md` for complete API documentation
 - **Quick Reference:** See `references/quick-reference.md` for command examples
 - **Troubleshooting:** See `references/troubleshooting.md` for common issues
-- **Scripts:** `skills/paperless-ngx/scripts/`
+- **Scripts:** `scripts/` relative to this skill directory
 
 ---

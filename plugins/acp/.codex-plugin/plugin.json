@@ -1,6 +1,6 @@
 {
   "name": "acp",
-  "description": "Agent Client Protocol skills for Rust, Python, and TypeScript implementations.",
+  "description": "Rust implementation patterns for ACP, rmcp-derived MCP servers, and Lab runtime work.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"
@@ -13,13 +13,13 @@
     "agents",
     "protocol",
     "rust",
-    "python",
-    "typescript"
+    "rmcp",
+    "lab"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "ACP",
-    "shortDescription": "Agent Client Protocol implementation guidance for Rust, Python, and TypeScript.",
+    "shortDescription": "Rust implementation guidance for ACP, rmcp MCP servers, and Lab runtime work.",
     "longDescription": "ACP packages implementation skills and protocol references for building Agent Client Protocol clients and agents, including session lifecycle, streaming, tool calls, and adapter patterns.",
     "developerName": "Jacob Magar",
     "category": "Developer Tools",
@@ -32,6 +32,5 @@
       "Explain how ACP tool calls should stream results."
     ],
     "brandColor": "#7C3AED"
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

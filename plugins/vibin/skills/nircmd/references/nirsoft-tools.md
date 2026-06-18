@@ -92,7 +92,7 @@ ssh "$NIRCMD_HOST" "cat '/mnt/c/Users/jmaga/AppData/Local/Temp/activity.csv'" \
   | grep -i chrome.exe
 ```
 
-The temp-file dance is the same one used for clipboard UTF-8 — see `references/clipboard.md`.
+For clipboard UTF-8 handling, use the separate `clipboard` skill.
 
 ## Privacy / safety notes
 

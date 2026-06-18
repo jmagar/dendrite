@@ -15,7 +15,6 @@
     "mcp"
   ],
   "skills": "./skills/",
-  "hooks": "./hooks/hooks.json",
   "homepage": "https://github.com/jmagar/swag-mcp",
   "interface": {
     "displayName": "SWAG MCP",
@@ -33,6 +32,5 @@
       "Inspect existing SWAG configs for a service."
     ],
     "brandColor": "#10B981"
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

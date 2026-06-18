@@ -1,6 +1,6 @@
 {
   "name": "tei",
-  "description": "Skill for operating tei via the lab MCP server / CLI.",
+  "description": "Inspect and query a Text Embeddings Inference server through its HTTP API.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"

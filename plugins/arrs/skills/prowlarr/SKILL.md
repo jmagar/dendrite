@@ -177,4 +177,10 @@ When the user asks about indexers or searches:
 - Sync operations push indexer configs to all connected apps (Sonarr, Radarr, Lidarr, etc.)
 - Category IDs follow Newznab/Torznab standards
 
+## Local References
+
+- `references/quick-reference.md` — common Prowlarr curl and helper examples
+- `references/api-endpoints.md` — endpoint catalog and request shapes
+- `references/troubleshooting.md` — connectivity, auth, and indexer failure diagnosis
+
 ---

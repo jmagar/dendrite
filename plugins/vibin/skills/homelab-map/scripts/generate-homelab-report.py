@@ -22,8 +22,8 @@ from pathlib import Path
 from typing import Iterable
 
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-DEFAULT_TEMPLATE = REPO_ROOT / "src/skills/homelab-map/references/homelab.md"
+SKILL_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_TEMPLATE = SKILL_DIR / "references/homelab.md"
 DEFAULT_DIR = Path.home() / ".homelab"
 DEFAULT_OUTPUT = DEFAULT_DIR / "homelab.md"
 DEFAULT_JSON_OUTPUT = DEFAULT_DIR / "homelab.json"
@@ -371,7 +371,7 @@ def report_payload(snapshots: dict[str, HostSnapshot], generated_at: dt.datetime
         "schema_version": 1,
         "generated_at": generated_at.isoformat(),
         "generated_at_display": generated_at.strftime("%Y-%m-%d %H:%M:%S %Z"),
-        "generator": "src/skills/homelab-map/scripts/generate-homelab-report.py",
+        "generator": "skills/homelab-map/scripts/generate-homelab-report.py",
         "collection_method": "non-interactive SSH, Docker CLI, ZFS CLI, Unraid shell commands, and SWAG config files",
         "network": "WillyNet / 10.1.0.0/24 plus Tailscale mesh",
         "primary_public_domain": "*.tootie.tv via SWAG on squirts",
@@ -447,7 +447,7 @@ def render_report(snapshots: dict[str, HostSnapshot], generated_at: dt.datetime)
     return f"""# WillyNet Homelab - Infrastructure Documentation
 
 > Generated: {generated_at.strftime('%Y-%m-%d %H:%M:%S %Z')}
-> Generator: `src/skills/homelab-map/scripts/generate-homelab-report.py`
+> Generator: `skills/homelab-map/scripts/generate-homelab-report.py`
 > Collection method: non-interactive SSH, Docker CLI, ZFS CLI, Unraid shell commands, and SWAG config files.
 
 ---
@@ -469,7 +469,7 @@ def render_report(snapshots: dict[str, HostSnapshot], generated_at: dt.datetime)
 Values in this document are a fresh runtime snapshot. Re-run the generator before making operational decisions:
 
 ```bash
-python3 src/skills/homelab-map/scripts/generate-homelab-report.py
+python3 <skill-dir>/scripts/generate-homelab-report.py
 ```
 
 ## Nodes

@@ -34,9 +34,8 @@ fi
 }
 ```
 
-In this homelab, the public URL may return `403` for unauthenticated script
-probes. If Subsonic requests through `NAVIDROME_URL` fail with proxy/auth errors,
-use the direct backend `http://10.1.0.2:4533` for API calls.
+If Subsonic requests through `NAVIDROME_URL` fail with proxy/auth errors, use a
+direct backend URL from plugin settings or local env for API calls.
 
 ## Authentication (do this first, every session)
 

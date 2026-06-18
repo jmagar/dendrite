@@ -89,10 +89,13 @@ Then use the current release's equivalent render/open flow.
 
 ## agent-os Notes
 
-On the `agent-os` Windows VM, verified packages were:
+On the `agent-os` Windows VM, historical validation used:
 
 - `@mcpjam/cli@3.3.4`
 - `@mcpjam/inspector@2.4.15`
+
+Refresh exact package versions with `npm view @mcpjam/cli version` and
+`npm view @mcpjam/inspector version` before documenting current behavior.
 
 Available commands:
 

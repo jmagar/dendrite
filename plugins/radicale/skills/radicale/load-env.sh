@@ -11,7 +11,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     exit 1
 fi
 
-# Load a generated plugin config, legacy ~/.lab/.env, or old ~/.claude-homelab/.env.
+# Load a generated plugin config or legacy ~/.lab/.env.
 # Usage: load_env_file [/optional/override/path]
 load_env_file() {
     local default_file="${XDG_CONFIG_HOME:-$HOME/.config}/lab-radicale/config.env"
@@ -20,10 +20,6 @@ load_env_file() {
     if [[ ! -f "$env_file" && "$env_file" == "$default_file" && -f "$HOME/.lab/.env" ]]; then
         env_file="$HOME/.lab/.env"
     fi
-    if [[ ! -f "$env_file" && "$env_file" == "$default_file" && -f "$HOME/.claude-homelab/.env" ]]; then
-        env_file="$HOME/.claude-homelab/.env"
-    fi
-
     if [[ ! -f "$env_file" ]]; then
         echo "ERROR: $env_file not found" >&2
         echo "Configure the Radicale plugin or add credentials to ~/.lab/.env" >&2

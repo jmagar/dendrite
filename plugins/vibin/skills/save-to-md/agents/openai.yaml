@@ -1,4 +1,4 @@
 interface:
   display_name: "Save To Md"
-  short_description: "Save session documentation to a markdown file with full..."
-  default_prompt: "Use $save-to-md for save session documentation to a markdown file with full."
+  short_description: "Save session documentation to a Markdown artifact with useful context and outcomes."
+  default_prompt: "Use $save-to-md to write a complete session note that captures decisions, commands, changes, and follow-ups."

@@ -1,7 +1,7 @@
 ---
 name: refresh-docs
 description: Use when the user asks to refresh local reference docs, rerun `./scripts/refresh-docs.sh`, review the latest `docs/references/CHANGES.md` entry, or produce/update `docs/references/CHANGES-REPORT.md`. Trigger phrases include "refresh docs", "refresh references", "update references", "check what the refresh changed", "write the changes report". Requires the host project to provide `./scripts/refresh-docs.sh` and a `docs/references/` tree.
-allowed-tools: "Bash(./scripts/refresh-docs.sh *), Bash(/home/jmagar/.agents/src/skills/refresh-docs/scripts/archive-changes-report.sh *), Bash(rg *), Bash(find *), Bash(sed *), Bash(awk *), Read, Write"
+allowed-tools: "Bash(./scripts/refresh-docs.sh *), Bash(*archive-changes-report.sh *), Bash(rg *), Bash(find *), Bash(sed *), Bash(awk *), Read, Write"
 ---
 
 # Refresh Docs Impact Review
@@ -77,7 +77,7 @@ find docs/references -maxdepth 3 -type f \
 5. Cross-check against `docs/references/INDEX.md` so the report uses the current reference layout and source names.
 6. Identify any code, docs, config, tests, schemas, skills, scripts, or workflows that should change because of the refreshed references.
 7. Identify new capabilities, commands, protocol features, examples, or workflows that the project could add because of the refreshed references.
-8. Before writing a new report, run `.agents/src/skills/refresh-docs/scripts/archive-changes-report.sh`.
+8. Before writing a new report, run `<skill-dir>/scripts/archive-changes-report.sh`.
 9. Write the new report to `docs/references/CHANGES-REPORT.md` using `references/CHANGES-REPORT-template.md` as the structure.
 
 `./scripts/refresh-docs.sh` excludes `docs/references/CHANGES.md`, `docs/references/CHANGES-REPORT.md`, and `docs/references/archive/changes-reports/*` from the detected file-change set. Do not treat those generated report/log files as upstream reference changes.

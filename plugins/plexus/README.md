@@ -15,7 +15,7 @@ touches the machine.
   host's context.
 - `scripts/remote-context.py` - helper that reads host memory and gathers live
   SSH/Tailscale/syslog context.
-- `templates/remotes/squirts/REMOTE.md` - bundled default host memory draft.
+- `templates/remotes/squirts/REMOTE.md` - sample host memory draft.
 - `.claude-plugin/plugin.json` - Claude Code plugin manifest.
 - `.codex-plugin/plugin.json` - Codex plugin manifest.
 
@@ -44,8 +44,8 @@ Set `PLEXUS_DATA_DIR` or pass `--data-dir` to override the data directory.
 ## Quick Check
 
 ```bash
-python3 plugins/plexus/scripts/remote-context.py squirts --no-probe
-python3 plugins/plexus/scripts/remote-context.py squirts --format json --no-probe
+python3 plugins/plexus/scripts/remote-context.py example-host --no-probe
+python3 plugins/plexus/scripts/remote-context.py example-host --format json --no-probe
 python3 plugins/plexus/scripts/remote-context.py --init
 ```
 

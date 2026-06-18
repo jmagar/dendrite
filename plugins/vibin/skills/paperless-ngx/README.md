@@ -67,8 +67,8 @@ This ensures only you can read the credentials file.
 
 **Simple upload:**
 ```bash
-cd skills/paperless-ngx
-./scripts/paperless-api.sh upload ~/Documents/receipt.pdf
+SKILL_DIR="<paperless-ngx-skill-dir>"
+bash "$SKILL_DIR/scripts/paperless-api.sh" upload ~/Documents/receipt.pdf
 ```
 
 **Upload with metadata:**

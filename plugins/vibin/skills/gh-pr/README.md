@@ -24,7 +24,7 @@ Triggers: "address PR comments", "handle PR review", "work through review feedba
 ## Files
 
 - `SKILL.md` — agent workflow
-- `scripts/` — 13 Python helpers (fetch, triage, render, resolve, etc.); invoke from repo root with `SCRIPTS=skills/gh-pr/scripts`
+- `scripts/` — 13 Python helpers (fetch, triage, render, resolve, etc.); invoke from the target repo root with `SCRIPTS=<gh-pr-skill-dir>/scripts`
 - `references/` — workflow patterns, troubleshooting, webhook setup, quick reference
 - `agents/openai.yaml` — OpenAI runtime metadata
 - `assets/` — icons

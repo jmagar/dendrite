@@ -28,7 +28,7 @@ codex mcp add mobile -- npx -y claude-in-mobile@latest
 For Claude Code, local stdio fallback:
 
 ```bash
-claude mcp add --scope user --transport stdio mobile -- npx claude-in-mobile@latest
+claude mcp add --scope user --transport stdio mobile -- npx -y claude-in-mobile@latest
 ```
 
 Equivalent JSON config:

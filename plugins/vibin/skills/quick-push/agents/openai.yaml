@@ -1,4 +1,4 @@
 interface:
   display_name: "Quick Push"
-  short_description: "Git add all, commit with Claude co-authorship trailer, and..."
-  default_prompt: "Use $quick-push for git add all, commit with Claude co-authorship trailer, and."
+  short_description: "Stage, commit, and push the current repo with the expected quick-push workflow."
+  default_prompt: "Use $quick-push to save the session when needed, stage intended changes, commit with trailer, and push."

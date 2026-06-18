@@ -13,7 +13,6 @@ Bridge for driving a Win11 desktop remotely from this SSH session via the NirCmd
 NIRCMD_HOST="${NIRCMD_HOST:-steamy-wsl}"                          # ssh alias
 NIRCMD_PATH="${NIRCMD_PATH:-/mnt/c/tools/nircmd/nircmd.exe}"      # POSIX path from WSL
 NIRSOFT_DIR="${NIRSOFT_DIR:-/mnt/c/tools/nirsoft}"                # NirSoft companion tools dir
-SKILL_DIR=/home/jmagar/.agents/src/skills/nircmd                      # hardcoded; SKILL.md isn't sourced as a real script
 ```
 
 For persistence across sessions, set in `~/.claude/settings.json` under `env` (see `screenshots` skill for the pattern).

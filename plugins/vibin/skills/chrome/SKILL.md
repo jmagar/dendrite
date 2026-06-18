@@ -7,18 +7,6 @@ description: "This skill should be used when the user wants to inspect or contro
 
 Talk to a real, running Chrome instance on a remote machine via CDP (Chrome DevTools Protocol). The remote Chrome must be launched with `--remote-debugging-port=<PORT>`. Everything in this skill is one SSH-hop away and stays on the user's machine — no data leaves their box except the response payload you fetch back.
 
-## Preferred web-dev tool priority
-
-For web development, browser verification, screenshots, and interactive page checks, use this order unless the user explicitly asks for a specific machine or browser session:
-
-1. **CDP running on agent-os** - best first choice when the agent-os Chrome debug endpoint is available.
-2. **agent-browser** - best fallback for fresh automation, screenshots, form flows, and ref-based browser testing.
-3. **claude-in-chrome on agent-os** - use when the workflow specifically needs the Claude-in-Chrome path on the sandbox VM.
-4. **agent-os Windows-MCP** - use for OS-level control, desktop apps, PowerShell, or browser tasks that cannot be handled cleanly through CDP/agent-browser.
-5. **claude-in-chrome on steamy** - last choice for the user's personal desktop/session.
-
-If a higher-priority surface is unavailable, record the observed failure briefly and move to the next option. Only stop for user action when the task specifically requires the user's personal Chrome session and steamy CDP is down.
-
 ## Defaults (override via env vars)
 
 ```bash
@@ -42,11 +30,10 @@ On the default host there's a "Chrome (debug)" desktop shortcut wired to this. I
 ssh "$SSH_TARGET" "$POWERSHELL -NoProfile -Command \"try { Invoke-RestMethod -Uri http://127.0.0.1:$CHROME_PORT/json/version -TimeoutSec 3 | Select-Object Browser,'User-Agent' } catch { 'CDP_DOWN' }\""
 ```
 
-If you see `CDP_DOWN`, follow the web-dev priority ladder:
+If you see `CDP_DOWN`, keep the scope narrow:
 
-- For generic web-dev verification, screenshots, and automation, fall back to `agent-browser`.
-- For sandbox-specific browser or desktop work, use `agent-os` through CDP if possible, then `claude-in-chrome` on agent-os, then Windows-MCP.
 - For explicit "my Chrome", "my tabs", cookies, or steamy personal-session tasks, ask the user to start the debug Chrome and open the target page in that window.
+- For generic web automation or sandbox browser work, switch to the appropriate skill instead of stretching this one.
 
 Everything below assumes the selected CDP endpoint is live.
 

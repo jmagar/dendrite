@@ -1,6 +1,6 @@
 ---
 name: operating-remote
-description: This skill should be used when the user asks to inspect, troubleshoot, change, SSH into, or operate a named remote host that has a Plexus `REMOTE.md` profile, such as squirts, dookie, steamy, or another homelab device. Before changing state, load durable host memory and live context with `remote-context.py <host>`. This is host-scoped operational memory for remote machines.
+description: This skill should be used when the user asks to inspect, troubleshoot, change, SSH into, or operate a named remote host that has a Plexus `REMOTE.md` profile, such as example-host, media-server, devbox, or another managed device. Before changing state, load durable host memory and live context with `remote-context.py <host>`. This is host-scoped operational memory for remote machines.
 argument-hint: <host> [--json] [--no-probe]
 ---
 

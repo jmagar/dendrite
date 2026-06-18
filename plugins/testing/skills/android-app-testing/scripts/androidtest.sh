@@ -26,12 +26,12 @@
 #
 # Env: ADB (path to adb, default ~/Android/Sdk/platform-tools/adb),
 #      EMULATOR (path, default ~/Android/Sdk/emulator/emulator),
-#      AVD (default axon_test), ANDROID_SERIAL (default first device).
+#      AVD (otherwise first emulator -list-avds entry), ANDROID_SERIAL (default first device).
 set -euo pipefail
 
 ADB="${ADB:-$HOME/Android/Sdk/platform-tools/adb}"
 EMULATOR="${EMULATOR:-$HOME/Android/Sdk/emulator/emulator}"
-AVD_DEFAULT="${AVD:-axon_test}"
+AVD_DEFAULT="${AVD:-$("$EMULATOR" -list-avds 2>/dev/null | head -n1 || true)}"
 
 adb() { "$ADB" ${ANDROID_SERIAL:+-s "$ANDROID_SERIAL"} "$@"; }
 
@@ -40,6 +40,10 @@ cmd="${1:-}"; shift || true
 case "$cmd" in
 boot)
   avd="${1:-$AVD_DEFAULT}"
+  if [ -z "$avd" ]; then
+    echo "No AVD specified and none found. Set AVD or pass androidtest.sh boot <avd>." >&2
+    exit 2
+  fi
   nohup "$EMULATOR" -avd "$avd" -no-window -no-audio -no-boot-anim \
     -gpu swiftshader_indirect -no-snapshot >"/tmp/avd_${avd}.log" 2>&1 &
   echo "emulator launching (pid $!), log /tmp/avd_${avd}.log"

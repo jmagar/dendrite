@@ -20,7 +20,7 @@ Any prompt naming one of the devices, or `WillyNet`. Strict device-name fidelity
 Regenerate the external report instead of hand-maintaining runtime values:
 
 ```bash
-python3 src/skills/homelab-map/scripts/generate-homelab-report.py
+python3 <skill-dir>/scripts/generate-homelab-report.py
 ```
 
 The generator uses non-interactive SSH plus Docker/ZFS/Unraid/SWAG shell probes. Container counts, RAM%, uptime etc. are point-in-time; rerun before acting on anything current-state dependent.
@@ -32,11 +32,11 @@ After writing artifacts, the generator starts or reuses a viewer on `0.0.0.0:405
 Disable serving for CI or one-off generation:
 
 ```bash
-python3 src/skills/homelab-map/scripts/generate-homelab-report.py --no-serve
+python3 <skill-dir>/scripts/generate-homelab-report.py --no-serve
 ```
 
 Override ports:
 
 ```bash
-python3 src/skills/homelab-map/scripts/generate-homelab-report.py --serve-bind 127.0.0.1 --serve-port 40501 --tailscale-https-port 8448
+python3 <skill-dir>/scripts/generate-homelab-report.py --serve-bind 127.0.0.1 --serve-port 40501 --tailscale-https-port 8448
 ```

@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:?plugin root missing}}/scripts/setup.sh",
             "timeout": 30
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT:-${CODEX_PLUGIN_ROOT:?plugin root missing}}/scripts/setup.sh",
             "timeout": 30
           }
         ]

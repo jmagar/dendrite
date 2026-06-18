@@ -28,7 +28,8 @@ Every connected upstream — homelab services (dozzle, plex, sonarr, unraid, cor
 If a skill or request names a capability and you don't see a matching tool, do NOT conclude it's unavailable. Translate it:
 
 1. `search` the catalog for the capability.
-2. `execute` it via `callTool("<upstream>::<tool>", params)`.
+2. `execute` it via `callTool(tool.id, params)` using the exact `id` returned
+   by `search`.
 
 Exception: a server with its own native MCP endpoint registered directly in the client (e.g. dozzle per its skill) — use that directly, not the gateway.
 
@@ -57,14 +58,17 @@ Good search snippets return only what you need. Avoid dumping the entire catalog
 
 ```js
 async () => {
-  const result = await callTool("github::search_issues", {
+  const tool = tools.find(t => t.upstream === "github" && t.name === "search_issues");
+  if (!tool) throw new Error("github search_issues tool not found");
+  const result = await callTool(tool.id, {
     q: "repo:jmagar/lab gateway"
   });
   return result;
 }
 ```
 
-IDs are always `<upstream>::<tool>`, for example `cortex::cortex` or `github::search_issues`. The old `upstream::<server>::<tool>` form is invalid.
+Tool IDs are gateway-defined. Do not derive them from upstream/name strings;
+use the `id` returned by `search` exactly.
 
 The generated helper form is also available after `search` confirms the helper name:
 
@@ -79,7 +83,7 @@ The gateway returns structured errors as JSON text. Check `kind`.
 | `kind` | What it means | What to do |
 |---|---|---|
 | `unknown_tool` | The upstream/tool id did not match a visible tool | Re-run `search` and use the returned `id` exactly |
-| `invalid_code_mode_id` | The id is not `<upstream>::<tool>` or uses a reserved namespace | Fix the id shape |
+| `invalid_code_mode_id` | The id does not match the live catalog or uses a reserved namespace | Re-run `search` and copy the returned `id` exactly |
 | `validation_failed` | Params failed the upstream input schema | Use the `signature`, `dts`, or `schema` returned by `search` |
 | `forbidden` | Missing scope | Surface to the user |
 | `confirmation_required` | Destructive action without confirmation | Ask the user before retrying with confirmation if supported |
@@ -95,7 +99,7 @@ Surface unknown `kind` values verbatim.
 - Do not call legacy `code_mode` / `tool_execute` unless those are the only names actually listed by the client; canonical names are `search` and `execute`.
 - Do not use the old `tool_execute({ name, arguments })` shape with `execute`; current `execute` runs JavaScript.
 - Do not guess IDs. Use `search` in the current session and copy the returned `id`.
-- Do not use `upstream::` as a prefix; all gateway tools are upstream tools, so IDs start with the actual server name.
+- Do not invent IDs from examples or naming conventions. Search the live catalog first.
 - Do not try to call Lab built-in service actions from inside Code Mode. Code Mode brokers upstream MCP tools only.
 
 ## Quick Reference
@@ -105,5 +109,5 @@ Surface unknown `kind` values verbatim.
 search({ code: "async () => tools.filter(t => /logs/i.test(t.description))" })
 
 // Execute
-execute({ code: "async () => callTool('cortex::cortex', { action: 'help', params: {} })" })
+execute({ code: "async () => { const tool = tools.find(t => t.upstream === 'cortex' && t.name === 'cortex'); if (!tool) throw new Error('cortex tool not found'); return callTool(tool.id, { action: 'help', params: {} }); }" })
 ```

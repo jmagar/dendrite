@@ -19,7 +19,7 @@ share one report format (`references/report-format.md`).
 
 ## Prerequisites
 - **Android SDK** with `adb` + `emulator` (default `~/Android/Sdk/...`; override `ADB`/`EMULATOR`).
-- **An AVD** (default `axon_test`; override `AVD`). The emulator does NOT auto-boot — step 1 boots it.
+- **An AVD** (`AVD` or the first emulator returned by `emulator -list-avds`). The emulator does NOT auto-boot — step 1 boots it.
 - The APK to test (a path on this host).
 
 ## The driver
@@ -41,7 +41,7 @@ androidtest.sh current                   # current focused activity/package
 androidtest.sh logclear                  # logcat -c  (call before a feature)
 androidtest.sh crashes                   # grep buffer for FATAL/ANR/SIG/died
 ```
-All primitives are live-validated (2026-05-29) against `axon_test` (Android 15, 1080×2400).
+All primitives were live-validated (2026-05-29) against an Android 15 AVD.
 
 ## Workflow
 

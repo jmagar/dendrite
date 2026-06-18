@@ -59,7 +59,7 @@ Read `~/.homelab/homelab.md` or `~/.homelab/homelab.json` whenever you need:
 `~/.homelab/homelab.md`, `~/.homelab/homelab.json`, and `~/.homelab/index.html` are generated from live collection plus the template at `references/homelab.md`. Refresh them instead of hand-editing point-in-time data:
 
 ```bash
-python3 src/skills/homelab-map/scripts/generate-homelab-report.py
+python3 <skill-dir>/scripts/generate-homelab-report.py
 ```
 
 By default, the generator also starts or reuses a viewer on `0.0.0.0:40500` so SWAG can reach it through dookie's Tailscale IP, checks `tailscale status`, and attempts Tailscale Serve on HTTPS port `8447` only if Tailscale is installed and usable. Use `--no-serve` when you only want files.

@@ -9,8 +9,8 @@ Three ways to put a PNG of your desktop in front of Claude:
 | Mode | Trigger phrases | What you get |
 |------|-----------------|--------------|
 | **Fetch existing** | "check my screen", "look at the screenshot", "latest screen" | The newest PNG from your screenshots folder. Pairs with Win+Shift+S → drag → autosave. |
-| **Fresh capture** | "take a screenshot", "capture my screen" | Live grab of your primary monitor via PowerShell + .NET. Captures whatever's on top right now. |
-| **Chrome tab** | "grab my chrome tab", "screenshot the X page", "show me chrome" | Any tab in your debug Chrome — works even if the window is minimized or behind others. Uses Chrome DevTools Protocol. |
+| **Fresh capture** | "take a screenshot", "capture my screen" | Live grab via ShareX when available. |
+| **PowerShell fallback** | "capture my screen" when ShareX is unavailable | Primary-monitor grab via PowerShell + .NET. Captures whatever's on top right now. |
 
 ## How it works
 
@@ -18,7 +18,7 @@ You're SSH'd from Windows into a remote Linux box running Claude. Claude can't s
 
 ```
 [Win11 desktop]                  [Remote Linux + Claude]
-  Chrome / windows                       │
+  Windows desktop                        │
   C:\screens\*.png                       │
        ↑                                 │
        │                                 │
@@ -32,7 +32,7 @@ You're SSH'd from Windows into a remote Linux box running Claude. Claude can't s
 
 - Passwordless SSH from the Claude host to your Windows-side WSL (`ssh steamy-wsl` should just work).
 - A screenshots folder on the Windows side — defaults to `C:\screens`. Win+Shift+S autosave or any tool that lands PNGs there will work for Mode 1.
-- For Mode 3 (Chrome tab capture): a Chrome instance launched with `--remote-debugging-port=9222`. There's a "Chrome (debug)" shortcut on the desktop that handles this — double-click it to start.
+- For Chrome tab capture, use the separate `chrome` skill.
 
 ## Setup notes
 
@@ -43,12 +43,6 @@ Host steamy-wsl
     User <wsl-username>
     IdentityFile ~/.ssh/...
 ```
-
-**Chrome debug shortcut** — already on the Win11 desktop. Target:
-```
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir=C:\chrome-debug
-```
-It runs alongside your normal Chrome (separate profile) so no quit-everything dance.
 
 **`.zshenv` on the WSL host** — has `[ -f ... ] && . ...` guards on `~/.cargo/env` and `~/.rover/env` so SSH sessions don't spam errors. Original backed up to `~/.zshenv.bak`.
 
@@ -62,8 +56,7 @@ Set the `SCREENS_*` env vars. The reliable place is `~/.claude/settings.json` (C
     "SCREENS_HOST": "workbox",
     "SCREENS_REMOTE_DIR": "~/Pictures/Screenshots",
     "SCREENS_NATIVE_DIR": "",
-    "SCREENS_POWERSHELL": "",
-    "SCREENS_CHROME_PORT": "9223"
+    "SCREENS_POWERSHELL": ""
   }
 }
 ```
@@ -76,17 +69,15 @@ If the target isn't Windows, only Mode 1 (fetch existing) works out of the box.
 
 ```
 screens/
-├── SKILL.md              Agent-facing instructions for all three modes
+├── SKILL.md              Agent-facing instructions
 ├── README.md             This file
-└── scripts/
-    └── cdp-shot.ps1      PowerShell: connects to Chrome WebSocket, captures a tab
+└── scripts/              Optional helper scripts
 ```
 
 ## Limitations
 
-- Mode 2 captures the **primary monitor only** and **whatever's on top** — focus the thing you want first.
-- Mode 3 needs Chrome started with the debug flag; opening the page in your *normal* Chrome won't work.
-- No region/window grab mode. Install NirCmd or ShareX and add a mode if you want one.
+- PowerShell fallback captures the **primary monitor only** and **whatever's on top** — focus the thing you want first.
+- Chrome tab screenshots live in the `chrome` skill.
 - No video. ShareX records video but Claude can't watch MP4 directly — you'd need an ffmpeg-to-frames step.
 
 ## Troubleshooting
@@ -94,7 +85,5 @@ screens/
 | Symptom | Check |
 |---------|-------|
 | "no screenshots found" | `ssh steamy-wsl ls /mnt/c/screens` — is the dir populated? Is `$SCREENS_REMOTE_DIR` pointing at the right place? |
-| Mode 3 fails with connection error | Debug Chrome isn't running. Double-click "Chrome (debug)" on the Win11 desktop. |
-| Mode 3 captures the wrong tab | Pass a more specific `PATTERN` (title or URL substring). |
 | `ssh steamy-wsl` itself errors | Test with `ssh steamy-wsl true`. Likely an SSH config / network issue, not the skill. |
-| Captured PNG is all black | Hardware-accelerated app — known PowerShell `CopyFromScreen` limitation. Use Mode 3 if it's Chrome; otherwise needs NirCmd or `PrintWindow` + `PW_RENDERFULLCONTENT`. |
+| Captured PNG is all black | Hardware-accelerated app — known PowerShell `CopyFromScreen` limitation. Use the `chrome` skill if it's Chrome; otherwise use ShareX/NirCmd or `PrintWindow` + `PW_RENDERFULLCONTENT`. |

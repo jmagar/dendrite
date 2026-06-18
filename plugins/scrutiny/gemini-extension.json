@@ -1,7 +1,7 @@
 {
   "name": "scrutiny",
   "version": "0.1.0",
-  "description": "Skill for operating scrutiny via the lab MCP server / CLI.",
+  "description": "Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API.",
   "settings": [
     {
       "name": "Scrutiny URL",
