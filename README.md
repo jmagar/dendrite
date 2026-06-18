@@ -19,6 +19,19 @@ public repo.
 publishes `labby` as an external GitHub subdirectory source:
 `https://github.com/jmagar/lab.git`, path `plugins/labby`.
 
+## Marketplace Variants
+
+`main` is the canonical full marketplace branch. It may include plugin metadata
+for MCP-backed plugins when those plugins own or bootstrap their MCP server
+configuration.
+
+`marketplace-no-mcp` is an intentional long-lived alternate ref for installs
+where MCP servers are already registered through the Labby gateway. That branch
+keeps the skills and plugin entries available, but strips bundled MCP server
+registrations so installing the marketplace does not duplicate servers already
+provided by the gateway. Treat it as an active release variant, not stale branch
+cleanup.
+
 ## Inventory
 
 <!-- BEGIN GENERATED README INVENTORY -->

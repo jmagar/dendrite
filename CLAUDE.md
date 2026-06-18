@@ -26,6 +26,18 @@ subdirectory source.
   but committed examples must not contain real credentials.
 - Preserve executable bits on scripts and hooks when copying plugin directories.
 
+## Long-Lived Branches
+
+- `marketplace-no-mcp` is an intentional long-lived marketplace variant branch,
+  not stale cleanup. It keeps the same skill/plugin catalog available while
+  removing bundled MCP server registrations for environments where those MCP
+  servers are already connected through the Labby gateway. Leave the branch and
+  its worktree in place unless Jacob explicitly asks to retire the no-MCP
+  marketplace variant.
+- Do not merge `marketplace-no-mcp` into `main` by default. `main` remains the
+  canonical full marketplace; `marketplace-no-mcp` is for publishing or testing
+  the alternate ref.
+
 ## Common Checks
 
 ```bash
@@ -42,4 +54,3 @@ done
 jq empty .claude-plugin/marketplace.json
 jq empty .agents/plugins/marketplace.json
 ```
-
