@@ -11,7 +11,7 @@
     },
     {
       "name": "Zsnoop Log Level",
-      "description": "Optional zsnoop-mcp stderr log level: DEBUG, INFO, WARNING, or ERROR.",
+      "description": "Optional zsnoop-mcp stderr log level: DEBUG, INFO, WARNING, or ERROR. Default: 'INFO'.",
       "envVar": "ZSNOOP_LOG_LEVEL",
       "sensitive": false
     }

@@ -1,7 +1,7 @@
 {
   "name": "immich",
   "version": "0.1.0",
-  "description": "Self-hosted photo and video management via direct calls to the Immich REST API.",
+  "description": "Skill for operating immich via the lab MCP server / CLI.",
   "settings": [
     {
       "name": "API Key",

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 import re
+import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +32,21 @@ def load_plugin_manifest(plugin_dir: Path) -> dict[str, Any]:
         return read_json(codex)
     if claude.exists():
         return read_json(claude)
+    return {}
+
+
+def load_user_config(plugin_dir: Path) -> dict[str, Any]:
+    for relative in (
+        ".claude-plugin/plugin.json",
+        ".codex-plugin/plugin.json",
+    ):
+        path = plugin_dir / relative
+        if not path.exists():
+            continue
+        manifest = read_json(path)
+        user_config = manifest.get("userConfig") or {}
+        if isinstance(user_config, dict) and user_config:
+            return user_config
     return {}
 
 
@@ -175,7 +192,7 @@ def manifest_for(plugin_dir: Path) -> dict[str, Any]:
         "description": description,
     }
 
-    user_config = plugin.get("userConfig") or {}
+    user_config = load_user_config(plugin_dir)
     settings = settings_from_user_config(user_config)
     existing_env = {setting["envVar"] for setting in settings}
 
@@ -194,13 +211,30 @@ def manifest_for(plugin_dir: Path) -> dict[str, Any]:
     return manifest
 
 
-def main() -> None:
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="verify generated manifests are up to date")
+    args = parser.parse_args()
+
+    stale: list[Path] = []
     for plugin_dir in sorted(path for path in PLUGINS.iterdir() if path.is_dir()):
         manifest = manifest_for(plugin_dir)
         output = plugin_dir / "gemini-extension.json"
-        output.write_text(json.dumps(manifest, indent=2, ensure_ascii=True) + "\n")
-        print(output.relative_to(ROOT))
+        generated = json.dumps(manifest, indent=2, ensure_ascii=True) + "\n"
+        if args.check:
+            if not output.exists() or output.read_text() != generated:
+                stale.append(output.relative_to(ROOT))
+        else:
+            output.write_text(generated)
+            print(output.relative_to(ROOT))
+
+    if stale:
+        print("Gemini extension manifests are out of date:", file=sys.stderr)
+        for path in stale:
+            print(f"- {path}", file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -21,7 +21,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate marketplace manifests
-        run: |
-          jq empty .claude-plugin/marketplace.json .agents/plugins/marketplace.json
-          python3 plugins/scripts/check-marketplace-sync
-          python3 plugins/scripts/generate-readme-inventory --check --strict
+        run: plugins/scripts/check-all

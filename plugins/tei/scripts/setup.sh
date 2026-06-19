@@ -26,8 +26,8 @@ if [[ -f "$HOME/.lab/.env" ]]; then
   set +a
 fi
 
-url="${CLAUDE_PLUGIN_OPTION_TEI_URL:-${CODEX_PLUGIN_OPTION_TEI_URL:-${TEI_URL:-}}}"
-auth_header="${CLAUDE_PLUGIN_OPTION_TEI_AUTH_HEADER:-${CODEX_PLUGIN_OPTION_TEI_AUTH_HEADER:-${TEI_AUTH_HEADER:-}}}"
+url="${CLAUDE_PLUGIN_OPTION_TEI_URL:-${TEI_URL:-}}"
+auth_header="${CLAUDE_PLUGIN_OPTION_TEI_AUTH_HEADER:-${TEI_AUTH_HEADER:-}}"
 
 mkdir -p "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR" 2>/dev/null || true

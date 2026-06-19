@@ -160,10 +160,16 @@ def skill_manifest_drift() -> list[str]:
 
 
 PLACEHOLDER_RE = re.compile(r"\$\{(?:userConfig|user_config)\.([A-Za-z0-9_]+)\}")
+PLUGIN_OPTION_RE = re.compile(r"\b(?:CLAUDE|CODEX)_PLUGIN_OPTION_([A-Z0-9_]+)\b")
+USER_CONFIG_REF_RE = re.compile(r"\$\{(?:userConfig|user_config)\.([A-Za-z0-9_]+)\}")
 
 
 def env_name(config_key: str) -> str:
     return re.sub(r"[^A-Z0-9]+", "_", config_key.upper()).strip("_")
+
+
+def config_key_from_env(env_var: str) -> str:
+    return env_var.lower()
 
 
 def transform_value(value: Any) -> Any:
@@ -225,6 +231,90 @@ def mcp_manifest_drift() -> list[str]:
     return drift
 
 
+def gemini_setting_env_vars(plugin_dir: Path) -> set[str]:
+    gemini = load_optional_json(plugin_dir / "gemini-extension.json")
+    settings = gemini.get("settings") or []
+    if not isinstance(settings, list):
+        return set()
+    env_vars = set()
+    for setting in settings:
+        if isinstance(setting, dict) and isinstance(setting.get("envVar"), str):
+            env_vars.add(setting["envVar"])
+    return env_vars
+
+
+def config_reference_files(plugin_dir: Path) -> list[Path]:
+    files: list[Path] = []
+    for relative in (".mcp.json",):
+        path = plugin_dir / relative
+        if path.exists():
+            files.append(path)
+    for subdir in ("hooks", "commands", "scripts"):
+        root = plugin_dir / subdir
+        if root.exists():
+            files.extend(path for path in root.rglob("*") if path.is_file())
+    return sorted(files)
+
+
+def config_refs_for(plugin_dir: Path) -> tuple[set[str], list[str]]:
+    refs: set[str] = set()
+    errors: list[str] = []
+    for path in config_reference_files(plugin_dir):
+        text = path.read_text(errors="ignore")
+        refs.update(USER_CONFIG_REF_RE.findall(text))
+        for env_ref in PLUGIN_OPTION_RE.findall(text):
+            full_match = f"{env_ref}"
+            if f"CODEX_PLUGIN_OPTION_{env_ref}" in text:
+                errors.append(
+                    f"{path.relative_to(ROOT)} references CODEX_PLUGIN_OPTION_{env_ref}, "
+                    "but Codex plugins do not have a userConfig/settings option surface"
+                )
+            refs.add(config_key_from_env(full_match))
+    return refs, errors
+
+
+def config_manifest_drift() -> list[str]:
+    drift = []
+    for plugin_dir in plugin_dirs():
+        claude_path = plugin_dir / ".claude-plugin" / "plugin.json"
+        if not claude_path.exists():
+            continue
+
+        claude = load_optional_json(claude_path)
+        user_config = claude.get("userConfig") or {}
+        if not isinstance(user_config, dict):
+            drift.append(f"{claude_path.relative_to(ROOT)} userConfig must be an object")
+            continue
+
+        user_keys = set(user_config)
+        expected_env = {env_name(key) for key in user_keys}
+        actual_env = gemini_setting_env_vars(plugin_dir)
+
+        missing_gemini = sorted(expected_env - actual_env)
+        extra_gemini = sorted(actual_env - expected_env)
+        if missing_gemini:
+            drift.append(
+                f"{plugin_dir.relative_to(ROOT)} Gemini settings missing env vars: "
+                + ", ".join(missing_gemini)
+            )
+        if extra_gemini:
+            drift.append(
+                f"{plugin_dir.relative_to(ROOT)} Gemini settings not backed by Claude userConfig: "
+                + ", ".join(extra_gemini)
+            )
+
+        refs, ref_errors = config_refs_for(plugin_dir)
+        drift.extend(ref_errors)
+        missing_user_config = sorted(refs - user_keys)
+        if missing_user_config:
+            drift.append(
+                f"{plugin_dir.relative_to(ROOT)} config refs not backed by Claude userConfig: "
+                + ", ".join(missing_user_config)
+            )
+
+    return drift
+
+
 def main() -> int:
     try:
         claude_plugins = read_plugins(CLAUDE_MARKETPLACE)
@@ -274,6 +364,10 @@ def main() -> int:
     mcp_drift = mcp_manifest_drift()
     if mcp_drift:
         errors.append("MCP manifest drift:\n  " + "\n  ".join(mcp_drift))
+
+    config_drift = config_manifest_drift()
+    if config_drift:
+        errors.append("Config manifest drift:\n  " + "\n  ".join(config_drift))
 
     if errors:
         print("Marketplace manifests are not aligned:", file=sys.stderr)

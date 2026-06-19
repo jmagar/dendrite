@@ -4,6 +4,12 @@
   "description": "Skill for operating adguard via the lab MCP server / CLI.",
   "settings": [
     {
+      "name": "Password",
+      "description": "AdGuard Home password used for HTTP Basic authentication.",
+      "envVar": "ADGUARD_PASSWORD",
+      "sensitive": true
+    },
+    {
       "name": "AdGuard URL",
       "description": "Base URL of the AdGuard Home instance, including scheme. Do not include a trailing slash or /control.",
       "envVar": "ADGUARD_URL",
@@ -14,12 +20,6 @@
       "description": "AdGuard Home username used for HTTP Basic authentication.",
       "envVar": "ADGUARD_USERNAME",
       "sensitive": false
-    },
-    {
-      "name": "Password",
-      "description": "AdGuard Home password used for HTTP Basic authentication.",
-      "envVar": "ADGUARD_PASSWORD",
-      "sensitive": true
     }
   ]
 }

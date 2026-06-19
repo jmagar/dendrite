@@ -55,13 +55,15 @@ test ! -e plugins/labby
 
 # Apply and validate the no-MCP marketplace transform locally.
 plugins/scripts/apply-no-mcp-marketplace
-plugins/scripts/check-marketplace-sync
-plugins/scripts/generate-readme-inventory --check --strict
+plugins/scripts/check-all
 
 # Claude and Codex marketplace entries must stay aligned by plugin name and
 # normalized source target. Local plugins with Claude or Codex manifests must
 # also have a sibling gemini-extension.json.
 plugins/scripts/check-marketplace-sync
+
+# Enable the tracked pre-push hook in a clone.
+git config core.hooksPath .githooks
 
 # Every skill has an OpenAI companion file.
 for f in $(find plugins -path '*/skills/*/SKILL.md' -type f | sort); do

@@ -39,9 +39,7 @@ jobs:
         run: |
           python3 plugins/scripts/apply-no-mcp-marketplace
           python3 plugins/scripts/generate-readme-inventory
-          jq empty .claude-plugin/marketplace.json .agents/plugins/marketplace.json
-          python3 plugins/scripts/check-marketplace-sync
-          python3 plugins/scripts/generate-readme-inventory --check --strict
+          plugins/scripts/check-all
 
       - name: Commit and push marketplace-no-mcp
         run: |

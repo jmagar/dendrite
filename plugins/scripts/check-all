@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+jq empty .claude-plugin/marketplace.json .agents/plugins/marketplace.json
+plugins/scripts/validate-plugin-schemas
+plugins/scripts/check-marketplace-sync
+plugins/scripts/generate-gemini-extensions --check
+plugins/scripts/generate-readme-inventory --check --strict
