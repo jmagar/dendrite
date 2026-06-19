@@ -4,26 +4,26 @@
   "description": "SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration.",
   "settings": [
     {
-      "name": "Swag Mcp Token",
-      "description": "Environment value for SWAG_MCP_TOKEN.",
+      "name": "Remote SWAG MCP bearer token",
+      "description": "Optional bearer token for the remote swag-mcp endpoint.",
       "envVar": "SWAG_MCP_TOKEN",
       "sensitive": true
     },
     {
-      "name": "Swag Mcp Url",
-      "description": "Environment value for SWAG_MCP_URL.",
+      "name": "Remote SWAG MCP URL",
+      "description": "Optional remote Streamable HTTP MCP endpoint for swag-mcp, used by the swag-mcp-remote server entry. Default: ''.",
       "envVar": "SWAG_MCP_URL",
       "sensitive": false
     },
     {
-      "name": "Swag Proxy Confs Path",
-      "description": "Environment value for SWAG_PROXY_CONFS_PATH.",
+      "name": "SWAG proxy configs path",
+      "description": "Local filesystem path to the SWAG nginx proxy-confs directory. Leave empty when using an SSH URI instead. Default: ''.",
       "envVar": "SWAG_PROXY_CONFS_PATH",
       "sensitive": false
     },
     {
-      "name": "Swag Proxy Confs Uri",
-      "description": "Environment value for SWAG_PROXY_CONFS_URI.",
+      "name": "SWAG proxy configs SSH URI",
+      "description": "Optional SSH URI for the remote SWAG proxy-confs directory, such as user@host:/mnt/appdata/swag/nginx/proxy-confs. Takes precedence over the local path when set. Default: ''.",
       "envVar": "SWAG_PROXY_CONFS_URI",
       "sensitive": false
     }

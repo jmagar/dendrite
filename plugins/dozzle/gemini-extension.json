@@ -1,7 +1,7 @@
 {
   "name": "dozzle",
   "version": "0.1.0",
-  "description": "Skill for operating Dozzle through direct HTTP API checks, auth guidance, and gateway-backed MCP setup notes.",
+  "description": "Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes.",
   "settings": [
     {
       "name": "Dozzle MCP URL",

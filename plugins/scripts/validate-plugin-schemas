@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+"""Validate plugin and marketplace JSON against available official schemas/tools."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+from typing import Any
+
+from jsonschema import Draft7Validator
+
+
+ROOT = Path(__file__).resolve().parents[2]
+CLAUDE_PLUGIN_SCHEMA_URL = "https://json.schemastore.org/claude-code-plugin-manifest.json"
+CLAUDE_MARKETPLACE_SCHEMA_URL = "https://json.schemastore.org/claude-code-marketplace.json"
+
+
+def read_json(path: Path) -> Any:
+    return json.loads(path.read_text())
+
+
+def load_schema(url: str) -> dict[str, Any]:
+    with urllib.request.urlopen(url, timeout=15) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def format_error(path: Path, error: Any) -> str:
+    location = ".".join(str(part) for part in error.absolute_path)
+    suffix = f" at {location}" if location else ""
+    return f"{path.relative_to(ROOT)}{suffix}: {error.message}"
+
+
+def validate_json_schema(path: Path, schema: dict[str, Any]) -> list[str]:
+    validator = Draft7Validator(schema)
+    data = read_json(path)
+    return [format_error(path, error) for error in sorted(validator.iter_errors(data), key=str)]
+
+
+def claude_schema_errors() -> list[str]:
+    errors: list[str] = []
+    marketplace_schema = load_schema(CLAUDE_MARKETPLACE_SCHEMA_URL)
+    plugin_schema = load_schema(CLAUDE_PLUGIN_SCHEMA_URL)
+
+    errors.extend(validate_json_schema(ROOT / ".claude-plugin" / "marketplace.json", marketplace_schema))
+    for path in sorted((ROOT / "plugins").glob("*/.claude-plugin/plugin.json")):
+        errors.extend(validate_json_schema(path, plugin_schema))
+    return errors
+
+
+def run(command: list[str]) -> tuple[int, str]:
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    return completed.returncode, completed.stdout
+
+
+def gemini_validation_errors() -> list[str]:
+    errors: list[str] = []
+    for manifest in sorted((ROOT / "plugins").glob("*/gemini-extension.json")):
+        plugin_dir = manifest.parent
+        code, output = run(["gemini", "extensions", "validate", str(plugin_dir.relative_to(ROOT))])
+        if code != 0:
+            errors.append(f"{plugin_dir.relative_to(ROOT)} failed gemini extensions validate:\n{output}")
+    return errors
+
+
+def main() -> int:
+    errors: list[str] = []
+
+    try:
+        errors.extend(claude_schema_errors())
+    except Exception as exc:
+        errors.append(f"Claude schema validation failed before checking files: {exc}")
+
+    errors.extend(gemini_validation_errors())
+
+    if errors:
+        print("Plugin schema validation failed:", file=sys.stderr)
+        for error in errors:
+            print(f"- {error}", file=sys.stderr)
+        return 1
+
+    print("Plugin schema validation passed")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

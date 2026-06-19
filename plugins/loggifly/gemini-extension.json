@@ -1,5 +1,5 @@
 {
   "name": "loggifly",
   "version": "0.1.0",
-  "description": "Docker container log alerting via keyword/regex patterns, configured through LoggiFly's config.yaml."
+  "description": "Skill for operating loggifly via the lab MCP server / CLI."
 }

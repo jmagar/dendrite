@@ -47,6 +47,18 @@ targets that do not normalize to the same repo/path/ref. It also checks local
 plugin packaging: any `plugins/*` directory with `.claude-plugin/plugin.json` or
 `.codex-plugin/plugin.json` must have a sibling `gemini-extension.json`.
 
+Schema and runtime validation lives in `plugins/scripts/validate-plugin-schemas`:
+Claude marketplace/plugin JSON is checked against the published SchemaStore
+schemas, and every local Gemini extension is checked with
+`gemini extensions validate`. Codex does not currently publish a plugin
+manifest JSON schema or `codex plugin validate` command, so Codex coverage comes
+from `plugins/scripts/check-marketplace-sync`. Run `plugins/scripts/check-all`
+before pushing, or enable the tracked hook with:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Inventory
 
 <!-- BEGIN GENERATED README INVENTORY -->

@@ -26,7 +26,7 @@ if [[ -f "$HOME/.lab/.env" ]]; then
   set +a
 fi
 
-url="${CLAUDE_PLUGIN_OPTION_SCRUTINY_URL:-${CODEX_PLUGIN_OPTION_SCRUTINY_URL:-${SCRUTINY_URL:-}}}"
+url="${CLAUDE_PLUGIN_OPTION_SCRUTINY_URL:-${SCRUTINY_URL:-}}"
 
 mkdir -p "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR" 2>/dev/null || true
