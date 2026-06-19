@@ -40,6 +40,13 @@ validates both marketplace manifests, and pushes the branch when there is a
 resulting change. Add new MCP-backed alternate-ref entries to
 `NO_MCP_REF_NAMES` in that script so the branch stays reproducible.
 
+Marketplace parity is enforced by `plugins/scripts/check-marketplace-sync` and
+`.github/workflows/validate-marketplaces.yml`. The check fails on duplicate
+plugin names, entries that exist in only one marketplace, or Claude/Codex source
+targets that do not normalize to the same repo/path/ref. It also checks local
+plugin packaging: any `plugins/*` directory with `.claude-plugin/plugin.json` or
+`.codex-plugin/plugin.json` must have a sibling `gemini-extension.json`.
+
 ## Inventory
 
 <!-- BEGIN GENERATED README INVENTORY -->

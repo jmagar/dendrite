@@ -75,7 +75,8 @@
       "name": "agent-browser",
       "source": {
         "source": "github",
-        "repo": "vercel-labs/agent-browser"
+        "repo": "vercel-labs/agent-browser",
+        "sha": "2c7991c9eccca1c9db6eee1a26a713414778de5a"
       },
       "description": "Browser automation plugin for agent-driven web app testing, inspection, and debugging."
     },
