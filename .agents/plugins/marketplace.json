@@ -2253,6 +2253,102 @@
         ],
         "brandColor": "#2563EB"
       }
+    },
+    {
+      "name": "project-artifact",
+      "description": "Generate and publish a living project status page \u2014 overview & success criteria, the workstream sequence, and next steps \u2014 as a shareable claude.ai artifact backed by a per-project config, so refreshes re-gather live state, redeploy the same URL, and report only the delta.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/project-artifact"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity",
+      "interface": {
+        "displayName": "Project Artifact",
+        "shortDescription": "Publish and refresh living project status pages.",
+        "longDescription": "Generate and publish a living project status page \u2014 overview & success criteria, the workstream sequence, and next steps \u2014 as a shareable claude.ai artifact backed by a per-project config, so refreshes re-gather live state, redeploy the same URL, and report only the delta.",
+        "developerName": "Anthropic",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write",
+          "Automation"
+        ],
+        "defaultPrompt": [
+          "Use Project Artifact to publish a project status page.",
+          "Refresh the project artifact for this repo.",
+          "Summarize this project as a shareable artifact."
+        ],
+        "brandColor": "#7C3AED"
+      }
+    },
+    {
+      "name": "code-modernization",
+      "description": "Modernize legacy codebases (COBOL, legacy Java/C++, monolith web apps) with a structured preflight / assess / map / extract-rules / brief / reimagine / transform / harden workflow, an interactive topology viewer, and specialist review agents",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/code-modernization"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Developer Tools",
+      "interface": {
+        "displayName": "Code Modernization",
+        "shortDescription": "Modernize legacy codebases with structured assessment and transformation workflows.",
+        "longDescription": "Modernize legacy codebases (COBOL, legacy Java/C++, monolith web apps) with a structured preflight / assess / map / extract-rules / brief / reimagine / transform / harden workflow, an interactive topology viewer, and specialist review agents",
+        "developerName": "Anthropic",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Read",
+          "Write",
+          "Automation"
+        ],
+        "defaultPrompt": [
+          "Use Code Modernization to assess this legacy codebase.",
+          "Map this monolith for modernization.",
+          "Create a modernization plan for this system."
+        ],
+        "brandColor": "#D97757"
+      }
+    },
+    {
+      "name": "security-guidance",
+      "description": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/security-guidance"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Security",
+      "interface": {
+        "displayName": "Security Guidance",
+        "shortDescription": "Review Claude-generated code for common security vulnerabilities.",
+        "longDescription": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes.",
+        "developerName": "Anthropic",
+        "category": "Security",
+        "capabilities": [
+          "Read",
+          "Write",
+          "Automation"
+        ],
+        "defaultPrompt": [
+          "Use Security Guidance to review this diff.",
+          "Check this generated code for security issues.",
+          "Run a security-guidance review before commit."
+        ],
+        "brandColor": "#DC2626"
+      }
     }
   ]
 }
