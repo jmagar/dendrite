@@ -37,12 +37,25 @@ subdirectory source.
 - Do not merge `marketplace-no-mcp` into `main` by default. `main` remains the
   canonical full marketplace; `marketplace-no-mcp` is for publishing or testing
   the alternate ref.
+- The `.github/workflows/sync-marketplace-no-mcp.yml` workflow keeps
+  `marketplace-no-mcp` current after pushes to `main`: it merges `main`, runs
+  `plugins/scripts/apply-no-mcp-marketplace`, regenerates the README inventory,
+  validates both marketplace manifests, and pushes the branch only when that
+  produces a change.
+- Keep the no-MCP transform deterministic. If a new MCP-backed marketplace entry
+  needs the alternate ref, add its plugin name to `NO_MCP_REF_NAMES` in
+  `plugins/scripts/apply-no-mcp-marketplace` instead of hand-editing the
+  long-lived branch.
 
 ## Common Checks
 
 ```bash
 # No local labby plugin copy.
 test ! -e plugins/labby
+
+# Apply and validate the no-MCP marketplace transform locally.
+plugins/scripts/apply-no-mcp-marketplace
+plugins/scripts/generate-readme-inventory --check --strict
 
 # Every skill has an OpenAI companion file.
 for f in $(find plugins -path '*/skills/*/SKILL.md' -type f | sort); do

@@ -32,6 +32,14 @@ registrations so installing the marketplace does not duplicate servers already
 provided by the gateway. Treat it as an active release variant, not stale branch
 cleanup.
 
+The no-MCP branch is synchronized from `main` by
+`.github/workflows/sync-marketplace-no-mcp.yml`. On every push to `main`, the
+workflow merges `main` into `marketplace-no-mcp`, runs
+`plugins/scripts/apply-no-mcp-marketplace`, regenerates the README inventory,
+validates both marketplace manifests, and pushes the branch when there is a
+resulting change. Add new MCP-backed alternate-ref entries to
+`NO_MCP_REF_NAMES` in that script so the branch stays reproducible.
+
 ## Inventory
 
 <!-- BEGIN GENERATED README INVENTORY -->
