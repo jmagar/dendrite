@@ -581,6 +581,33 @@
       "name": "zsnoop-mcp",
       "source": "./plugins/zsnoop-mcp",
       "description": "ZFS snapshot exploration and recovery through an already-configured zsnoop-mcp server."
+    },
+    {
+      "name": "project-artifact",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/project-artifact"
+      },
+      "description": "Generate and publish a living project status page \u2014 overview & success criteria, the workstream sequence, and next steps \u2014 as a shareable claude.ai artifact backed by a per-project config, so refreshes re-gather live state, redeploy the same URL, and report only the delta."
+    },
+    {
+      "name": "code-modernization",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/code-modernization"
+      },
+      "description": "Modernize legacy codebases (COBOL, legacy Java/C++, monolith web apps) with a structured preflight / assess / map / extract-rules / brief / reimagine / transform / harden workflow, an interactive topology viewer, and specialist review agents"
+    },
+    {
+      "name": "security-guidance",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/anthropics/claude-plugins-official.git",
+        "path": "plugins/security-guidance"
+      },
+      "description": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes."
     }
   ]
 }

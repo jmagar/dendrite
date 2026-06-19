@@ -1,0 +1,53 @@
+name: Sync marketplace-no-mcp
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-marketplace-no-mcp
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge main into marketplace-no-mcp
+        run: |
+          git fetch origin main marketplace-no-mcp
+          git switch marketplace-no-mcp
+          git merge --no-edit origin/main
+
+      - name: Apply no-MCP variant rules
+        run: |
+          python3 plugins/scripts/apply-no-mcp-marketplace
+          python3 plugins/scripts/generate-readme-inventory
+          jq empty .claude-plugin/marketplace.json .agents/plugins/marketplace.json
+          python3 plugins/scripts/generate-readme-inventory --check --strict
+
+      - name: Commit and push marketplace-no-mcp
+        run: |
+          if git diff --quiet; then
+            echo "marketplace-no-mcp already up to date"
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore: sync marketplace-no-mcp from main"
+          git push origin marketplace-no-mcp
