@@ -49,15 +49,45 @@ plugin packaging: any `plugins/*` directory with `.claude-plugin/plugin.json` or
 
 Schema and runtime validation lives in `plugins/scripts/validate-plugin-schemas`:
 Claude marketplace/plugin JSON is checked against the published SchemaStore
-schemas, and every local Gemini extension is checked with
-`gemini extensions validate`. Codex does not currently publish a plugin
-manifest JSON schema or `codex plugin validate` command, so Codex coverage comes
-from `plugins/scripts/check-marketplace-sync`. Run `plugins/scripts/check-all`
-before pushing, or enable the tracked hook with:
+schemas; Codex marketplace/plugin JSON is checked against local schemas derived
+from the OpenAI Codex plugin docs and current parser behavior; Gemini extension
+JSON is checked against a local schema derived from the Gemini CLI extension
+reference and `ExtensionConfig`, then every local Gemini extension is checked
+with `gemini extensions validate`. OpenAI and Gemini do not currently publish
+standalone JSON Schema files for those plugin/extension manifests, so the local
+schemas live under `plugins/schemas/` with provenance notes in each schema
+description. Cross-runtime parity still comes from
+`plugins/scripts/check-marketplace-sync`. Run `plugins/scripts/check-all` before
+pushing, or enable the tracked hook with:
 
 ```bash
 git config core.hooksPath .githooks
 ```
+
+To review or refresh the schema provenance, run:
+
+```bash
+plugins/scripts/audit-upstream-schema-sources
+```
+
+Primary upstream references:
+
+- Claude SchemaStore:
+  `https://json.schemastore.org/claude-code-plugin-manifest.json` and
+  `https://json.schemastore.org/claude-code-marketplace.json`
+- Codex docs/spec:
+  `https://developers.openai.com/codex/plugins/build` and
+  `https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/plugin-creator/references/plugin-json-spec.md`
+- Codex parser sources:
+  `https://github.com/openai/codex/blob/main/codex-rs/core-plugins/src/manifest.rs`
+  and
+  `https://github.com/openai/codex/blob/main/codex-rs/core-plugins/src/marketplace.rs`
+- Gemini extension reference:
+  `https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/reference.md`
+- Gemini source/validator:
+  `https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/config/extension.ts`
+  and
+  `https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/validate.ts`
 
 ## Inventory
 

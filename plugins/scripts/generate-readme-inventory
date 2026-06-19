@@ -24,6 +24,7 @@ FALLBACK_DESCRIPTIONS = {
     "broadcastr": "Helper assets for Broadcastr plugin tooling.",
     "scripts": "Shared Dendrite plugin maintenance scripts.",
 }
+IGNORED_PLUGIN_DIRS = {"schemas"}
 
 
 @dataclass(frozen=True)
@@ -64,7 +65,11 @@ def marketplace(path: Path) -> Marketplace:
 
 
 def plugin_dirs() -> list[Path]:
-    return sorted(path for path in PLUGINS.iterdir() if path.is_dir())
+    return sorted(
+        path
+        for path in PLUGINS.iterdir()
+        if path.is_dir() and path.name not in IGNORED_PLUGIN_DIRS
+    )
 
 
 def plugin_manifest(plugin_dir: Path) -> dict[str, Any]:

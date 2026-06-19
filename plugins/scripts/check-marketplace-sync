@@ -15,6 +15,9 @@ ROOT = Path(__file__).resolve().parents[2]
 PLUGINS = ROOT / "plugins"
 CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 CODEX_MARKETPLACE = ROOT / ".agents" / "plugins" / "marketplace.json"
+IGNORED_PLUGIN_DIRS = {"schemas"}
+GITHUB_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+GIT_SHA_RE = re.compile(r"^[0-9a-fA-F]{7,64}$")
 
 
 def read_plugins(path: Path) -> list[dict[str, Any]]:
@@ -37,6 +40,104 @@ def duplicate_names(plugins: list[dict[str, Any]]) -> list[str]:
 
 def github_url(repo: str) -> str:
     return f"https://github.com/{repo}.git"
+
+
+def source_label(path: Path, plugin: dict[str, Any]) -> str:
+    return f"{path.relative_to(ROOT)}:{plugin.get('name', '<unnamed>')}"
+
+
+def valid_relative_path(value: str, *, allow_dot_prefix: bool) -> bool:
+    if not value or value.startswith("/") or "\\" in value:
+        return False
+    path_value = value
+    if path_value in (".", "./"):
+        return allow_dot_prefix
+    if path_value.startswith("./"):
+        if not allow_dot_prefix:
+            return False
+        path_value = path_value[2:]
+    elif allow_dot_prefix:
+        return False
+    return all(part not in ("", ".", "..") for part in path_value.split("/"))
+
+
+def valid_git_url(value: str) -> bool:
+    if not value or value.strip() != value:
+        return False
+    if value.startswith(("https://", "http://", "ssh://", "git@")):
+        return True
+    if value.startswith(("./", "../", ".\\", "..\\", "/", "file://")):
+        return True
+    return bool(GITHUB_REPO_RE.fullmatch(value))
+
+
+def source_selector_errors(label: str, source: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    ref = source.get("ref")
+    sha = source.get("sha")
+    if ref is not None and (not isinstance(ref, str) or not ref.strip()):
+        errors.append(f"{label} source.ref must be a non-empty string when present")
+    if sha is not None and (not isinstance(sha, str) or not GIT_SHA_RE.fullmatch(sha)):
+        errors.append(f"{label} source.sha must be a 7-64 character hex Git commit when present")
+    return errors
+
+
+def marketplace_source_errors(path: Path, plugins: list[dict[str, Any]]) -> list[str]:
+    errors: list[str] = []
+    for plugin in plugins:
+        label = source_label(path, plugin)
+        source = plugin.get("source")
+        if isinstance(source, str):
+            if not valid_relative_path(source, allow_dot_prefix=True):
+                errors.append(f"{label} local source must be a normalized ./ path")
+            elif not source.startswith("./plugins/"):
+                errors.append(f"{label} local source should stay under ./plugins/")
+            continue
+
+        if not isinstance(source, dict):
+            errors.append(f"{label} source must be a string or object")
+            continue
+
+        source_type = source.get("source")
+        if source_type == "local":
+            local_path = source.get("path")
+            if not isinstance(local_path, str) or not valid_relative_path(
+                local_path,
+                allow_dot_prefix=True,
+            ):
+                errors.append(f"{label} local source.path must be a normalized ./ path")
+            elif not local_path.startswith("./plugins/"):
+                errors.append(f"{label} local source.path should stay under ./plugins/")
+        elif source_type == "github":
+            repo = source.get("repo")
+            if not isinstance(repo, str) or not GITHUB_REPO_RE.fullmatch(repo):
+                errors.append(f"{label} github source.repo must look like owner/repo")
+            errors.extend(source_selector_errors(label, source))
+        elif source_type == "url":
+            url = source.get("url")
+            if not isinstance(url, str) or not valid_git_url(url):
+                errors.append(f"{label} url source.url must be a valid Git URL or owner/repo")
+            remote_path = source.get("path")
+            if remote_path is not None and (
+                not isinstance(remote_path, str)
+                or not valid_relative_path(remote_path, allow_dot_prefix=False)
+            ):
+                errors.append(f"{label} url source.path must be a normalized repository path")
+            errors.extend(source_selector_errors(label, source))
+        elif source_type == "git-subdir":
+            url = source.get("url")
+            remote_path = source.get("path")
+            if not isinstance(url, str) or not valid_git_url(url):
+                errors.append(f"{label} git-subdir source.url must be a valid Git URL or owner/repo")
+            if not isinstance(remote_path, str) or not valid_relative_path(
+                remote_path,
+                allow_dot_prefix=False,
+            ):
+                errors.append(f"{label} git-subdir source.path must be a normalized repository path")
+            errors.extend(source_selector_errors(label, source))
+        else:
+            errors.append(f"{label} has unsupported source type {source_type!r}")
+    return errors
 
 
 def normalize_source(source: Any) -> tuple[Any, ...]:
@@ -96,7 +197,7 @@ def source_drift(
 
 def missing_gemini_extensions() -> list[str]:
     missing = []
-    for plugin_dir in sorted(path for path in PLUGINS.iterdir() if path.is_dir()):
+    for plugin_dir in plugin_dirs():
         has_claude = (plugin_dir / ".claude-plugin" / "plugin.json").exists()
         has_codex = (plugin_dir / ".codex-plugin" / "plugin.json").exists()
         has_gemini = (plugin_dir / "gemini-extension.json").exists()
@@ -111,7 +212,11 @@ def missing_gemini_extensions() -> list[str]:
 
 
 def plugin_dirs() -> list[Path]:
-    return sorted(path for path in PLUGINS.iterdir() if path.is_dir())
+    return sorted(
+        path
+        for path in PLUGINS.iterdir()
+        if path.is_dir() and path.name not in IGNORED_PLUGIN_DIRS
+    )
 
 
 def load_optional_json(path: Path) -> dict[str, Any]:
@@ -332,6 +437,11 @@ def main() -> int:
     codex_dupes = duplicate_names(codex_plugins)
     if codex_dupes:
         errors.append("Codex duplicate plugin names: " + ", ".join(codex_dupes))
+
+    source_errors = marketplace_source_errors(CLAUDE_MARKETPLACE, claude_plugins)
+    source_errors.extend(marketplace_source_errors(CODEX_MARKETPLACE, codex_plugins))
+    if source_errors:
+        errors.append("Marketplace source validation:\n  " + "\n  ".join(source_errors))
 
     claude_by_name = {plugin["name"]: plugin for plugin in claude_plugins}
     codex_by_name = {plugin["name"]: plugin for plugin in codex_plugins}
