@@ -72,6 +72,12 @@ plugins/scripts/validate-plugin-schemas
 # schemas. Use this before changing plugins/schemas/*.
 plugins/scripts/audit-upstream-schema-sources
 
+# Regenerate docs/plugin-matrix.md, docs/configuration-matrix.md,
+# docs/marketplace-sources.md, docs/schema-provenance.md, and
+# docs/no-mcp-variant.md after changing manifests, config, schemas, or no-MCP
+# marketplace rules.
+plugins/scripts/generate-docs
+
 # Enable the tracked pre-push hook in a clone.
 git config core.hooksPath .githooks
 

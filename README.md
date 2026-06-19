@@ -89,6 +89,21 @@ Primary upstream references:
   and
   `https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/validate.ts`
 
+Generated operational docs live under `docs/`:
+
+- `docs/plugin-matrix.md`: local plugin packaging across Claude, Codex, Gemini,
+  skills, commands, README, and CHANGELOG coverage.
+- `docs/configuration-matrix.md`: plugin config keys, env vars, sensitivity,
+  descriptions, and consuming files.
+- `docs/marketplace-sources.md`: Claude/Codex marketplace source, selector,
+  and no-MCP ref inventory.
+- `docs/schema-provenance.md`: local schema files and upstream references.
+- `docs/no-mcp-variant.md`: the long-lived no-MCP branch behavior and
+  ref-managed entries.
+
+Regenerate them with `plugins/scripts/generate-docs`; `plugins/scripts/check-all`
+uses `plugins/scripts/generate-docs --check` to fail on stale generated docs.
+
 ## Inventory
 
 <!-- BEGIN GENERATED README INVENTORY -->
