@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "arrs",
   "description": "The *arr / media-automation stack in one plugin: Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr — each operated via its own REST API. Credentials are configured here and bridged to the skills via a generated env file.",
+  "skills": "./skills/",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"

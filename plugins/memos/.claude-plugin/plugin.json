@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "memos",
   "description": "Skills for operating a Memos note hub.",
+  "skills": "./skills/",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"

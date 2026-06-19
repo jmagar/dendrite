@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -109,6 +110,121 @@ def missing_gemini_extensions() -> list[str]:
     return missing
 
 
+def plugin_dirs() -> list[Path]:
+    return sorted(path for path in PLUGINS.iterdir() if path.is_dir())
+
+
+def load_optional_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text())
+    if not isinstance(data, dict):
+        raise ValueError(f"{path.relative_to(ROOT)} must contain a JSON object")
+    return data
+
+
+def skill_names(plugin_dir: Path) -> list[str]:
+    skills_dir = plugin_dir / "skills"
+    if not skills_dir.exists():
+        return []
+    return sorted(path.parent.name for path in skills_dir.glob("*/SKILL.md"))
+
+
+def normalized_skill_path(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    return value.rstrip("/")
+
+
+def skill_manifest_drift() -> list[str]:
+    drift = []
+    for plugin_dir in plugin_dirs():
+        skills = skill_names(plugin_dir)
+        if not skills:
+            continue
+
+        claude_path = plugin_dir / ".claude-plugin" / "plugin.json"
+        codex_path = plugin_dir / ".codex-plugin" / "plugin.json"
+        gemini_path = plugin_dir / "gemini-extension.json"
+
+        claude = load_optional_json(claude_path)
+        codex = load_optional_json(codex_path)
+
+        if claude_path.exists() and normalized_skill_path(claude.get("skills")) != "./skills":
+            drift.append(f"{plugin_dir.relative_to(ROOT)} Claude skills must be './skills/'")
+        if codex_path.exists() and normalized_skill_path(codex.get("skills")) != "./skills":
+            drift.append(f"{plugin_dir.relative_to(ROOT)} Codex skills must be './skills/'")
+        if (claude_path.exists() or codex_path.exists()) and not gemini_path.exists():
+            drift.append(f"{plugin_dir.relative_to(ROOT)} is missing gemini-extension.json")
+    return drift
+
+
+PLACEHOLDER_RE = re.compile(r"\$\{(?:userConfig|user_config)\.([A-Za-z0-9_]+)\}")
+
+
+def env_name(config_key: str) -> str:
+    return re.sub(r"[^A-Z0-9]+", "_", config_key.upper()).strip("_")
+
+
+def transform_value(value: Any) -> Any:
+    if isinstance(value, str):
+        value = PLACEHOLDER_RE.sub(lambda m: "${" + env_name(m.group(1)) + "}", value)
+        value = value.replace("${CLAUDE_PLUGIN_ROOT}", "${extensionPath}")
+        value = value.replace("${GEMINI_EXTENSION_ROOT}", "${extensionPath}")
+        value = value.replace("${CLAUDE_PLUGIN_DATA}", "${extensionPath}${/}.data")
+        return value
+    if isinstance(value, list):
+        return [transform_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: transform_value(item) for key, item in value.items()}
+    return value
+
+
+def transform_mcp_server(server: Any) -> Any:
+    if not isinstance(server, dict):
+        return transform_value(server)
+
+    transformed = transform_value(server)
+    env = transformed.get("env")
+    if isinstance(env, dict):
+        for key, value in list(env.items()):
+            if value == "" and re.fullmatch(r"[A-Z][A-Z0-9_]*", key):
+                env[key] = "${" + key + "}"
+    return transformed
+
+
+def expected_gemini_mcp_servers(plugin_dir: Path) -> dict[str, Any]:
+    mcp_path = plugin_dir / ".mcp.json"
+    if not mcp_path.exists():
+        return {}
+    data = load_optional_json(mcp_path)
+    servers = data.get("mcpServers") or {}
+    if not isinstance(servers, dict):
+        raise ValueError(f"{mcp_path.relative_to(ROOT)} mcpServers must be an object")
+    return {key: transform_mcp_server(value) for key, value in servers.items()}
+
+
+def mcp_manifest_drift() -> list[str]:
+    drift = []
+    for plugin_dir in plugin_dirs():
+        gemini_path = plugin_dir / "gemini-extension.json"
+        if not gemini_path.exists():
+            continue
+
+        expected = expected_gemini_mcp_servers(plugin_dir)
+        gemini = load_optional_json(gemini_path)
+        actual = gemini.get("mcpServers") or {}
+        if not isinstance(actual, dict):
+            drift.append(f"{gemini_path.relative_to(ROOT)} mcpServers must be an object")
+            continue
+
+        if actual != expected:
+            drift.append(
+                f"{plugin_dir.relative_to(ROOT)} Gemini mcpServers do not match .mcp.json"
+            )
+    return drift
+
+
 def main() -> int:
     try:
         claude_plugins = read_plugins(CLAUDE_MARKETPLACE)
@@ -150,6 +266,14 @@ def main() -> int:
             "Local plugin manifests without gemini-extension.json:\n  "
             + "\n  ".join(missing_gemini)
         )
+
+    skill_drift = skill_manifest_drift()
+    if skill_drift:
+        errors.append("Skill manifest drift:\n  " + "\n  ".join(skill_drift))
+
+    mcp_drift = mcp_manifest_drift()
+    if mcp_drift:
+        errors.append("MCP manifest drift:\n  " + "\n  ".join(mcp_drift))
 
     if errors:
         print("Marketplace manifests are not aligned:", file=sys.stderr)
