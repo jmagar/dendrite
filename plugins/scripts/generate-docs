@@ -218,6 +218,13 @@ def yes_no(value: bool) -> str:
     return "yes" if value else "no"
 
 
+def doc_status(path: Path) -> str:
+    if not path.exists():
+        return "no"
+    nonblank = sum(1 for line in path.read_text(errors="ignore").splitlines() if line.strip())
+    return "yes" if nonblank >= 3 else "empty"
+
+
 def env_name(config_key: str) -> str:
     return re.sub(r"[^A-Z0-9]+", "_", config_key.upper()).strip("_")
 
@@ -232,7 +239,7 @@ def config_reference_files(plugin_dir: Path) -> list[Path]:
         path = plugin_dir / relative
         if path.exists():
             files.append(path)
-    for subdir in ("hooks", "commands", "scripts"):
+    for subdir in ("hooks", "commands", "scripts", "skills"):
         root = plugin_dir / subdir
         if root.exists():
             files.extend(path for path in root.rglob("*") if path.is_file())
@@ -290,6 +297,12 @@ def selector_cell(source: Any) -> str:
     return ", ".join(selectors) if selectors else "none"
 
 
+def no_mcp_selector_cell(source: Any) -> str:
+    if not isinstance(source, dict):
+        return "none"
+    return "ref=`marketplace-no-mcp`"
+
+
 def no_mcp_names() -> list[str]:
     text = NO_MCP_SCRIPT.read_text()
     match = re.search(r"NO_MCP_REF_NAMES\s*=\s*\{(?P<body>.*?)\}", text, re.S)
@@ -324,8 +337,8 @@ def plugin_matrix_doc() -> GeneratedDoc:
                 list_cell(mcp_server_names(plugin_dir)),
                 str(openai_companion_count(plugin_dir)),
                 list_cell(command_names(plugin_dir)),
-                yes_no((plugin_dir / "README.md").exists()),
-                yes_no((plugin_dir / "CHANGELOG.md").exists()),
+                doc_status(plugin_dir / "README.md"),
+                doc_status(plugin_dir / "CHANGELOG.md"),
             ]
         )
 
@@ -469,9 +482,9 @@ def no_mcp_variant_doc() -> GeneratedDoc:
             [
                 f"`{markdown_escape(name)}`",
                 markdown_escape(normalized_source(claude.get(name, {}).get("source"))),
-                selector_cell(claude.get(name, {}).get("source")),
+                no_mcp_selector_cell(claude.get(name, {}).get("source")),
                 markdown_escape(normalized_source(codex.get(name, {}).get("source"))),
-                selector_cell(codex.get(name, {}).get("source")),
+                no_mcp_selector_cell(codex.get(name, {}).get("source")),
             ]
         )
 
@@ -479,6 +492,8 @@ def no_mcp_variant_doc() -> GeneratedDoc:
     lines.extend(
         [
             "`marketplace-no-mcp` is a long-lived alternate branch for installs where MCP servers are already registered through the Labby gateway.",
+            "",
+            "`main` is the full/default marketplace for normal users. The no-MCP branch exists for Jacob's gateway-oriented setup and similar environments that already have those MCP servers registered elsewhere.",
             "",
             "The branch keeps plugin and skill entries available while removing bundled MCP server registrations from local plugin assets and Gemini extension manifests. It also points selected remote plugin sources at their own `marketplace-no-mcp` refs.",
             "",

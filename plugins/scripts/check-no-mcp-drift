@@ -17,6 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 NO_MCP_SCRIPT = ROOT / "plugins" / "scripts" / "apply-no-mcp-marketplace"
 NO_MCP_REF = "marketplace-no-mcp"
+NO_MCP_MARKETPLACE_NAME = "dendrite-no-mcp"
 
 
 def run(command: list[str], *, cwd: Path = ROOT, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -58,6 +59,11 @@ def no_mcp_ref_names() -> list[str]:
 def marketplace_ref_errors(path: Path, root: Path) -> list[str]:
     errors: list[str] = []
     data = read_json(path)
+    if data.get("name") != NO_MCP_MARKETPLACE_NAME:
+        errors.append(
+            f"{display_path(path, root)} name is {data.get('name')!r}, "
+            f"expected {NO_MCP_MARKETPLACE_NAME!r}"
+        )
     plugins = data.get("plugins")
     if not isinstance(plugins, list):
         return [f"{display_path(path, root)} must contain a plugins array"]
@@ -141,8 +147,6 @@ def compare_refs(main_ref: str, no_mcp_ref: str, *, skip_if_missing_refs: bool =
         run(["git", "worktree", "add", "--detach", str(actual), no_mcp_ref])
 
         run(["python3", "plugins/scripts/apply-no-mcp-marketplace"], cwd=expected)
-        run(["python3", "plugins/scripts/generate-readme-inventory"], cwd=expected)
-        run(["plugins/scripts/generate-docs"], cwd=expected)
 
         if check_current(root=expected) != 0:
             return 1

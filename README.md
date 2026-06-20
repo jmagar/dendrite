@@ -1,7 +1,8 @@
 # Dendrite
 
-Dendrite is the Claude Code and Codex marketplace home for agent plugins, skills,
-MCP integrations, hooks, commands, and OpenAI agent companion files.
+Dendrite is the Claude Code, Codex, and Gemini marketplace home for agent
+plugins, skills, MCP integrations, hooks, commands, and OpenAI agent companion
+files.
 
 It is split out from `jmagar/lab` so the Lab control plane can stay focused on
 the `labby` runtime while the agent capability catalog can evolve as its own
@@ -23,21 +24,23 @@ publishes `labby` as an external GitHub subdirectory source:
 
 `main` is the canonical full marketplace branch. It may include plugin metadata
 for MCP-backed plugins when those plugins own or bootstrap their MCP server
-configuration.
+configuration. This is the default for normal users.
 
 `marketplace-no-mcp` is an intentional long-lived alternate ref for installs
 where MCP servers are already registered through the Labby gateway. That branch
 keeps the skills and plugin entries available, but strips bundled MCP server
 registrations so installing the marketplace does not duplicate servers already
-provided by the gateway. Treat it as an active release variant, not stale branch
-cleanup.
+provided by the gateway. This exists for Jacob's gateway-based setup; do not
+assume other users operate that way. Treat it as an active release variant, not
+stale branch cleanup.
 
 The no-MCP branch is synchronized from `main` by
 `.github/workflows/sync-marketplace-no-mcp.yml`. On every push to `main` and on
 a daily schedule, the workflow merges `main` into `marketplace-no-mcp`, runs
-`plugins/scripts/apply-no-mcp-marketplace`, regenerates the README inventory,
-validates both marketplace manifests, runs the no-MCP invariant check, and
-pushes the branch when there is a resulting change. Add new MCP-backed
+`plugins/scripts/apply-no-mcp-marketplace`, validates both marketplace
+manifests, runs the no-MCP invariant check, and pushes the branch when there is
+a resulting change. The transform regenerates Gemini manifests, the README
+inventory, and generated docs as part of the rewrite. Add new MCP-backed
 alternate-ref entries to `NO_MCP_REF_NAMES` in that script so the branch stays
 reproducible.
 
@@ -108,7 +111,17 @@ Primary upstream references:
   and
   `https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/validate.ts`
 
-Generated operational docs live under `docs/`:
+Operational docs live under `docs/`:
+
+- `docs/installation.md`: install commands for Claude, Codex, Gemini, full
+  marketplace, and no-MCP variant.
+- `docs/marketplace-operations.md`: maintainer workflow for adding, updating,
+  removing, and validating marketplace entries.
+- `docs/plugin-documentation-standard.md`: README/CHANGELOG expectations and
+  docs-quality enforcement.
+- `docs/configuration.md`: plugin settings, generated env files, and secret
+  handling.
+- `docs/release-and-changelog.md`: root vs plugin changelog policy.
 
 - `docs/plugin-matrix.md`: local plugin packaging across Claude, Codex, Gemini,
   skills, commands, README, and CHANGELOG coverage.
@@ -137,18 +150,18 @@ bounded diff preview.
 - 63 skills
 - 63 OpenAI agent companion files
 - 25 Gemini extension manifests
-- 0 MCP config files, defining 0 MCP servers
+- 6 MCP config files, defining 5 MCP servers
 - 3 command docs
 
 | Plugin | Description | Skills | MCP servers | OpenAI agents | Commands |
 |---|---|---|---|---:|---|
 | `acp` | Rust implementation patterns for ACP, rmcp-derived MCP servers, and Lab runtime work. | rust | none | 1 | none |
 | `adguard` | Skill for operating adguard via the lab MCP server / CLI. | adguard | none | 1 | none |
-| `agent-os` | Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | agent-os | none | 1 | agent-os.md |
+| `agent-os` | Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | agent-os | windows-mcp | 1 | agent-os.md |
 | `arrs` | The *arr / media-automation stack in one plugin: Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr — each operated via its own REST API. Credentials are configured here and bridged to the skills via a generated env file. | jellyfin, overseerr, plex, prowlarr, qbittorrent, radarr, sabnzbd, sonarr, tautulli, tracearr | none | 10 | none |
 | `broadcastr` | Helper assets for Broadcastr plugin tooling. | none | none | 0 | none |
 | `bytestash` | Skills for operating a ByteStash snippet manager. | bytestash | none | 1 | none |
-| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | dozzle | none | 1 | none |
+| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | dozzle | dozzle | 1 | none |
 | `immich` | Skill for operating immich via the lab MCP server / CLI. | immich | none | 1 | none |
 | `linkding` | Skills for operating a Linkding bookmark manager. | linkding | none | 1 | none |
 | `loggifly` | Skill for operating loggifly via the lab MCP server / CLI. | loggifly | none | 1 | none |
@@ -161,12 +174,12 @@ bounded diff preview.
 | `radicale` | CalDAV and CardDAV workflow skills for Radicale. | radicale | none | 1 | none |
 | `scripts` | Shared Dendrite plugin maintenance scripts. | none | none | 0 | none |
 | `scrutiny` | Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API. | scrutiny | none | 1 | none |
-| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | swag | none | 1 | none |
+| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | swag | swag-mcp, swag-mcp-remote | 1 | none |
 | `tei` | Inspect and query a Text Embeddings Inference server through its HTTP API. | tei | none | 1 | none |
 | `testing` | App-testing and MCP-tooling skills: live QA of web, Android, and desktop apps; MCP server smoke-testing (mcporter); MCP-UI / Apps validation (mcpjam); and claude-in-mobile device automation. | android-app-testing, claude-in-mobile, desktop-app-testing, mcpjam-ui-testing, mcporter, web-app-testing | none | 6 | none |
 | `uptime-kuma` | Read-only monitoring of a self-hosted Uptime Kuma instance via direct HTTP — Prometheus /metrics (API-key auth) and public status-page JSON. No monitor management (that requires Uptime Kuma's socket.io API). | uptime-kuma | none | 1 | none |
 | `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | check-skill-clis, chrome, claude-android-ninja, clipboard, create-swag-config, fastmcp-client-cli, gh-fix-ci, gh-pr, hand-off, homelab-map, jetpack-compose-expert, mcp-gateway-tools, monolith-check, nircmd, paperless-ngx, quick-push, rclone, refresh-docs, repo-status, save-to-md, screenshots, sysinternals, using-rmcp, validate-skill, work-it, worktree-setup | none | 26 | scaffold-claude-plugin.md |
-| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | none | 1 | none |
+| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | zsnoop | 1 | none |
 
 <!-- END GENERATED README INVENTORY -->
 
