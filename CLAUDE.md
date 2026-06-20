@@ -62,6 +62,22 @@ plugins/scripts/check-all
 # also have a sibling gemini-extension.json.
 plugins/scripts/check-marketplace-sync
 
+# Validate plugin and marketplace manifests. Claude uses published SchemaStore
+# schemas. Codex and Gemini use local docs-derived schemas under plugins/schemas;
+# Gemini extensions are also checked with the official `gemini extensions
+# validate` command.
+plugins/scripts/validate-plugin-schemas
+
+# Print the upstream docs/source files used to maintain local Codex and Gemini
+# schemas. Use this before changing plugins/schemas/*.
+plugins/scripts/audit-upstream-schema-sources
+
+# Regenerate docs/plugin-matrix.md, docs/configuration-matrix.md,
+# docs/marketplace-sources.md, docs/schema-provenance.md, and
+# docs/no-mcp-variant.md after changing manifests, config, schemas, or no-MCP
+# marketplace rules.
+plugins/scripts/generate-docs
+
 # Enable the tracked pre-push hook in a clone.
 git config core.hooksPath .githooks
 
