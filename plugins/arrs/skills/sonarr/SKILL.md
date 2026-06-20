@@ -1,6 +1,11 @@
 ---
 name: sonarr
-description: This skill should be used when the user wants to manage TV shows in Sonarr. Triggers include: "add a TV show", "add to Sonarr", "search Sonarr", "find a series", "remove a show", "delete show", "check if show exists", "is [show] in my library", "what's airing this week", "upcoming episodes", "Sonarr library", or any general mention of Sonarr or TV show library management.
+description: >-
+  This skill should be used when the user wants to manage TV shows in Sonarr.
+  Triggers include "add a TV show", "add to Sonarr", "search Sonarr", "find a
+  series", "remove a show", "delete show", "check if show exists", "is [show]
+  in my library", "what's airing this week", "upcoming episodes", "Sonarr
+  library", or any general mention of Sonarr or TV show library management.
 ---
 
 # Sonarr TV Show Management Skill

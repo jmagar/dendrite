@@ -1,6 +1,12 @@
 ---
 name: plex
-description: This skill should be used when the user wants to interact with their Plex Media Server. Triggers include: "check Plex", "search Plex", "what's on Plex", "what's playing on Plex", "who's watching", "Plex sessions", "active streams", "Plex library", "browse movies", "browse TV shows", "recently added", "on deck", "continue watching", "Plex status", or any mention of Plex Media Server.
+description: >-
+  This skill should be used when the user wants to interact with their Plex
+  Media Server. Triggers include "check Plex", "search Plex", "what's on Plex",
+  "what's playing on Plex", "who's watching", "Plex sessions", "active
+  streams", "Plex library", "browse movies", "browse TV shows", "recently
+  added", "on deck", "continue watching", "Plex status", or any mention of Plex
+  Media Server.
 ---
 
 # Plex Media Server Skill

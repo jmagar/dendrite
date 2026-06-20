@@ -1,6 +1,11 @@
 ---
 name: overseerr
-description: This skill should be used when the user wants to request movies or TV shows via Overseerr, monitor or manage media requests, or check request status. Triggers include: "request a movie", "request a TV show", "add to Overseerr", "check request status", "pending requests", "is my request done", "Overseerr status", or any mention of Overseerr media requesting.
+description: >-
+  This skill should be used when the user wants to request movies or TV shows
+  via Overseerr, monitor or manage media requests, or check request status.
+  Triggers include "request a movie", "request a TV show", "add to Overseerr",
+  "check request status", "pending requests", "is my request done", "Overseerr
+  status", or any mention of Overseerr media requesting.
 ---
 
 # Overseerr Media Request Skill

@@ -1,6 +1,11 @@
 ---
 name: qbittorrent
-description: This skill should be used when the user asks about torrents, downloading, seeding, or the qBittorrent client. Triggers include: "what's downloading", "list torrents", "add a torrent", "pause/resume/delete torrent", "torrent speed", "download queue", "qbit", "qBittorrent stats", "check download status", or any mention of managing a torrent client.
+description: >-
+  This skill should be used when the user asks about torrents, downloading,
+  seeding, or the qBittorrent client. Triggers include "what's downloading",
+  "list torrents", "add a torrent", "pause/resume/delete torrent", "torrent
+  speed", "download queue", "qbit", "qBittorrent stats", "check download
+  status", or any mention of managing a torrent client.
 ---
 
 # qBittorrent WebUI API
