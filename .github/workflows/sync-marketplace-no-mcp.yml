@@ -54,10 +54,12 @@ jobs:
 
       - name: Commit and push marketplace-no-mcp
         run: |
-          if git diff --quiet; then
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "chore: sync marketplace-no-mcp from main"
+          fi
+          if [ "$(git rev-list --count origin/marketplace-no-mcp..HEAD)" = "0" ]; then
             echo "marketplace-no-mcp already up to date"
             exit 0
           fi
-          git add -A
-          git commit -m "chore: sync marketplace-no-mcp from main"
-          git push origin marketplace-no-mcp
+          git push origin HEAD:marketplace-no-mcp
