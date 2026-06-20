@@ -121,12 +121,22 @@ def fetch_ref_name(ref: str) -> str:
     return ref.removeprefix("origin/")
 
 
-def compare_refs(main_ref: str, no_mcp_ref: str) -> int:
+def compare_refs(main_ref: str, no_mcp_ref: str, *, skip_if_missing_refs: bool = False) -> int:
     tmp_parent = Path(tempfile.mkdtemp(prefix="dendrite-no-mcp-drift."))
     expected = tmp_parent / "expected"
     actual = tmp_parent / "actual"
     try:
-        run(["git", "fetch", "origin", fetch_ref_name(main_ref), fetch_ref_name(no_mcp_ref)])
+        fetched = run(
+            ["git", "fetch", "origin", fetch_ref_name(main_ref), fetch_ref_name(no_mcp_ref)],
+            check=not skip_if_missing_refs,
+        )
+        if fetched.returncode != 0:
+            print(
+                "no-MCP drift compare skipped because refs could not be fetched:\n"
+                f"{fetched.stdout}",
+                file=sys.stderr,
+            )
+            return 0
         run(["git", "worktree", "add", "--detach", str(expected), main_ref])
         run(["git", "worktree", "add", "--detach", str(actual), no_mcp_ref])
 
@@ -155,7 +165,10 @@ def compare_refs(main_ref: str, no_mcp_ref: str) -> int:
             print(diff_output, file=sys.stderr)
             return 1
 
-        print(f"{no_mcp_ref} matches {main_ref} plus no-MCP transform")
+        print("no-MCP drift compare passed")
+        print(f"- main ref: {main_ref}")
+        print(f"- no-MCP ref: {no_mcp_ref}")
+        print(f"- tree: {actual_tree}")
         return 0
     finally:
         for path in (expected, actual):
@@ -172,12 +185,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check-current", action="store_true", help="check current checkout invariants")
     parser.add_argument("--compare-ref", action="store_true", help="compare origin/marketplace-no-mcp to origin/main plus transform")
+    parser.add_argument(
+        "--skip-if-missing-refs",
+        action="store_true",
+        help="skip compare mode when the configured remote refs cannot be fetched",
+    )
     parser.add_argument("--main-ref", default="origin/main")
     parser.add_argument("--no-mcp-ref", default="origin/marketplace-no-mcp")
     args = parser.parse_args()
 
     if args.compare_ref:
-        return compare_refs(args.main_ref, args.no_mcp_ref)
+        return compare_refs(args.main_ref, args.no_mcp_ref, skip_if_missing_refs=args.skip_if_missing_refs)
 
     if args.check_current:
         return check_current()

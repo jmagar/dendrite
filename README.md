@@ -47,6 +47,18 @@ expected tree from `origin/main` plus the no-MCP transform and compares it with
 `origin/marketplace-no-mcp`; it also verifies that local plugin MCP configs and
 Gemini `mcpServers` entries are absent from the no-MCP variant.
 
+The no-MCP branch should allow GitHub Actions to push sync commits, but humans
+should not casually push, merge, or close it. Treat direct human writes as
+release-maintenance work: explain why the automation was not enough, run the
+drift check afterward, and leave the branch as a long-lived variant.
+
+Marketplace install smoke tests live in
+`plugins/scripts/smoke-marketplace-install`. They add the marketplace to
+isolated Claude and Codex homes, install the `acp` plugin, assert the Codex
+catalog count matches the manifest, and install the matching Gemini extension.
+CI runs that smoke against the current checkout and against both remote refs in
+the scheduled no-MCP drift workflow.
+
 Marketplace parity is enforced by `plugins/scripts/check-marketplace-sync` and
 `.github/workflows/validate-marketplaces.yml`. The check fails on duplicate
 plugin names, entries that exist in only one marketplace, or Claude/Codex source
@@ -110,6 +122,8 @@ Generated operational docs live under `docs/`:
 
 Regenerate them with `plugins/scripts/generate-docs`; `plugins/scripts/check-all`
 uses `plugins/scripts/generate-docs --check` to fail on stale generated docs.
+When generated docs are stale, the check prints the regeneration command and a
+bounded diff preview.
 
 ## Inventory
 

@@ -10,6 +10,10 @@ Do not merge, delete, or retire this branch unless Jacob explicitly asks for tha
 
 The branch is synchronized by `.github/workflows/sync-marketplace-no-mcp.yml` after pushes to `main` and on a daily schedule. Drift is checked by `.github/workflows/check-no-mcp-drift.yml` and can be checked locally with `plugins/scripts/check-no-mcp-drift --compare-ref`.
 
+The branch should allow GitHub Actions to push sync commits. Humans should not casually push, merge, or close it; direct human writes are release-maintenance work and must be followed by the drift check.
+
+Marketplace install smoke tests live in `plugins/scripts/smoke-marketplace-install`. The scheduled drift workflow runs the smoke against both `origin/main` and `origin/marketplace-no-mcp`.
+
 ## Ref-Managed Entries
 
 | Plugin | Claude source | Claude selector | Codex source | Codex selector |

@@ -2,3 +2,4 @@
 set -euo pipefail
 
 plugins/scripts/check-all
+plugins/scripts/check-no-mcp-drift --compare-ref --skip-if-missing-refs

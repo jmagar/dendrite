@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import re
 import sys
@@ -485,6 +486,10 @@ def no_mcp_variant_doc() -> GeneratedDoc:
             "",
             "The branch is synchronized by `.github/workflows/sync-marketplace-no-mcp.yml` after pushes to `main` and on a daily schedule. Drift is checked by `.github/workflows/check-no-mcp-drift.yml` and can be checked locally with `plugins/scripts/check-no-mcp-drift --compare-ref`.",
             "",
+            "The branch should allow GitHub Actions to push sync commits. Humans should not casually push, merge, or close it; direct human writes are release-maintenance work and must be followed by the drift check.",
+            "",
+            "Marketplace install smoke tests live in `plugins/scripts/smoke-marketplace-install`. The scheduled drift workflow runs the smoke against both `origin/main` and `origin/marketplace-no-mcp`.",
+            "",
             "## Ref-Managed Entries",
             "",
             "| Plugin | Claude source | Claude selector | Codex source | Codex selector |",
@@ -512,12 +517,23 @@ def main() -> int:
     args = parser.parse_args()
 
     stale: list[Path] = []
+    diff_lines: list[str] = []
     DOCS.mkdir(exist_ok=True)
     for doc in generated_docs():
         contents = doc.contents
         if args.check:
             if not doc.path.exists() or doc.path.read_text() != contents:
                 stale.append(doc.path.relative_to(ROOT))
+                current = doc.path.read_text().splitlines(keepends=True) if doc.path.exists() else []
+                expected = contents.splitlines(keepends=True)
+                diff_lines.extend(
+                    difflib.unified_diff(
+                        current,
+                        expected,
+                        fromfile=str(doc.path.relative_to(ROOT)),
+                        tofile=f"{doc.path.relative_to(ROOT)} (generated)",
+                    )
+                )
         else:
             doc.path.write_text(contents)
             print(doc.path.relative_to(ROOT))
@@ -526,6 +542,14 @@ def main() -> int:
         print("Generated docs are out of date:", file=sys.stderr)
         for path in stale:
             print(f"- {path}", file=sys.stderr)
+        print("\nRun `plugins/scripts/generate-docs` and commit the generated changes.", file=sys.stderr)
+        if diff_lines:
+            print("\nDiff preview:", file=sys.stderr)
+            preview_limit = 220
+            for line in diff_lines[:preview_limit]:
+                print(line, end="", file=sys.stderr)
+            if len(diff_lines) > preview_limit:
+                print(f"\n... truncated {len(diff_lines) - preview_limit} more diff lines", file=sys.stderr)
         return 1
     return 0
 
