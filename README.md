@@ -33,12 +33,19 @@ provided by the gateway. Treat it as an active release variant, not stale branch
 cleanup.
 
 The no-MCP branch is synchronized from `main` by
-`.github/workflows/sync-marketplace-no-mcp.yml`. On every push to `main`, the
-workflow merges `main` into `marketplace-no-mcp`, runs
+`.github/workflows/sync-marketplace-no-mcp.yml`. On every push to `main` and on
+a daily schedule, the workflow merges `main` into `marketplace-no-mcp`, runs
 `plugins/scripts/apply-no-mcp-marketplace`, regenerates the README inventory,
-validates both marketplace manifests, and pushes the branch when there is a
-resulting change. Add new MCP-backed alternate-ref entries to
-`NO_MCP_REF_NAMES` in that script so the branch stays reproducible.
+validates both marketplace manifests, runs the no-MCP invariant check, and
+pushes the branch when there is a resulting change. Add new MCP-backed
+alternate-ref entries to `NO_MCP_REF_NAMES` in that script so the branch stays
+reproducible.
+
+Drift is checked by `.github/workflows/check-no-mcp-drift.yml` and
+`plugins/scripts/check-no-mcp-drift --compare-ref`. The drift check builds an
+expected tree from `origin/main` plus the no-MCP transform and compares it with
+`origin/marketplace-no-mcp`; it also verifies that local plugin MCP configs and
+Gemini `mcpServers` entries are absent from the no-MCP variant.
 
 Marketplace parity is enforced by `plugins/scripts/check-marketplace-sync` and
 `.github/workflows/validate-marketplaces.yml`. The check fails on duplicate

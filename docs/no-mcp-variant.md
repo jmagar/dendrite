@@ -8,6 +8,8 @@ The branch keeps plugin and skill entries available while removing bundled MCP s
 
 Do not merge, delete, or retire this branch unless Jacob explicitly asks for that. Update `NO_MCP_REF_NAMES` in `plugins/scripts/apply-no-mcp-marketplace` when a new remote MCP-backed marketplace entry needs the alternate ref.
 
+The branch is synchronized by `.github/workflows/sync-marketplace-no-mcp.yml` after pushes to `main` and on a daily schedule. Drift is checked by `.github/workflows/check-no-mcp-drift.yml` and can be checked locally with `plugins/scripts/check-no-mcp-drift --compare-ref`.
+
 ## Ref-Managed Entries
 
 | Plugin | Claude source | Claude selector | Codex source | Codex selector |

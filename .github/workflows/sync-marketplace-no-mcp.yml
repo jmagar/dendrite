@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "17 9 * * *"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +17,7 @@ concurrency:
 
 jobs:
   sync:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -32,6 +34,11 @@ jobs:
       - name: Install Gemini CLI
         run: npm install -g @google/gemini-cli@0.47.0
 
+      - name: Smoke Gemini CLI
+        run: |
+          command -v gemini
+          gemini --version
+
       - name: Merge main into marketplace-no-mcp
         run: |
           git fetch origin main marketplace-no-mcp
@@ -42,14 +49,17 @@ jobs:
         run: |
           python3 plugins/scripts/apply-no-mcp-marketplace
           python3 plugins/scripts/generate-readme-inventory
+          plugins/scripts/check-no-mcp-drift --check-current
           plugins/scripts/check-all
 
       - name: Commit and push marketplace-no-mcp
         run: |
-          if git diff --quiet; then
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "chore: sync marketplace-no-mcp from main"
+          fi
+          if [ "$(git rev-list --count origin/marketplace-no-mcp..HEAD)" = "0" ]; then
             echo "marketplace-no-mcp already up to date"
             exit 0
           fi
-          git add -A
-          git commit -m "chore: sync marketplace-no-mcp from main"
-          git push origin marketplace-no-mcp
+          git push origin HEAD:marketplace-no-mcp

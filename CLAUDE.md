@@ -38,10 +38,15 @@ subdirectory source.
   canonical full marketplace; `marketplace-no-mcp` is for publishing or testing
   the alternate ref.
 - The `.github/workflows/sync-marketplace-no-mcp.yml` workflow keeps
-  `marketplace-no-mcp` current after pushes to `main`: it merges `main`, runs
-  `plugins/scripts/apply-no-mcp-marketplace`, regenerates the README inventory,
-  validates both marketplace manifests, and pushes the branch only when that
-  produces a change.
+  `marketplace-no-mcp` current after pushes to `main` and on a daily schedule:
+  it merges `main`, runs `plugins/scripts/apply-no-mcp-marketplace`,
+  regenerates the README inventory, validates both marketplace manifests, runs
+  the no-MCP invariant check, and pushes the branch only when that produces a
+  change.
+- The `.github/workflows/check-no-mcp-drift.yml` workflow runs
+  `plugins/scripts/check-no-mcp-drift --compare-ref` on a schedule and on
+  manual dispatch. It compares `origin/marketplace-no-mcp` with `origin/main`
+  plus the deterministic no-MCP transform.
 - Keep the no-MCP transform deterministic. If a new MCP-backed marketplace entry
   needs the alternate ref, add its plugin name to `NO_MCP_REF_NAMES` in
   `plugins/scripts/apply-no-mcp-marketplace` instead of hand-editing the
@@ -56,6 +61,9 @@ test ! -e plugins/labby
 # Apply and validate the no-MCP marketplace transform locally.
 plugins/scripts/apply-no-mcp-marketplace
 plugins/scripts/check-all
+
+# Compare origin/marketplace-no-mcp with origin/main plus the no-MCP transform.
+plugins/scripts/check-no-mcp-drift --compare-ref
 
 # Claude and Codex marketplace entries must stay aligned by plugin name and
 # normalized source target. Local plugins with Claude or Codex manifests must
