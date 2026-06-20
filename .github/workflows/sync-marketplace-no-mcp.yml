@@ -52,7 +52,6 @@ jobs:
       - name: Apply no-MCP variant rules
         run: |
           python3 plugins/scripts/apply-no-mcp-marketplace
-          python3 plugins/scripts/generate-readme-inventory
           plugins/scripts/check-no-mcp-drift --check-current
           plugins/scripts/check-all
 

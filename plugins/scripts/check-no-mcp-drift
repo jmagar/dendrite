@@ -147,8 +147,6 @@ def compare_refs(main_ref: str, no_mcp_ref: str, *, skip_if_missing_refs: bool =
         run(["git", "worktree", "add", "--detach", str(actual), no_mcp_ref])
 
         run(["python3", "plugins/scripts/apply-no-mcp-marketplace"], cwd=expected)
-        run(["python3", "plugins/scripts/generate-readme-inventory"], cwd=expected)
-        run(["plugins/scripts/generate-docs"], cwd=expected)
 
         if check_current(root=expected) != 0:
             return 1

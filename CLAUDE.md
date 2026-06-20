@@ -43,9 +43,10 @@ subdirectory source.
 - The `.github/workflows/sync-marketplace-no-mcp.yml` workflow keeps
   `marketplace-no-mcp` current after pushes to `main` and on a daily schedule:
   it merges `main`, runs `plugins/scripts/apply-no-mcp-marketplace`,
-  regenerates the README inventory, validates both marketplace manifests, runs
-  the no-MCP invariant check, and pushes the branch only when that produces a
-  change.
+  validates both marketplace manifests, runs the no-MCP invariant check, and
+  pushes the branch only when that produces a change. The transform regenerates
+  Gemini manifests, the README inventory, and generated docs as part of its
+  deterministic rewrite.
 - The `.github/workflows/check-no-mcp-drift.yml` workflow runs
   `plugins/scripts/check-no-mcp-drift --compare-ref` on a schedule and on
   manual dispatch. It compares `origin/marketplace-no-mcp` with `origin/main`

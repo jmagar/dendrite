@@ -354,7 +354,7 @@ def config_reference_files(plugin_dir: Path) -> list[Path]:
         path = plugin_dir / relative
         if path.exists():
             files.append(path)
-    for subdir in ("hooks", "commands", "scripts"):
+    for subdir in ("hooks", "commands", "scripts", "skills"):
         root = plugin_dir / subdir
         if root.exists():
             files.extend(path for path in root.rglob("*") if path.is_file())

@@ -37,9 +37,10 @@ stale branch cleanup.
 The no-MCP branch is synchronized from `main` by
 `.github/workflows/sync-marketplace-no-mcp.yml`. On every push to `main` and on
 a daily schedule, the workflow merges `main` into `marketplace-no-mcp`, runs
-`plugins/scripts/apply-no-mcp-marketplace`, regenerates the README inventory,
-validates both marketplace manifests, runs the no-MCP invariant check, and
-pushes the branch when there is a resulting change. Add new MCP-backed
+`plugins/scripts/apply-no-mcp-marketplace`, validates both marketplace
+manifests, runs the no-MCP invariant check, and pushes the branch when there is
+a resulting change. The transform regenerates Gemini manifests, the README
+inventory, and generated docs as part of the rewrite. Add new MCP-backed
 alternate-ref entries to `NO_MCP_REF_NAMES` in that script so the branch stays
 reproducible.
 
