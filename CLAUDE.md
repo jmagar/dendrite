@@ -46,7 +46,12 @@ subdirectory source.
 - The `.github/workflows/check-no-mcp-drift.yml` workflow runs
   `plugins/scripts/check-no-mcp-drift --compare-ref` on a schedule and on
   manual dispatch. It compares `origin/marketplace-no-mcp` with `origin/main`
-  plus the deterministic no-MCP transform.
+  plus the deterministic no-MCP transform, then smoke-tests marketplace
+  installs from both refs.
+- `marketplace-no-mcp` should allow GitHub Actions to push sync commits, but
+  humans should not casually push, merge, or close it. Direct human writes are
+  release-maintenance work and must be followed by
+  `plugins/scripts/check-no-mcp-drift --compare-ref`.
 - Keep the no-MCP transform deterministic. If a new MCP-backed marketplace entry
   needs the alternate ref, add its plugin name to `NO_MCP_REF_NAMES` in
   `plugins/scripts/apply-no-mcp-marketplace` instead of hand-editing the
@@ -64,6 +69,9 @@ plugins/scripts/check-all
 
 # Compare origin/marketplace-no-mcp with origin/main plus the no-MCP transform.
 plugins/scripts/check-no-mcp-drift --compare-ref
+
+# Smoke Claude, Codex, and Gemini marketplace/extension installs in temp homes.
+plugins/scripts/smoke-marketplace-install
 
 # Claude and Codex marketplace entries must stay aligned by plugin name and
 # normalized source target. Local plugins with Claude or Codex manifests must

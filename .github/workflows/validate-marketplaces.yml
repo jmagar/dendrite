@@ -20,13 +20,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Gemini CLI
-        run: npm install -g @google/gemini-cli@0.47.0
+      - name: Install marketplace CLIs
+        run: npm install -g @anthropic-ai/claude-code @openai/codex @google/gemini-cli@0.47.0
 
-      - name: Smoke Gemini CLI
+      - name: Smoke marketplace CLIs
         run: |
+          command -v claude
+          claude --version
+          command -v codex
+          codex --version
           command -v gemini
           gemini --version
 
       - name: Validate marketplace manifests
         run: plugins/scripts/check-all
+
+      - name: Smoke marketplace installs
+        run: plugins/scripts/smoke-marketplace-install
