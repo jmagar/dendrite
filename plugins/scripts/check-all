@@ -4,6 +4,7 @@ set -euo pipefail
 jq empty .claude-plugin/marketplace.json .agents/plugins/marketplace.json
 plugins/scripts/validate-plugin-schemas
 plugins/scripts/check-marketplace-sync
+plugins/scripts/check-no-mcp-drift
 plugins/scripts/generate-gemini-extensions --check
 plugins/scripts/generate-readme-inventory --check --strict
 plugins/scripts/generate-docs --check

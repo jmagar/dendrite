@@ -23,5 +23,10 @@ jobs:
       - name: Install Gemini CLI
         run: npm install -g @google/gemini-cli@0.47.0
 
+      - name: Smoke Gemini CLI
+        run: |
+          command -v gemini
+          gemini --version
+
       - name: Validate marketplace manifests
         run: plugins/scripts/check-all
