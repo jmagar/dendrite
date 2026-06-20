@@ -25,6 +25,8 @@ subdirectory source.
 - Keep secrets out of the repo. Plugin config hooks may write local config files,
   but committed examples must not contain real credentials.
 - Preserve executable bits on scripts and hooks when copying plugin directories.
+- Plugin README and CHANGELOG files must be useful, not empty placeholders.
+  `plugins/scripts/check-plugin-docs` enforces this as part of `check-all`.
 
 ## Long-Lived Branches
 
@@ -34,9 +36,10 @@ subdirectory source.
   servers are already connected through the Labby gateway. Leave the branch and
   its worktree in place unless Jacob explicitly asks to retire the no-MCP
   marketplace variant.
-- Do not merge `marketplace-no-mcp` into `main` by default. `main` remains the
-  canonical full marketplace; `marketplace-no-mcp` is for publishing or testing
-  the alternate ref.
+- Do not merge `marketplace-no-mcp` into `main` by default. `main` is the
+  canonical full marketplace for normal users and should keep bundled MCP server
+  registrations where a plugin owns them; `marketplace-no-mcp` is Jacob's
+  gateway-oriented alternate ref.
 - The `.github/workflows/sync-marketplace-no-mcp.yml` workflow keeps
   `marketplace-no-mcp` current after pushes to `main` and on a daily schedule:
   it merges `main`, runs `plugins/scripts/apply-no-mcp-marketplace`,
@@ -72,6 +75,9 @@ plugins/scripts/check-no-mcp-drift --compare-ref
 
 # Smoke Claude, Codex, and Gemini marketplace/extension installs in temp homes.
 plugins/scripts/smoke-marketplace-install
+
+# Plugin README and CHANGELOG files must exist and contain useful content.
+plugins/scripts/check-plugin-docs
 
 # Claude and Codex marketplace entries must stay aligned by plugin name and
 # normalized source target. Local plugins with Claude or Codex manifests must

@@ -4,6 +4,8 @@
 
 `marketplace-no-mcp` is a long-lived alternate branch for installs where MCP servers are already registered through the Labby gateway.
 
+`main` is the full/default marketplace for normal users. The no-MCP branch exists for Jacob's gateway-oriented setup and similar environments that already have those MCP servers registered elsewhere.
+
 The branch keeps plugin and skill entries available while removing bundled MCP server registrations from local plugin assets and Gemini extension manifests. It also points selected remote plugin sources at their own `marketplace-no-mcp` refs.
 
 Do not merge, delete, or retire this branch unless Jacob explicitly asks for that. Update `NO_MCP_REF_NAMES` in `plugins/scripts/apply-no-mcp-marketplace` when a new remote MCP-backed marketplace entry needs the alternate ref.

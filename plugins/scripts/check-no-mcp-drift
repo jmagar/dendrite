@@ -17,6 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 NO_MCP_SCRIPT = ROOT / "plugins" / "scripts" / "apply-no-mcp-marketplace"
 NO_MCP_REF = "marketplace-no-mcp"
+NO_MCP_MARKETPLACE_NAME = "dendrite-no-mcp"
 
 
 def run(command: list[str], *, cwd: Path = ROOT, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -58,6 +59,11 @@ def no_mcp_ref_names() -> list[str]:
 def marketplace_ref_errors(path: Path, root: Path) -> list[str]:
     errors: list[str] = []
     data = read_json(path)
+    if data.get("name") != NO_MCP_MARKETPLACE_NAME:
+        errors.append(
+            f"{display_path(path, root)} name is {data.get('name')!r}, "
+            f"expected {NO_MCP_MARKETPLACE_NAME!r}"
+        )
     plugins = data.get("plugins")
     if not isinstance(plugins, list):
         return [f"{display_path(path, root)} must contain a plugins array"]
