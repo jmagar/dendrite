@@ -11,6 +11,8 @@ through the Labby gateway.
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +32,7 @@ NO_MCP_REF_NAMES = {
 }
 
 NO_MCP_REF = "marketplace-no-mcp"
+NO_MCP_MARKETPLACE_NAME = "dendrite-no-mcp"
 
 
 def read_json(path: Path) -> Any:
@@ -61,6 +64,11 @@ def strip_gemini_mcp_servers() -> list[Path]:
 
 def apply_no_mcp_refs(path: Path) -> list[str]:
     data = read_json(path)
+    changed_name = False
+    if data.get("name") != NO_MCP_MARKETPLACE_NAME:
+        data["name"] = NO_MCP_MARKETPLACE_NAME
+        changed_name = True
+
     plugins = data.get("plugins")
     if not isinstance(plugins, list):
         raise ValueError(f"{path.relative_to(ROOT)} must contain a plugins array")
@@ -74,9 +82,20 @@ def apply_no_mcp_refs(path: Path) -> list[str]:
             source["ref"] = NO_MCP_REF
             changed.append(plugin["name"])
 
-    if changed:
+    if changed or changed_name:
         write_json(path, data)
+    if changed_name:
+        changed.insert(0, f"marketplace name -> {NO_MCP_MARKETPLACE_NAME}")
     return changed
+
+
+def regenerate_generated_files() -> None:
+    for script in (
+        "generate-gemini-extensions",
+        "generate-readme-inventory",
+        "generate-docs",
+    ):
+        subprocess.run([sys.executable, str(ROOT / "plugins" / "scripts" / script)], check=True)
 
 
 def main() -> int:
@@ -84,6 +103,7 @@ def main() -> int:
     stripped_gemini = strip_gemini_mcp_servers()
     claude_refs = apply_no_mcp_refs(CLAUDE_MARKETPLACE)
     codex_refs = apply_no_mcp_refs(CODEX_MARKETPLACE)
+    regenerate_generated_files()
 
     if removed_mcp:
         print("removed MCP configs: " + ", ".join(str(path) for path in removed_mcp))
@@ -96,6 +116,7 @@ def main() -> int:
 
     if not any([removed_mcp, stripped_gemini, claude_refs, codex_refs]):
         print("no-MCP marketplace rules already applied")
+    print("regenerated Gemini manifests, README inventory, and generated docs")
     return 0
 
 

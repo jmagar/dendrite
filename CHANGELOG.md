@@ -14,6 +14,9 @@ All notable changes to Dendrite are recorded here.
 - Added Memos API helper coverage for current Memos v1 workflows, including authentication, memo updates, and attachment operations.
 - Added dedicated Overseerr request-moderation helpers for common approve, decline, retry, and listing workflows.
 - Added repeatable helper scripts for Jellyfin, Tracearr, Navidrome, AdGuard, Immich, Qdrant, TEI, Uptime Kuma, and MCPJam UI testing.
+- Added schema-backed Claude/Codex/Gemini manifest validation, generated documentation checks, marketplace install smoke tests, and no-MCP drift automation.
+- Added installation, marketplace operations, plugin documentation standard, configuration, and release/changelog docs.
+- Added `plugins/scripts/check-plugin-docs` to reject empty plugin README/CHANGELOG placeholders.
 
 ### Changed
 
@@ -22,11 +25,14 @@ All notable changes to Dendrite are recorded here.
 - Moved the `creating-snippets` skill out of Dendrite and into the Labby plugin source in the Lab repository.
 - Updated ByteStash documentation so snippet creation guidance lives under ByteStash-specific wording.
 - Refreshed skill documentation across the plugin set with clearer verification, configuration, and operational notes.
+- Restored `main` as the full/default marketplace and kept `marketplace-no-mcp` as the derived gateway-oriented variant.
+- Updated generated configuration docs to include skill-body config consumers.
 
 ### Fixed
 
 - Hardened several skill scripts and docs based on reviewer findings, including Plex token handling, mcporter output quoting, and explicit Overseerr media identifiers.
 - Restored the expected skill documentation contract: every Dendrite skill now has `SKILL.md`, `agents/openai.yaml`, `README.md`, and `CHANGELOG.md`.
+- Filled empty README and CHANGELOG placeholders for ByteStash, Immich, Linkding, LoggiFly, Memos, NotebookLM, and Radicale.
 
 ### Removed
 
