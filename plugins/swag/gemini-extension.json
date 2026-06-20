@@ -2,45 +2,6 @@
   "name": "swag",
   "version": "0.1.0",
   "description": "SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration.",
-  "mcpServers": {
-    "swag-mcp": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--project",
-        "${extensionPath}",
-        "python",
-        "-m",
-        "swag_mcp"
-      ],
-      "env": {
-        "UV_PROJECT_ENVIRONMENT": "${extensionPath}${/}.data/.venv",
-        "SWAG_MCP_PROXY_CONFS_PATH": "${SWAG_PROXY_CONFS_PATH}",
-        "SWAG_MCP_PROXY_CONFS_URI": "${SWAG_PROXY_CONFS_URI}",
-        "SWAG_MCP_NO_AUTH": "true",
-        "SWAG_MCP_TOKEN": "${SWAG_MCP_TOKEN}",
-        "SWAG_MCP_DEFAULT_AUTH_METHOD": "authelia",
-        "SWAG_MCP_DEFAULT_QUIC_ENABLED": "false",
-        "SWAG_MCP_BACKUP_RETENTION_DAYS": "30",
-        "SWAG_MCP_LOG_LEVEL": "INFO",
-        "SWAG_MCP_LOG_FILE_ENABLED": "false",
-        "SWAG_MCP_ENABLE_STRUCTURED_LOGGING": "false",
-        "SWAG_MCP_RATE_LIMIT_ENABLED": "false",
-        "SWAG_MCP_ENABLE_RETRY_MIDDLEWARE": "true",
-        "SWAG_MCP_MAX_RETRIES": "3"
-      }
-    },
-    "swag-mcp-remote": {
-      "command": "mcp-remote",
-      "args": [
-        "${SWAG_MCP_URL}"
-      ],
-      "env": {
-        "SWAG_MCP_URL": "${SWAG_MCP_URL}",
-        "SWAG_MCP_TOKEN": "${SWAG_MCP_TOKEN}"
-      }
-    }
-  },
   "settings": [
     {
       "name": "Remote SWAG MCP bearer token",
