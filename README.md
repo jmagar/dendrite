@@ -147,8 +147,8 @@ bounded diff preview.
 - 25 local plugin directories
 - 76 Claude marketplace entries
 - 76 Codex/OpenAI marketplace entries
-- 63 skills
-- 63 OpenAI agent companion files
+- 65 skills
+- 65 OpenAI agent companion files
 - 25 Gemini extension manifests
 - 6 MCP config files, defining 5 MCP servers
 - 3 command docs
@@ -178,7 +178,7 @@ bounded diff preview.
 | `tei` | Inspect and query a Text Embeddings Inference server through its HTTP API. | tei | none | 1 | none |
 | `testing` | App-testing and MCP-tooling skills: live QA of web, Android, and desktop apps; MCP server smoke-testing (mcporter); MCP-UI / Apps validation (mcpjam); and claude-in-mobile device automation. | android-app-testing, claude-in-mobile, desktop-app-testing, mcpjam-ui-testing, mcporter, web-app-testing | none | 6 | none |
 | `uptime-kuma` | Read-only monitoring of a self-hosted Uptime Kuma instance via direct HTTP — Prometheus /metrics (API-key auth) and public status-page JSON. No monitor management (that requires Uptime Kuma's socket.io API). | uptime-kuma | none | 1 | none |
-| `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | check-skill-clis, chrome, claude-android-ninja, clipboard, create-swag-config, fastmcp-client-cli, gh-fix-ci, gh-pr, hand-off, homelab-map, jetpack-compose-expert, mcp-gateway-tools, monolith-check, nircmd, paperless-ngx, quick-push, rclone, refresh-docs, repo-status, save-to-md, screenshots, sysinternals, using-rmcp, validate-skill, work-it, worktree-setup | none | 26 | scaffold-claude-plugin.md |
+| `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | check-skill-clis, chrome, claude-android-ninja, clipboard, compose-skill, create-swag-config, fastmcp-client-cli, gh-fix-ci, gh-pr, gog, hand-off, homelab-map, jetpack-compose-expert, mcp-gateway-tools, monolith-check, nircmd, paperless-ngx, quick-push, rclone, refresh-docs, repo-status, save-to-md, screenshots, sysinternals, using-rmcp, validate-skill, work-it, worktree-setup | none | 28 | scaffold-claude-plugin.md |
 | `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | zsnoop | 1 | none |
 
 <!-- END GENERATED README INVENTORY -->

@@ -6,6 +6,7 @@ All notable changes to Dendrite are recorded here.
 
 ### Added
 
+- Added the `gog` skill to the Vibin plugin for safe Google Workspace automation (Gmail, Calendar, Drive, Docs, Sheets, Contacts) with stable JSON output, scoped auth, and command guards; regenerated the README and plugin-matrix inventories.
 - Added missing `README.md` and `CHANGELOG.md` files for all current skill directories.
 - Added a curated-plugin inventory to the root `README.md`, including marketplace coverage and repo counts.
 - Added Gemini CLI extension manifests for every local plugin directory.
