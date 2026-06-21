@@ -100,18 +100,27 @@ After writing the file, print the final absolute path.
 
 ## Session File Commit and Push
 
-Immediately after writing the session artifact, stage, commit, and push **only that generated file**. This is part of the `save-to-md` contract, not a caller responsibility.
+Immediately after writing the session artifact, stage, commit, and **land only that generated file on the repo's integration (default) branch with NO manual merge step left for the user**. This is part of the `save-to-md` contract, not a caller responsibility. A session log must never be left sitting on a side branch for the user to merge by hand — if you cannot push straight to the default branch, you open AND merge the PR yourself.
 
-Rules:
+Stage + commit (always identical):
 - Resolve the final artifact path to one absolute path under the repo root and store it as the session artifact path.
 - Stage only that path with `git add -f -- <session-artifact-path>`. Use `-f` because `docs/sessions/` is commonly ignored.
+- Do NOT commit yet if you are on the default branch — see "Where it lands" first (you must branch before committing in that case).
 - Commit only that path with `git commit -m "docs: save session log" --only -- <session-artifact-path>`. This path-limited commit is mandatory so pre-existing staged or dirty files are not included.
-- If the current branch has no upstream, push with `git push -u origin HEAD`; otherwise use `git push`.
 - Do not run `git add .`, `git add -A`, broad pathspecs, or any command that stages or commits non-session files.
-- If `git commit -m "docs: save session log" --only -- <session-artifact-path>` reports there is nothing to commit because the generated content is unchanged, do not create an empty commit. Report that no session-file commit was needed, then continue to push only if the branch is ahead of its upstream.
+- If the commit reports nothing to commit because the content is unchanged, do not create an empty commit. Report that no session-file commit was needed and stop.
 - If the target is outside a git repository, write the file and report that the commit/push step was skipped because no repo was available.
-- If push fails, diagnose and retry after non-destructive fixes. Do not use force push.
-- After the push, verify the committed file set with `git show --name-only --format= --stat HEAD` or `git diff-tree --no-commit-id --name-only -r HEAD`. The only path in the session-file commit must be the generated artifact path. If any other path appears, report it as a workflow failure.
+
+Where it lands — choose the path that needs the LEAST user follow-up. Determine the default branch first: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` (fallback: `git symbolic-ref --short refs/remotes/origin/HEAD` → strip `origin/`).
+1. **On a feature/topic branch** (HEAD ≠ default branch): commit there and push (`git push`, or `git push -u origin HEAD` if no upstream). The log rides along with that branch's existing PR/merge — do NOT open a second PR. Done.
+2. **On the default branch** (HEAD == default branch, e.g. `main`): do NOT commit onto local default. `git fetch origin` and make sure local default is current, then create and switch to a throwaway branch `session-log/<YYYY-MM-DD>-<slug>`, and commit the log there. Then publish it to the default branch yourself, fully automated:
+   - First try a direct fast-forward to the remote default: `git push origin HEAD:<default>`. If it succeeds (unprotected default), run `git checkout <default> && git pull --ff-only`, delete the temp branch, and you're done — no PR needed.
+   - If that push is rejected (protected branch / required checks), push the temp branch (`git push -u origin <session-log-branch>`), open a PR (`gh pr create --base <default> --head <session-log-branch> --title "docs: save session log" --body "Session log — docs only."`), then MERGE IT YOURSELF: try `gh pr merge <n> --squash --delete-branch --auto`; if auto-merge is disabled (the `--auto` call errors), watch required checks with `gh pr checks <n> --watch` and then `gh pr merge <n> --squash --delete-branch`. A session log is docs-only and low-risk — merge on green **without asking for confirmation**. Afterward `git checkout <default> && git pull --ff-only`.
+   - Only leave the pushed `session-log/*` branch unmerged (and tell the user exactly which branch to merge) if a required check FAILS, a merge rule you cannot satisfy blocks it (e.g. mandatory human review), or `gh`/permissions are unavailable.
+
+General:
+- If push fails for a transient reason, diagnose and retry after non-destructive fixes. Do not use force push.
+- After the final merge/push, verify the committed file set (`git show --name-only --format= <commit-or-merge-sha>` or `git diff-tree --no-commit-id --name-only -r HEAD`). The only path in the session-file commit must be the generated artifact path. If any other path appears, report it as a workflow failure.
 
 Content quality rules:
 - Facts only. Do not infer values that were not observed in tool/command output.
