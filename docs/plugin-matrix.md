@@ -7,7 +7,6 @@
 | `acp` | Rust implementation patterns for ACP, rmcp-derived MCP servers, and Lab runtime work. | yes | yes | yes | `rust` | none | 1 | none | yes | yes |
 | `adguard` | Skill for operating adguard via the lab MCP server / CLI. | yes | yes | yes | `adguard` | none | 1 | none | yes | yes |
 | `agent-os` | Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | yes | yes | yes | `agent-os` | `windows-mcp` | 1 | `agent-os.md` | yes | yes |
-| `arrs` | The *arr / media-automation stack in one plugin: Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr — each operated via its own REST API. Credentials are configured here and bridged to the skills via a generated env file. | yes | yes | yes | `jellyfin`, `overseerr`, `plex`, `prowlarr`, `qbittorrent`, `radarr`, `sabnzbd`, `sonarr`, `tautulli`, `tracearr` | none | 10 | none | yes | yes |
 | `broadcastr` | Helper assets for Broadcastr plugin tooling. | no | no | yes | none | none | 0 | none | no | no |
 | `bytestash` | Skills for operating a ByteStash snippet manager. | yes | yes | yes | `bytestash` | none | 1 | none | yes | yes |
 | `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | yes | yes | yes | `dozzle` | `dozzle` | 1 | none | yes | yes |
