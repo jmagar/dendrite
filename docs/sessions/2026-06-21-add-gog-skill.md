@@ -2,7 +2,8 @@
 date: 2026-06-21 18:58:50 EST
 repo: git@github.com:jmagar/dendrite.git
 branch: claude/peaceful-chebyshev-582841
-head: d99b6c738796086da2a2d178e50015496b8c34f8
+head: 9164122554803d858c12355a240c1b4fdffa7a7b
+head at session start: d99b6c738796086da2a2d178e50015496b8c34f8
 working directory: /home/jmagar/workspace/dendrite/.claude/worktrees/peaceful-chebyshev-582841
 worktree: /home/jmagar/workspace/dendrite/.claude/worktrees/peaceful-chebyshev-582841
 beads: No bead activity observed
@@ -77,10 +78,10 @@ drift from commit `d99b6c7`). Verified the whole change set with `check-all`.
 | created | plugins/vibin/skills/gog/agents/openai.yaml | Required OpenAI companion | companion-coverage loop passes |
 | modified | README.md | Inventory: skills 63→65, vibin row 26→28 | `generate-readme-inventory --check` exit 0 |
 | modified | docs/plugin-matrix.md | vibin row 26→28 (adds compose-skill, gog) | `generate-docs --check` exit 0 |
+| modified | CHANGELOG.md | Added `Added` bullet for the gog skill | `git show --stat HEAD` |
 | created | docs/sessions/2026-06-21-add-gog-skill.md | This session log | — |
 
-(CHANGELOG.md also updated in the quick-push commit with an `Added` bullet for
-the gog skill.)
+All six paths landed in a single commit (`9164122`), not a separate commit.
 
 ## Beads Activity
 
@@ -132,7 +133,7 @@ No bead activity observed.
 
 Low risk — additive skill plus deterministic doc regeneration. Rollback:
 `git rm -r plugins/vibin/skills/gog` and revert the inventory changes, or revert
-the quick-push commit.
+commit `9164122`.
 
 ## Next Steps
 
