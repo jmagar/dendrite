@@ -2,6 +2,9 @@
 
 All notable changes to the `save-to-md` skill are recorded here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] - 2026-06-21
+- Session logs now land on the integration (default) branch with no manual merge step. On a feature branch the log rides along with that branch's PR as before; on the default branch the skill creates a throwaway `session-log/<date>-<slug>` branch and then either fast-forwards directly to the remote default or opens AND merges the PR itself (`--auto`, or watch-checks-then-`--squash --delete-branch`) without asking for confirmation. A side branch is only left behind if a required check fails, an unsatisfiable merge rule blocks it, or `gh`/permissions are unavailable.
+
 ## [0.2.1] - 2026-05-25
 - Added the post-write contract: force-stage, path-limited commit, and push only the generated session artifact.
 - Documented verification that the session-file commit contains no paths other than the generated artifact.
