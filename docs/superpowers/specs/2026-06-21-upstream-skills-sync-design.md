@@ -45,6 +45,33 @@ skill independently: `repo + branch + src_path -> dest`.
 5. **CI:** out of scope for now. The deliverable is the script + manifest. A
    scheduled `--check` workflow can be added later, mirroring
    `check-no-mcp-drift.yml`.
+6. **Minimal configuration:** adding a skill must require nothing more than
+   pasting the GitHub URL of the skill folder. The tool derives every manifest
+   field from the URL, resolves the SHA, vendors the folder, and auto-generates
+   the `agents/openai.yaml` stub. No hand-editing the manifest to onboard a
+   skill.
+
+## Minimal-config principle
+
+A GitHub folder or file URL already encodes repo, ref, and path:
+
+```
+https://github.com/openclaw/openclaw/tree/main/skills/meme-maker
+        └─owner─┘ └─repo─┘     └ref┘└────── src_path ──────┘
+
+https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md
+        └─owner─┘ └─repo─┘      └ref┘└──────── path ────────┘
+```
+
+The tool parses both forms:
+- `/tree/<ref>/<path…>` → `src_path` = `<path…>` (folder).
+- `/blob/<ref>/<path…>/SKILL.md` → `src_path` = `<path…>` (strip the trailing
+  `/SKILL.md`).
+
+From `src_path` it derives `name` = last path segment, and `branch` = `<ref>`.
+`ref` is taken as the first segment after `blob`/`tree`; branches containing
+slashes are the one case that needs a manual manifest edit (documented; not
+expected for these sources). The user pastes a URL; the tool does the rest.
 
 ## Layout
 
@@ -116,6 +143,29 @@ Python 3 (consistent with the existing `check-*` scripts), executable bit set,
 no third-party deps. Uses `gh` for GitHub access (auth + rate-limit headroom)
 and the stdlib for hashing/tar extraction.
 
+### `add <github-url>` (network) — the onboarding command
+
+The whole point of the minimal-config principle. Given one GitHub folder/file
+URL:
+
+1. Parse the URL into `owner/repo`, `ref`, and `src_path` (see Minimal-config
+   principle). Derive `name` from the last path segment.
+2. Reject if a skill with that `name` already exists in the manifest (or
+   `--force` to re-add).
+3. Resolve the target SHA at `ref` for that path, download the tarball, and
+   extract `src_path` into `plugins/upstream-skills/skills/<name>/`.
+4. **Auto-generate `skills/<name>/agents/openai.yaml`** from the vendored
+   `SKILL.md` frontmatter: `display_name` from `name`, `short_description` from
+   `description` (truncated), `default_prompt` a simple "Use <name> to …" line.
+   Only written if absent (it is a `local_only` file, so it survives later
+   applies and can be hand-tuned).
+5. Append the entry to `upstream-sources.json` with `pinned_sha` +
+   `content_hash`.
+6. Print: skill added; reminder to review `git diff` and run `check-all`.
+
+After `add`, the skill is fully wired for sync. The user touched nothing but the
+URL.
+
 ### `--check` (network)
 
 For each skill in the manifest:
@@ -143,7 +193,8 @@ For each targeted skill:
    `local_only`, then copy the freshly extracted upstream files in). This makes
    deletions upstream propagate.
 4. Preserve `local_only` files untouched. If `agents/openai.yaml` is missing,
-   print a warning — it must be hand-authored (the tool does not generate it).
+   regenerate the stub from the freshly vendored `SKILL.md` frontmatter (same
+   generator `add` uses), so the dendrite invariant is never left broken.
 5. Recompute `content_hash`, update `pinned_sha` + `content_hash` in the manifest.
 6. Print a summary. The human runs `git diff`, sanity-checks, and commits.
 
@@ -155,22 +206,34 @@ clones; works for any commit; trivial to hash. Branch-tip resolution for
 
 ## Workflow
 
-**Initial vendoring:**
-1. Author the manifest with the seven entries (branch `main`, correct
-   `src_path`, placeholder `pinned_sha`/`content_hash`).
-2. `plugins/scripts/sync-upstream-skills --apply --all` — vendors all folders and
-   fills in real `pinned_sha`/`content_hash`.
-3. Hand-author the seven `agents/openai.yaml` companions.
-4. Author plugin manifests (`.claude-plugin/plugin.json`,
-   `.codex-plugin/plugin.json`, `gemini-extension.json`), README, CHANGELOG.
-5. Add the `upstream-skills` entry to both marketplace manifests.
-6. `plugins/scripts/generate-docs` then `plugins/scripts/check-all` — the new
-   plugin flows into the matrices/README inventory and all invariants pass.
+**One-time plugin scaffolding** (done once, not per skill):
+- Author plugin manifests (`.claude-plugin/plugin.json`,
+  `.codex-plugin/plugin.json`, `gemini-extension.json`), README, CHANGELOG. The
+  Claude/Codex manifests use `"skills": "./skills/"`, so new skill folders need
+  no manifest edits.
+- Add the `upstream-skills` entry to both marketplace manifests.
+
+**Onboarding the seven skills** — paste each URL:
+```
+sync-upstream-skills add https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md
+sync-upstream-skills add https://github.com/openclaw/acpx/blob/main/skills/acpx/SKILL.md
+sync-upstream-skills add https://github.com/openclaw/openclaw/tree/main/skills/meme-maker
+sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/agent-transcript
+sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/autoreview
+sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/handoff
+sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/session-viewer
+```
+Each `add` vendors the folder, generates the `openai.yaml` stub, and records the
+manifest entry. Then run `generate-docs` and `check-all` once to fold the plugin
+into the matrices/README inventory and confirm all invariants pass.
 
 **Ongoing sync:**
 - `sync-upstream-skills --check` reports drift.
 - `sync-upstream-skills --apply <name>` (or `--all`) pulls updates; review +
   commit.
+
+**Adding a future skill:** one `sync-upstream-skills add <url>`, then
+`check-all`. Nothing else.
 
 ## Module boundaries
 
@@ -190,5 +253,8 @@ adaptations (`agents/openai.yaml`) from being clobbered.
 
 - Scheduled CI drift workflow (can be added later, mirroring
   `check-no-mcp-drift.yml`).
-- Auto-generating `agents/openai.yaml` (hand-authored, like every other skill).
 - Bidirectional sync / pushing changes back upstream (pull-only).
+- Auto-creating the *plugin* scaffolding (manifests/README/marketplace entries)
+  — that is a one-time manual setup; only per-skill onboarding is automated.
+- Upstream branches whose ref contains a slash — those need a manual manifest
+  edit (not expected for the current seven sources).
