@@ -46,7 +46,18 @@ jobs:
           echo "old_no_mcp_sha=$(git rev-parse origin/marketplace-no-mcp)" >> "$GITHUB_OUTPUT"
           echo "main_sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
           git switch marketplace-no-mcp
-          git merge --no-edit origin/main
+          # marketplace-no-mcp is a deterministic transform of main, so a content
+          # merge conflicts on every transform-derived file (manifests, README,
+          # generated docs) and on deleted .mcp.json files. Record a merge commit
+          # that takes main's tree wholesale; apply-no-mcp-marketplace (next step)
+          # re-derives the no-MCP content. Skip when main is already merged.
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "marketplace-no-mcp already contains main; nothing to merge"
+          else
+            git merge --no-commit --no-ff origin/main || true
+            git read-tree --reset -u origin/main
+            git commit --no-edit
+          fi
           echo "merged_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Apply no-MCP variant rules

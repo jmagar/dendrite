@@ -157,8 +157,13 @@ def compare_refs(main_ref: str, no_mcp_ref: str, *, skip_if_missing_refs: bool =
         expected_tree = run(["git", "write-tree"], cwd=expected).stdout.strip()
         actual_tree = run(["git", "rev-parse", "HEAD^{tree}"], cwd=actual).stdout.strip()
         if expected_tree != actual_tree:
+            # --stat only (no --patch): a full patch of the diverged tree can be
+            # tens of thousands of lines, and writing that to a non-blocking pipe
+            # (e.g. a git pre-push hook's stderr) raises BlockingIOError. The
+            # file-level summary is the actionable signal; rerun `git diff` by
+            # hand for full detail.
             diff_output = run(
-                ["git", "diff", "--stat", "--patch", actual_tree, expected_tree],
+                ["git", "diff", "--stat", actual_tree, expected_tree],
                 cwd=expected,
                 check=False,
             ).stdout
