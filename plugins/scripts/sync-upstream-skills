@@ -4,8 +4,12 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
+import shutil
+import subprocess
+import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -83,6 +87,73 @@ def save_manifest(data: dict) -> None:
     data["skills"].sort(key=lambda skill: skill["name"])
     MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
     MANIFEST_PATH.write_text(json.dumps(data, indent=2) + "\n")
+
+
+def _download_tarball(repo: str, sha: str) -> bytes:
+    result = subprocess.run(
+        ["gh", "api", f"repos/{repo}/tarball/{sha}"],
+        check=True, capture_output=True,
+    )
+    return result.stdout
+
+
+def resolve_tip_sha(repo: str, branch: str, src_path: str) -> str:
+    result = subprocess.run(
+        ["gh", "api",
+         f"repos/{repo}/commits?path={src_path}&sha={branch}&per_page=1"],
+        check=True, capture_output=True, text=True,
+    )
+    commits = json.loads(result.stdout)
+    if not commits:
+        raise RuntimeError(f"No commits for {src_path} in {repo}@{branch}")
+    return commits[0]["sha"]
+
+
+def fetch_subtree(repo: str, sha: str, src_path: str, dest: Path) -> None:
+    raw = _download_tarball(repo, sha)
+    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tar:
+        members = tar.getmembers()
+        if not members:
+            raise RuntimeError(f"Empty tarball for {repo}@{sha}")
+        prefix = members[0].name.split("/", 1)[0] + "/"
+        want = f"{prefix}{src_path.rstrip('/')}/"
+        if dest.exists():
+            shutil.rmtree(dest)
+        dest.mkdir(parents=True)
+        extracted = False
+        for member in members:
+            if not member.isfile() or not member.name.startswith(want):
+                continue
+            rel = member.name[len(want):]
+            target = dest / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            source = tar.extractfile(member)
+            target.write_bytes(source.read())
+            extracted = True
+        if not extracted:
+            raise RuntimeError(f"No files under {src_path} in {repo}@{sha}")
+
+
+def apply_skill(entry: dict) -> None:
+    dest = SKILLS_DIR / entry["name"]
+    preserved: dict[str, bytes] = {}
+    for rel in entry["local_only"]:
+        path = dest / rel
+        if path.exists():
+            preserved[rel] = path.read_bytes()
+    sha = resolve_tip_sha(entry["repo"], entry["branch"], entry["src_path"])
+    fetch_subtree(entry["repo"], sha, entry["src_path"], dest)
+    for rel, data in preserved.items():
+        path = dest / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    openai_path = dest / "agents" / "openai.yaml"
+    if not openai_path.exists():
+        skill_md = (dest / "SKILL.md").read_text()
+        openai_path.parent.mkdir(parents=True, exist_ok=True)
+        openai_path.write_text(generate_openai_yaml(skill_md, entry["name"]))
+    entry["pinned_sha"] = sha
+    entry["content_hash"] = compute_content_hash(dest, entry["local_only"])
 
 
 def generate_openai_yaml(skill_md_text: str, name: str) -> str:

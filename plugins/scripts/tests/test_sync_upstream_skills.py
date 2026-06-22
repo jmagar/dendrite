@@ -179,5 +179,100 @@ class TestManifestSchema(unittest.TestCase):
         self.assertTrue(list(self.validator.iter_errors({"skills": [bad]})))
 
 
+import io
+import tarfile
+
+
+def _make_tarball(prefix, files):
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        for rel, data in files.items():
+            raw = data.encode()
+            info = tarfile.TarInfo(name=f"{prefix}/{rel}")
+            info.size = len(raw)
+            tar.addfile(info, io.BytesIO(raw))
+    return buf.getvalue()
+
+
+class TestFetchSubtree(unittest.TestCase):
+    def test_extracts_only_src_path(self):
+        tarball = _make_tarball("openclaw-openclaw-abc123", {
+            "skills/meme-maker/SKILL.md": "meme",
+            "skills/meme-maker/scripts/run.sh": "echo hi",
+            "skills/other/SKILL.md": "other",
+            "README.md": "top",
+        })
+        orig = sus._download_tarball
+        sus._download_tarball = lambda repo, sha: tarball
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                dest = Path(d) / "meme-maker"
+                sus.fetch_subtree("openclaw/openclaw", "abc123",
+                                  "skills/meme-maker", dest)
+                self.assertEqual((dest / "SKILL.md").read_text(), "meme")
+                self.assertEqual((dest / "scripts/run.sh").read_text(), "echo hi")
+                self.assertFalse((dest / "other").exists())
+        finally:
+            sus._download_tarball = orig
+
+
+class TestApplySkill(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        sus.SKILLS_DIR = Path(self.tmp.name) / "skills"
+        self._orig_resolve = sus.resolve_tip_sha
+        self._orig_fetch = sus.fetch_subtree
+
+    def tearDown(self):
+        sus.resolve_tip_sha = self._orig_resolve
+        sus.fetch_subtree = self._orig_fetch
+        self.tmp.cleanup()
+
+    def _fake_fetch(self, files):
+        def fetch(repo, sha, src_path, dest):
+            import shutil
+            if dest.exists():
+                shutil.rmtree(dest)
+            dest.mkdir(parents=True)
+            for rel, data in files.items():
+                p = dest / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(data)
+        return fetch
+
+    def test_generates_openai_when_missing_and_sets_hashes(self):
+        sus.resolve_tip_sha = lambda repo, branch, path: "c" * 40
+        sus.fetch_subtree = self._fake_fetch({
+            "SKILL.md": "---\nname: gog\ndescription: Do gog.\n---\n",
+        })
+        entry = {
+            "name": "gog", "repo": "openclaw/gogcli", "branch": "main",
+            "src_path": ".agents/skills/gog", "pinned_sha": "",
+            "content_hash": "", "local_only": ["agents/openai.yaml"],
+        }
+        sus.apply_skill(entry)
+        dest = sus.SKILLS_DIR / "gog"
+        self.assertTrue((dest / "agents/openai.yaml").exists())
+        self.assertEqual(entry["pinned_sha"], "c" * 40)
+        self.assertRegex(entry["content_hash"], r"^sha256:[0-9a-f]{64}$")
+
+    def test_preserves_existing_openai_and_propagates_deletion(self):
+        dest = sus.SKILLS_DIR / "gog"
+        (dest / "agents").mkdir(parents=True)
+        (dest / "agents/openai.yaml").write_text("CUSTOM")
+        (dest / "stale.md").write_text("old")
+        sus.resolve_tip_sha = lambda repo, branch, path: "d" * 40
+        sus.fetch_subtree = self._fake_fetch({"SKILL.md": "new"})
+        entry = {
+            "name": "gog", "repo": "openclaw/gogcli", "branch": "main",
+            "src_path": ".agents/skills/gog", "pinned_sha": "",
+            "content_hash": "", "local_only": ["agents/openai.yaml"],
+        }
+        sus.apply_skill(entry)
+        self.assertEqual((dest / "agents/openai.yaml").read_text(), "CUSTOM")
+        self.assertFalse((dest / "stale.md").exists())
+        self.assertTrue((dest / "SKILL.md").exists())
+
+
 if __name__ == "__main__":
     unittest.main()
