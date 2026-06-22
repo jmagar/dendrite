@@ -1,3 +1,4 @@
+import contextlib
 import importlib.machinery
 import importlib.util
 import unittest
@@ -396,15 +397,20 @@ class TestMainCheckExit(unittest.TestCase):
             "local_only": ["agents/openai.yaml"],
         }]})
 
+    def _silent_main(self, argv):
+        sink = io.StringIO()
+        with contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+            return sus.main(argv)
+
     def test_check_clean_returns_zero(self):
         self._write_manifest()
         sus.check_skill = lambda entry: []
-        self.assertEqual(sus.main(["check"]), 0)
+        self.assertEqual(self._silent_main(["check"]), 0)
 
     def test_check_drift_returns_one(self):
         self._write_manifest()
         sus.check_skill = lambda entry: ["UPDATE_AVAILABLE"]
-        self.assertEqual(sus.main(["check"]), 1)
+        self.assertEqual(self._silent_main(["check"]), 1)
 
 
 if __name__ == "__main__":
