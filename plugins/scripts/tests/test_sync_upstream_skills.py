@@ -124,5 +124,60 @@ class TestOpenaiYaml(unittest.TestCase):
         self.assertIn("Yeet", out)
 
 
+import json
+
+
+class TestManifestIO(unittest.TestCase):
+    def test_roundtrip_sorted(self):
+        with tempfile.TemporaryDirectory() as d:
+            sus.MANIFEST_PATH = Path(d) / "upstream-sources.json"
+            sus.save_manifest({"skills": [
+                {"name": "zeta"}, {"name": "alpha"},
+            ]})
+            data = sus.load_manifest()
+            self.assertEqual([s["name"] for s in data["skills"]], ["alpha", "zeta"])
+
+    def test_missing_file_is_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            sus.MANIFEST_PATH = Path(d) / "nope.json"
+            self.assertEqual(sus.load_manifest(), {"skills": []})
+
+
+class TestManifestSchema(unittest.TestCase):
+    def setUp(self):
+        from jsonschema import Draft7Validator
+        schema_path = (
+            Path(__file__).resolve().parents[2]
+            / "schemas" / "upstream-sources.schema.json"
+        )
+        self.validator = Draft7Validator(json.loads(schema_path.read_text()))
+
+    def _entry(self, **over):
+        entry = {
+            "name": "gog",
+            "repo": "openclaw/gogcli",
+            "branch": "main",
+            "src_path": ".agents/skills/gog",
+            "pinned_sha": "a" * 40,
+            "content_hash": "sha256:" + "b" * 64,
+            "local_only": ["agents/openai.yaml"],
+        }
+        entry.update(over)
+        return entry
+
+    def test_valid_manifest_passes(self):
+        errors = list(self.validator.iter_errors({"skills": [self._entry()]}))
+        self.assertEqual(errors, [])
+
+    def test_bad_sha_rejected(self):
+        bad = self._entry(pinned_sha="xyz")
+        self.assertTrue(list(self.validator.iter_errors({"skills": [bad]})))
+
+    def test_missing_required_rejected(self):
+        bad = self._entry()
+        del bad["content_hash"]
+        self.assertTrue(list(self.validator.iter_errors({"skills": [bad]})))
+
+
 if __name__ == "__main__":
     unittest.main()

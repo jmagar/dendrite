@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from pathlib import Path
 
@@ -70,6 +71,18 @@ def parse_frontmatter(text: str) -> dict:
 
 def _yaml_quote(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def load_manifest() -> dict:
+    if MANIFEST_PATH.exists():
+        return json.loads(MANIFEST_PATH.read_text())
+    return {"skills": []}
+
+
+def save_manifest(data: dict) -> None:
+    data["skills"].sort(key=lambda skill: skill["name"])
+    MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
+    MANIFEST_PATH.write_text(json.dumps(data, indent=2) + "\n")
 
 
 def generate_openai_yaml(skill_md_text: str, name: str) -> str:
