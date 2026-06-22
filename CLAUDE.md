@@ -61,6 +61,31 @@ subdirectory source.
   `plugins/scripts/apply-no-mcp-marketplace` instead of hand-editing the
   long-lived branch.
 
+## Vendored Upstream Skills
+
+The `plugins/upstream-skills` plugin holds skills vendored verbatim from external
+repos and kept in sync by `plugins/scripts/sync-upstream-skills`. Full reference:
+`docs/upstream-skills.md`.
+
+- Each `plugins/upstream-skills/skills/<name>/` mirrors a whole upstream skill
+  folder (SKILL.md plus any references/scripts). The only dendrite-local file per
+  skill is `agents/openai.yaml`; the sync tool preserves it across updates.
+- Source of truth for provenance is `plugins/upstream-skills/upstream-sources.json`
+  (repo, branch, src_path, pinned commit SHA, content hash, local_only), validated
+  by `plugins/schemas/upstream-sources.schema.json` through
+  `plugins/scripts/validate-plugin-schemas`.
+- Onboard a skill with `sync-upstream-skills add <github-folder-url>` — it parses
+  repo/ref/path from the URL, vendors the folder, generates the `openai.yaml`
+  stub, and records the manifest entry. No manual manifest editing.
+- `sync-upstream-skills check` reports drift (whole-subtree content hash, so
+  references/scripts/added/removed files all count). `sync-upstream-skills apply
+  [names…|--all]` pulls updates. The tool never commits — review `git diff` and
+  commit yourself, then run `plugins/scripts/check-all`.
+- Do not also vendor the same upstream skill into another plugin (e.g. `vibin`).
+  `upstream-skills` is the single sync-managed home; duplicates collide on skill
+  name. The tool's unit tests live at
+  `plugins/scripts/tests/test_sync_upstream_skills.py` and run inside `check-all`.
+
 ## Common Checks
 
 ```bash
@@ -94,6 +119,12 @@ plugins/scripts/validate-plugin-schemas
 # Print the upstream docs/source files used to maintain local Codex and Gemini
 # schemas. Use this before changing plugins/schemas/*.
 plugins/scripts/audit-upstream-schema-sources
+
+# Vendor a new upstream skill from a single GitHub folder URL, then check/apply
+# drift for the vendored skills. See docs/upstream-skills.md.
+plugins/scripts/sync-upstream-skills add <github-folder-url>
+plugins/scripts/sync-upstream-skills check
+plugins/scripts/sync-upstream-skills apply --all
 
 # Regenerate docs/plugin-matrix.md, docs/configuration-matrix.md,
 # docs/marketplace-sources.md, docs/schema-provenance.md, and

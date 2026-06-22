@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "dendrite-no-mcp",
+  "name": "dendrite",
   "owner": {
     "name": "jmagar",
     "email": "jmagar@users.noreply.github.com"
@@ -11,8 +11,7 @@
       "name": "lumen",
       "source": {
         "source": "github",
-        "repo": "jmagar/lumen",
-        "ref": "marketplace-no-mcp"
+        "repo": "jmagar/lumen"
       },
       "description": "Precise local semantic code search via MCP. Indexes your codebase with Go AST parsing and vector embeddings \u2014 Ollama, LM Studio, or HuggingFace TEI."
     },
@@ -90,8 +89,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/axon.git",
-        "path": "plugins/axon",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/axon"
       },
       "description": "Skills and gateway-oriented guidance for the Axon crawl, ingest, embed, query, and RAG engine."
     },
@@ -118,8 +116,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rarcane.git",
-        "path": "plugins/rarcane",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/rarcane"
       },
       "description": "Arcane Docker management via the rarcane MCP server (Rust port of arcane-mcp)."
     },
@@ -128,8 +125,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rtemplate-mcp.git",
-        "path": "plugins/rtemplate",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/rtemplate"
       },
       "description": "Reference rmcp template/example MCP server \u2014 scaffold for building new Rust MCP servers."
     },
@@ -220,11 +216,6 @@
       "name": "vibin",
       "source": "./plugins/vibin",
       "description": "Session, repo status, GitHub review, and CI workflow skills for branch/worktree readiness audits, quick push, session documentation, PR comments, and CI debugging."
-    },
-    {
-      "name": "arrs",
-      "source": "./plugins/arrs",
-      "description": "The *arr / media-automation stack \u2014 Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr \u2014 each via its own REST API."
     },
     {
       "name": "testing",
@@ -554,8 +545,7 @@
       "name": "ytdl-mcp",
       "source": {
         "source": "github",
-        "repo": "jmagar/ytdl-mcp",
-        "ref": "marketplace-no-mcp"
+        "repo": "jmagar/ytdl-mcp"
       },
       "description": "Download audio/video from any yt-dlp-supported site, embed metadata and cover art, organize by artist, and rsync to an SSH remote with separate audio/video destinations."
     },
@@ -564,8 +554,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/lab.git",
-        "path": "plugins/labby",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/labby"
       },
       "description": "Skills and gateway-oriented guidance for the Lab homelab control plane."
     },
@@ -609,6 +598,11 @@
         "path": "plugins/security-guidance"
       },
       "description": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes."
+    },
+    {
+      "name": "upstream-skills",
+      "source": "./plugins/upstream-skills",
+      "description": "Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills."
     }
   ]
 }

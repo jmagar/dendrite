@@ -20,6 +20,7 @@ CLAUDE_MARKETPLACE_SCHEMA_URL = "https://json.schemastore.org/claude-code-market
 CODEX_PLUGIN_SCHEMA = SCHEMAS / "codex-plugin.schema.json"
 CODEX_MARKETPLACE_SCHEMA = SCHEMAS / "codex-marketplace.schema.json"
 GEMINI_EXTENSION_SCHEMA = SCHEMAS / "gemini-extension.schema.json"
+UPSTREAM_SOURCES_SCHEMA = SCHEMAS / "upstream-sources.schema.json"
 
 
 def read_json(path: Path) -> Any:
@@ -85,6 +86,14 @@ def gemini_schema_errors() -> list[str]:
     return errors
 
 
+def upstream_sources_errors() -> list[str]:
+    manifest = ROOT / "plugins" / "upstream-skills" / "upstream-sources.json"
+    if not manifest.exists():
+        return []
+    schema = load_local_schema(UPSTREAM_SOURCES_SCHEMA)
+    return validate_json_schema(manifest, schema)
+
+
 def run(command: list[str]) -> tuple[int, str]:
     completed = subprocess.run(
         command,
@@ -124,6 +133,11 @@ def main() -> int:
         errors.extend(gemini_schema_errors())
     except Exception as exc:
         errors.append(f"Gemini schema validation failed before checking files: {exc}")
+
+    try:
+        errors.extend(upstream_sources_errors())
+    except Exception as exc:
+        errors.append(f"Upstream sources validation failed before checking files: {exc}")
 
     errors.extend(gemini_validation_errors())
 

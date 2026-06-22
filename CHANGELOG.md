@@ -4,8 +4,13 @@ All notable changes to Dendrite are recorded here.
 
 ## Unreleased
 
+### Removed
+
+- Removed the `arrs` plugin. Its ten per-service skills (Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, Tracearr) were merged into the standalone `rustarr` plugin (github.com/jmagar/rustarr), which now exposes the same services through its MCP server and CLI. De-registered from the Claude and Codex marketplace manifests and regenerated the inventory docs.
+
 ### Added
 
+- Added the `gog` skill to the Vibin plugin for safe Google Workspace automation (Gmail, Calendar, Drive, Docs, Sheets, Contacts) with stable JSON output, scoped auth, and command guards; regenerated the README and plugin-matrix inventories.
 - Added missing `README.md` and `CHANGELOG.md` files for all current skill directories.
 - Added a curated-plugin inventory to the root `README.md`, including marketplace coverage and repo counts.
 - Added Gemini CLI extension manifests for every local plugin directory.
@@ -30,6 +35,7 @@ All notable changes to Dendrite are recorded here.
 
 ### Fixed
 
+- Scoped the `.githooks/pre-push` no-MCP drift compare to pushes that target `main` or `marketplace-no-mcp`, so feature-branch pushes are no longer blocked by pre-existing cross-ref drift. CI still enforces the invariant via `check-no-mcp-drift.yml` and `sync-marketplace-no-mcp.yml`. `check-all` still runs on every push.
 - Hardened several skill scripts and docs based on reviewer findings, including Plex token handling, mcporter output quoting, and explicit Overseerr media identifiers.
 - Restored the expected skill documentation contract: every Dendrite skill now has `SKILL.md`, `agents/openai.yaml`, `README.md`, and `CHANGELOG.md`.
 - Filled empty README and CHANGELOG placeholders for ByteStash, Immich, Linkding, LoggiFly, Memos, NotebookLM, and Radicale.
