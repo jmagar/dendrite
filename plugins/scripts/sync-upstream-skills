@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Vendor upstream skill folders into dendrite and keep them in sync."""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+PLUGIN_DIR = ROOT / "plugins" / "upstream-skills"
+SKILLS_DIR = PLUGIN_DIR / "skills"
+MANIFEST_PATH = PLUGIN_DIR / "upstream-sources.json"
+DEFAULT_LOCAL_ONLY = ["agents/openai.yaml"]
+
+_URL_RE = re.compile(
+    r"^https?://github\.com/"
+    r"(?P<owner>[^/]+)/(?P<repo>[^/]+)/"
+    r"(?P<kind>tree|blob)/(?P<ref>[^/]+)/(?P<path>.+)$"
+)
+
+
+def parse_skill_url(url: str) -> dict:
+    match = _URL_RE.match(url.strip())
+    if not match:
+        raise ValueError(f"Not a GitHub tree/blob URL: {url}")
+    path = match["path"].rstrip("/")
+    if match["kind"] == "blob":
+        if path.endswith("/SKILL.md"):
+            path = path[: -len("/SKILL.md")]
+        else:
+            path = path.rsplit("/", 1)[0]
+    return {
+        "name": path.rsplit("/", 1)[-1],
+        "repo": f"{match['owner']}/{match['repo']}",
+        "branch": match["ref"],
+        "src_path": path,
+    }
