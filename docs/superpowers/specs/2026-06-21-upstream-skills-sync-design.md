@@ -148,6 +148,97 @@ There are no MCP servers in this plugin, so nothing is added to
   deletions all affect the hash.
 - `local_only` lists files the tool must never overwrite or delete on apply.
 
+## Contracts
+
+Two contracts are fixed before implementation: a **data contract** (the manifest
+JSON Schema, validated by existing tooling) and a **behavioral contract** (the
+tool's CLI surface and invariants, written as TDD tests before the code).
+
+### Data contract — `plugins/schemas/upstream-sources.schema.json`
+
+Draft-07 JSON Schema (same family as `codex-plugin.schema.json` et al.), wired
+into `plugins/scripts/validate-plugin-schemas` so it runs under `check-all`. The
+validator gains one rule: validate `plugins/upstream-skills/upstream-sources.json`
+against this schema.
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/jmagar/dendrite/plugins/schemas/upstream-sources.schema.json",
+  "title": "Dendrite upstream skills sync manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skills"],
+  "properties": {
+    "skills": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/skill" }
+    }
+  },
+  "definitions": {
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repo", "branch", "src_path",
+                   "pinned_sha", "content_hash", "local_only"],
+      "properties": {
+        "name":         { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "repo":         { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+        "branch":       { "type": "string", "minLength": 1 },
+        "src_path":     { "type": "string", "minLength": 1 },
+        "pinned_sha":   { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "local_only":   { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
+```
+
+A malformed or hand-corrupted manifest then fails at `check-all` with a clear
+schema error, not deep inside the tool. `add`/`--apply` must emit manifests that
+validate against this schema (asserted by the behavioral contract below).
+
+### Behavioral contract (TDD test list)
+
+These invariants are written as tests *before* the implementation. Network-bound
+behavior is tested against local fixtures (a fixture tarball / temp dirs), not by
+hitting GitHub, so the suite is deterministic and offline.
+
+**URL parsing**
+- `…/tree/<ref>/<path…>` → `repo`, `branch=<ref>`, `src_path=<path…>`.
+- `…/blob/<ref>/<path…>/SKILL.md` → `src_path=<path…>` (trailing `/SKILL.md`
+  stripped).
+- `name` = last segment of `src_path`, correct even when a parent segment is
+  dot-prefixed (`skills/.curated/yeet` → `yeet`).
+- non-GitHub or malformed URLs are rejected with a clear error.
+
+**content_hash determinism**
+- identical file sets produce identical hashes; independent of file ordering.
+- changing any byte, adding a file, or removing a file changes the hash.
+- files listed in `local_only` are excluded from the hash.
+
+**`add`**
+- appends a manifest entry that validates against the schema.
+- generates `agents/openai.yaml` from `SKILL.md` frontmatter when absent; never
+  overwrites an existing one.
+- refuses a duplicate `name` unless `--force`.
+
+**`--check`**
+- reports LOCAL DRIFT when vendored upstream-owned hash ≠ recorded
+  `content_hash`.
+- reports UPDATE AVAILABLE when the upstream branch-tip subtree hash ≠ recorded
+  `content_hash`.
+- exit 0 when everything is in sync; non-zero when any skill drifts.
+
+**`--apply`**
+- replaces upstream-owned files and deletes files removed upstream.
+- preserves existing `local_only` files byte-for-byte; regenerates the
+  `openai.yaml` stub only if missing.
+- updates `pinned_sha` + `content_hash`; the resulting manifest validates against
+  the schema.
+- never creates a git commit.
+
 ## Tool — `plugins/scripts/sync-upstream-skills`
 
 Python 3 (consistent with the existing `check-*` scripts), executable bit set,
@@ -218,6 +309,8 @@ clones; works for any commit; trivial to hash. Branch-tip resolution for
 ## Workflow
 
 **One-time plugin scaffolding** (done once, not per skill):
+- Add `plugins/schemas/upstream-sources.schema.json` and the validation rule in
+  `validate-plugin-schemas` (the data contract).
 - Author plugin manifests (`.claude-plugin/plugin.json`,
   `.codex-plugin/plugin.json`, `gemini-extension.json`), README, CHANGELOG. The
   Claude/Codex manifests use `"skills": "./skills/"`, so new skill folders need
@@ -257,8 +350,10 @@ into the matrices/README inventory and confirm all invariants pass.
 - **Sync tool** (`sync-upstream-skills`): the only thing that reads the manifest
   to fetch/compare/replace. Pure I/O around GitHub + filesystem + hashing; no
   knowledge of dendrite invariants beyond `local_only`.
-- **Dendrite invariants** (existing `check-*` / `generate-docs`): unchanged. They
-  treat the vendored skills like any other plugin's skills.
+- **Dendrite invariants** (existing `check-*` / `generate-docs`): treat the
+  vendored skills like any other plugin's skills. The only addition is one
+  schema-validation rule in `validate-plugin-schemas` for the new manifest
+  format (the data contract).
 
 The tool depends on `gh` and the manifest; nothing depends on the tool's
 internals. The manifest's `local_only` is the single contract that keeps dendrite
