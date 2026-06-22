@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import tarfile
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -154,6 +155,24 @@ def apply_skill(entry: dict) -> None:
         openai_path.write_text(generate_openai_yaml(skill_md, entry["name"]))
     entry["pinned_sha"] = sha
     entry["content_hash"] = compute_content_hash(dest, entry["local_only"])
+
+
+def check_skill(entry: dict) -> list[str]:
+    statuses: list[str] = []
+    dest = SKILLS_DIR / entry["name"]
+    local_hash = (
+        compute_content_hash(dest, entry["local_only"]) if dest.exists() else None
+    )
+    if local_hash != entry["content_hash"]:
+        statuses.append("LOCAL_DRIFT")
+    sha = resolve_tip_sha(entry["repo"], entry["branch"], entry["src_path"])
+    with tempfile.TemporaryDirectory() as tmp:
+        upstream_dir = Path(tmp) / entry["name"]
+        fetch_subtree(entry["repo"], sha, entry["src_path"], upstream_dir)
+        upstream_hash = compute_content_hash(upstream_dir, entry["local_only"])
+    if upstream_hash != entry["content_hash"]:
+        statuses.append("UPDATE_AVAILABLE")
+    return statuses
 
 
 def add_skill(url: str, force: bool = False) -> dict:

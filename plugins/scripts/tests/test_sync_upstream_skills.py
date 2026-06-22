@@ -324,5 +324,57 @@ class TestAddSkill(unittest.TestCase):
         self.assertEqual(list(validator.iter_errors(sus.load_manifest())), [])
 
 
+class TestCheckSkill(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        sus.SKILLS_DIR = Path(self.tmp.name) / "skills"
+        self._orig_resolve = sus.resolve_tip_sha
+        self._orig_fetch = sus.fetch_subtree
+
+    def tearDown(self):
+        sus.resolve_tip_sha = self._orig_resolve
+        sus.fetch_subtree = self._orig_fetch
+        self.tmp.cleanup()
+
+    def _vendor(self, body):
+        dest = sus.SKILLS_DIR / "gog"
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / "SKILL.md").write_text(body)
+        return dest
+
+    def _entry(self, content_hash):
+        return {
+            "name": "gog", "repo": "openclaw/gogcli", "branch": "main",
+            "src_path": ".agents/skills/gog", "pinned_sha": "f" * 40,
+            "content_hash": content_hash, "local_only": ["agents/openai.yaml"],
+        }
+
+    def _fake_upstream(self, body):
+        def fetch(repo, sha, src_path, dest):
+            dest.mkdir(parents=True, exist_ok=True)
+            (dest / "SKILL.md").write_text(body)
+        sus.fetch_subtree = fetch
+        sus.resolve_tip_sha = lambda repo, branch, path: "0" * 40
+
+    def test_in_sync(self):
+        dest = self._vendor("same")
+        digest = sus.compute_content_hash(dest, ["agents/openai.yaml"])
+        self._fake_upstream("same")
+        self.assertEqual(sus.check_skill(self._entry(digest)), [])
+
+    def test_local_drift(self):
+        self._vendor("edited-locally")
+        self._fake_upstream("edited-locally")
+        # recorded hash is for different content
+        stale = "sha256:" + "0" * 64
+        self.assertIn("LOCAL_DRIFT", sus.check_skill(self._entry(stale)))
+
+    def test_update_available(self):
+        dest = self._vendor("v1")
+        digest = sus.compute_content_hash(dest, ["agents/openai.yaml"])
+        self._fake_upstream("v2-new-references-too")
+        self.assertIn("UPDATE_AVAILABLE", sus.check_skill(self._entry(digest)))
+
+
 if __name__ == "__main__":
     unittest.main()
