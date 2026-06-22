@@ -41,5 +41,63 @@ class TestParseSkillUrl(unittest.TestCase):
             sus.parse_skill_url("https://example.com/foo/bar")
 
 
+import tempfile
+
+
+class TestContentHash(unittest.TestCase):
+    def _make(self, root, files):
+        for rel, data in files.items():
+            p = root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(data)
+
+    def test_order_independent_and_deterministic(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            ra, rb = Path(a), Path(b)
+            self._make(ra, {"SKILL.md": "x", "references/r.md": "y"})
+            self._make(rb, {"references/r.md": "y", "SKILL.md": "x"})
+            self.assertEqual(
+                sus.compute_content_hash(ra, []),
+                sus.compute_content_hash(rb, []),
+            )
+
+    def test_content_change_changes_hash(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            ra, rb = Path(a), Path(b)
+            self._make(ra, {"SKILL.md": "x", "scripts/s.sh": "echo 1"})
+            self._make(rb, {"SKILL.md": "x", "scripts/s.sh": "echo 2"})
+            self.assertNotEqual(
+                sus.compute_content_hash(ra, []),
+                sus.compute_content_hash(rb, []),
+            )
+
+    def test_added_file_changes_hash(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            ra, rb = Path(a), Path(b)
+            self._make(ra, {"SKILL.md": "x"})
+            self._make(rb, {"SKILL.md": "x", "references/new.md": "z"})
+            self.assertNotEqual(
+                sus.compute_content_hash(ra, []),
+                sus.compute_content_hash(rb, []),
+            )
+
+    def test_local_only_excluded(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            ra, rb = Path(a), Path(b)
+            self._make(ra, {"SKILL.md": "x"})
+            self._make(rb, {"SKILL.md": "x", "agents/openai.yaml": "interface: {}"})
+            self.assertEqual(
+                sus.compute_content_hash(ra, ["agents/openai.yaml"]),
+                sus.compute_content_hash(rb, ["agents/openai.yaml"]),
+            )
+
+    def test_hash_format(self):
+        with tempfile.TemporaryDirectory() as a:
+            ra = Path(a)
+            self._make(ra, {"SKILL.md": "x"})
+            digest = sus.compute_content_hash(ra, [])
+            self.assertRegex(digest, r"^sha256:[0-9a-f]{64}$")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 
@@ -35,3 +36,18 @@ def parse_skill_url(url: str) -> dict:
         "branch": match["ref"],
         "src_path": path,
     }
+
+
+def compute_content_hash(skill_dir: Path, local_only: list[str]) -> str:
+    excluded = {(skill_dir / rel).resolve() for rel in local_only}
+    entries: list[tuple[str, str]] = []
+    for path in skill_dir.rglob("*"):
+        if not path.is_file() or path.resolve() in excluded:
+            continue
+        rel = path.relative_to(skill_dir).as_posix()
+        entries.append((rel, hashlib.sha256(path.read_bytes()).hexdigest()))
+    entries.sort()
+    outer = hashlib.sha256()
+    for rel, digest in entries:
+        outer.update(f"{rel}\0{digest}\n".encode())
+    return "sha256:" + outer.hexdigest()
