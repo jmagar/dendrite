@@ -14,7 +14,7 @@ changes (including references/scripts, additions, and deletions).
 
 ## Sources
 
-Seven skills across four upstream repos (all under the `openclaw` org):
+Eleven skills across five upstream repos:
 
 | Skill | Repo | Path in repo | Upstream contents |
 |---|---|---|---|
@@ -25,10 +25,17 @@ Seven skills across four upstream repos (all under the `openclaw` org):
 | `autoreview` | `openclaw/agent-skills` | `skills/autoreview` | full folder |
 | `handoff` | `openclaw/agent-skills` | `skills/handoff` | full folder |
 | `session-viewer` | `openclaw/agent-skills` | `skills/session-viewer` | full folder |
+| `openai-docs` | `openai/skills` | `skills/.curated/openai-docs` | full folder |
+| `define-goal` | `openai/skills` | `skills/.curated/define-goal` | full folder |
+| `chatgpt-apps` | `openai/skills` | `skills/.curated/chatgpt-apps` | full folder |
+| `yeet` | `openai/skills` | `skills/.curated/yeet` | full folder |
 
-Upstream paths differ per repo (`.agents/skills/` vs `skills/`), and one repo
-(`agent-skills`) supplies four skills. The sync manifest must therefore map each
-skill independently: `repo + branch + src_path -> dest`.
+Upstream paths differ per repo (`.agents/skills/`, `skills/`,
+`skills/.curated/`), one repo (`agent-skills`) supplies four skills, and another
+(`openai/skills`) supplies four more. The sync manifest must therefore map each
+skill independently: `repo + branch + src_path -> dest`. Note `src_path` may
+contain dot-prefixed segments (`.curated`); `name` is always the last segment
+(`openai-docs`, etc.), so no special handling is needed.
 
 ## Decisions (from brainstorming)
 
@@ -90,7 +97,11 @@ plugins/upstream-skills/
     ├── agent-transcript/
     ├── autoreview/
     ├── handoff/
-    └── session-viewer/
+    ├── session-viewer/
+    ├── openai-docs/
+    ├── define-goal/
+    ├── chatgpt-apps/
+    └── yeet/
 ```
 
 Each `skills/<name>/` directory contains the **verbatim upstream folder** plus
@@ -213,7 +224,7 @@ clones; works for any commit; trivial to hash. Branch-tip resolution for
   no manifest edits.
 - Add the `upstream-skills` entry to both marketplace manifests.
 
-**Onboarding the seven skills** — paste each URL:
+**Onboarding the eleven skills** — paste each URL:
 ```
 sync-upstream-skills add https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md
 sync-upstream-skills add https://github.com/openclaw/acpx/blob/main/skills/acpx/SKILL.md
@@ -222,6 +233,10 @@ sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skil
 sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/autoreview
 sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/handoff
 sync-upstream-skills add https://github.com/openclaw/agent-skills/tree/main/skills/session-viewer
+sync-upstream-skills add https://github.com/openai/skills/tree/main/skills/.curated/openai-docs
+sync-upstream-skills add https://github.com/openai/skills/tree/main/skills/.curated/define-goal
+sync-upstream-skills add https://github.com/openai/skills/tree/main/skills/.curated/chatgpt-apps
+sync-upstream-skills add https://github.com/openai/skills/tree/main/skills/.curated/yeet
 ```
 Each `add` vendors the folder, generates the `openai.yaml` stub, and records the
 manifest entry. Then run `generate-docs` and `check-all` once to fold the plugin
