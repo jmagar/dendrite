@@ -2313,6 +2313,32 @@
         ],
         "brandColor": "#DC2626"
       }
+    },
+    {
+      "name": "upstream-skills",
+      "description": "Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills.",
+      "source": {
+        "source": "local",
+        "path": "./plugins/upstream-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Developer Tools",
+      "interface": {
+        "displayName": "Upstream Skills",
+        "shortDescription": "Skills vendored from upstream repos, kept in sync.",
+        "longDescription": "A bundle of agent skills vendored verbatim from their upstream repositories (openclaw and openai orgs). Each skill folder is mirrored whole; the sync-upstream-skills tool detects and applies upstream drift via per-skill content hashes.",
+        "developerName": "Jacob Magar",
+        "category": "Developer Tools",
+        "capabilities": ["Read", "Write", "Automation"],
+        "defaultPrompt": [
+          "Use the meme-maker skill to caption an image.",
+          "Use the handoff skill to summarize this session."
+        ],
+        "brandColor": "#29B6F6"
+      }
     }
   ]
 }

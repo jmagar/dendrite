@@ -105,3 +105,6 @@ config.local.toml
 # Personal local cheatsheet (never commit)
 CLAUDE.md.local
 .worktrees
+
+# upstream-skills sync tool atomic-write temp file
+plugins/upstream-skills/*.json.tmp

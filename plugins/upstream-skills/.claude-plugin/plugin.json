@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "upstream-skills",
+  "description": "Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills.",
+  "skills": "./skills/",
+  "author": {
+    "name": "Jacob Magar",
+    "email": "jmagar@users.noreply.github.com"
+  },
+  "repository": "https://github.com/jmagar/dendrite",
+  "homepage": "https://github.com/jmagar/dendrite",
+  "license": "MIT",
+  "keywords": ["skills", "vendored", "upstream", "sync"]
+}

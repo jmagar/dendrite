@@ -73,6 +73,7 @@
 | `unifi` | git-subdir | https://github.com/jmagar/rustifi.git:plugins/unifi | none | git-subdir | https://github.com/jmagar/rustifi.git:plugins/unifi | none | no |
 | `unifi-network` | git-subdir | https://github.com/sirkirby/unifi-mcp.git:plugins/unifi-network | none | git-subdir | https://github.com/sirkirby/unifi-mcp.git:plugins/unifi-network | none | no |
 | `unraid` | git-subdir | https://github.com/jmagar/unrust.git:plugins/unraid | none | git-subdir | https://github.com/jmagar/unrust.git:plugins/unraid | none | no |
+| `upstream-skills` | local | ./plugins/upstream-skills | none | local | ./plugins/upstream-skills | none | no |
 | `uptime-kuma` | local | ./plugins/uptime-kuma | none | local | ./plugins/uptime-kuma | none | no |
 | `vibin` | local | ./plugins/vibin | none | local | ./plugins/vibin | none | no |
 | `webwright` | url | https://github.com/microsoft/Webwright.git | sha=`4a46f282ec37f27d6003cc498a977939d62d9015` | url | https://github.com/microsoft/Webwright.git | sha=`4a46f282ec37f27d6003cc498a977939d62d9015` | no |

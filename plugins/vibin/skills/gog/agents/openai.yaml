@@ -1,4 +1,0 @@
-interface:
-  display_name: "gog"
-  short_description: "gog CLI: safe Google Workspace automation, JSON, auth, scoped reads/writes."
-  default_prompt: "Use $gog for safe Google Workspace automation across Gmail, Calendar, Drive, Docs, Sheets, and Contacts with stable JSON, scoped auth, and command guards."

@@ -598,6 +598,11 @@
         "path": "plugins/security-guidance"
       },
       "description": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes."
+    },
+    {
+      "name": "upstream-skills",
+      "source": "./plugins/upstream-skills",
+      "description": "Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills."
     }
   ]
 }

@@ -11,6 +11,7 @@ Claude schemas are published JSON Schemas. Codex and Gemini schemas are local, d
 | `plugins/schemas/codex-marketplace.schema.json` | Codex Marketplace Manifest | Docs-derived schema for .agents/plugins/marketplace.json. Based on OpenAI Codex plugin docs and the current Codex marketplace parser; Codex does not currently publish a standalone JSON Schema. |
 | `plugins/schemas/codex-plugin.schema.json` | Codex Plugin Manifest | Docs-derived schema for .codex-plugin/plugin.json. Based on OpenAI Codex plugin docs and the current Codex manifest parser; Codex does not currently publish a standalone JSON Schema. |
 | `plugins/schemas/gemini-extension.schema.json` | Gemini CLI Extension Manifest | Docs-derived schema for gemini-extension.json. Based on the Gemini CLI extension reference and ExtensionConfig interface; Gemini CLI does not currently publish a standalone extension JSON Schema. |
+| `plugins/schemas/upstream-sources.schema.json` | Dendrite upstream skills sync manifest |  |
 
 ## Upstream References
 
