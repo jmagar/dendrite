@@ -99,5 +99,30 @@ class TestContentHash(unittest.TestCase):
             self.assertRegex(digest, r"^sha256:[0-9a-f]{64}$")
 
 
+class TestOpenaiYaml(unittest.TestCase):
+    SKILL = (
+        "---\n"
+        'name: meme-maker\n'
+        'description: Make memes from templates with captions.\n'
+        "---\n\n# Meme Maker\n"
+    )
+
+    def test_frontmatter_parsed(self):
+        fm = sus.parse_frontmatter(self.SKILL)
+        self.assertEqual(fm["name"], "meme-maker")
+        self.assertEqual(fm["description"], "Make memes from templates with captions.")
+
+    def test_generates_interface_block(self):
+        out = sus.generate_openai_yaml(self.SKILL, "meme-maker")
+        self.assertIn("interface:", out)
+        self.assertIn("display_name:", out)
+        self.assertIn("short_description:", out)
+        self.assertIn("default_prompt:", out)
+
+    def test_no_frontmatter_falls_back_to_name(self):
+        out = sus.generate_openai_yaml("# no frontmatter here", "yeet")
+        self.assertIn("Yeet", out)
+
+
 if __name__ == "__main__":
     unittest.main()

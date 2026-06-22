@@ -51,3 +51,39 @@ def compute_content_hash(skill_dir: Path, local_only: list[str]) -> str:
     for rel, digest in entries:
         outer.update(f"{rel}\0{digest}\n".encode())
     return "sha256:" + outer.hexdigest()
+
+
+def parse_frontmatter(text: str) -> dict:
+    if not text.startswith("---"):
+        return {}
+    end = text.find("\n---", 3)
+    if end == -1:
+        return {}
+    data: dict = {}
+    for line in text[3:end].splitlines():
+        if not line or line[0].isspace() or ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        data[key.strip()] = value.strip().strip('"').strip("'")
+    return data
+
+
+def _yaml_quote(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def generate_openai_yaml(skill_md_text: str, name: str) -> str:
+    fm = parse_frontmatter(skill_md_text)
+    display = fm.get("name", name).replace("-", " ").replace("_", " ").title()
+    description = fm.get("description", "").strip()
+    if len(description) > 120:
+        short = description[:117].rstrip() + "..."
+    else:
+        short = description or f"{display} skill."
+    prompt = f"Use {name}: {short}" if description else f"Use {name}."
+    return (
+        "interface:\n"
+        f"  display_name: {_yaml_quote(display)}\n"
+        f"  short_description: {_yaml_quote(short)}\n"
+        f"  default_prompt: {_yaml_quote(prompt)}\n"
+    )
