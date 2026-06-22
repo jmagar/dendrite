@@ -17,28 +17,6 @@
 | `agent-os` | `agent_os_novnc_url` | `AGENT_OS_NOVNC_URL` | noVNC URL | no | `plugins/agent-os/commands/agent-os.md`, `plugins/agent-os/skills/agent-os/SKILL.md` | Base URL of the dockur/windows web (noVNC) UI on the Docker host, for visual debugging. Example: http://tootie:8006. |
 | `agent-os` | `agent_os_vm_host` | `AGENT_OS_VM_HOST` | Docker host running the VM | no | `plugins/agent-os/commands/agent-os.md`, `plugins/agent-os/scripts/setup.sh`, `plugins/agent-os/skills/agent-os/SKILL.md` | SSH alias/host of the Docker host that runs the agent-os-win11 container (for `docker ps`, compose up, etc.). Example: tootie. |
 | `agent-os` | `agent_os_vm_tailscale_ip` | `AGENT_OS_VM_TAILSCALE_IP` | VM Tailscale IP / SSH host | no | `plugins/agent-os/commands/agent-os.md`, `plugins/agent-os/skills/agent-os/SKILL.md` | The agent-os guest's own Tailscale IP (or MagicDNS name) used by `ssh agent-os` for in-guest commands on port 22. Example: 100.109.125.128. |
-| `arrs` | `jellyfin_api_key` | `JELLYFIN_API_KEY` | Jellyfin API key | yes | none | Jellyfin API key (Dashboard → API Keys), sent as X-Emby-Token. |
-| `arrs` | `jellyfin_url` | `JELLYFIN_URL` | Jellyfin URL | no | none | Jellyfin base URL, e.g. http://localhost:8096 (no trailing slash). |
-| `arrs` | `overseerr_api_key` | `OVERSEERR_API_KEY` | Overseerr API key | yes | none | Overseerr API key (Settings → General). |
-| `arrs` | `overseerr_url` | `OVERSEERR_URL` | Overseerr URL | no | none | Overseerr base URL, e.g. http://localhost:5055 (no trailing slash). |
-| `arrs` | `plex_token` | `PLEX_TOKEN` | Plex token | yes | none | Plex X-Plex-Token. |
-| `arrs` | `plex_url` | `PLEX_URL` | Plex URL | no | none | Plex Media Server base URL incl. port, e.g. http://localhost:32400. |
-| `arrs` | `prowlarr_api_key` | `PROWLARR_API_KEY` | Prowlarr API key | yes | none | Prowlarr API key (Settings → General). |
-| `arrs` | `prowlarr_url` | `PROWLARR_URL` | Prowlarr URL | no | none | Prowlarr base URL, e.g. http://localhost:9696 (no trailing slash). |
-| `arrs` | `qbittorrent_password` | `QBITTORRENT_PASSWORD` | qBittorrent password | yes | none | qBittorrent WebUI password. |
-| `arrs` | `qbittorrent_url` | `QBITTORRENT_URL` | qBittorrent URL | no | none | qBittorrent WebUI base URL, e.g. http://localhost:8080 (no trailing slash). |
-| `arrs` | `qbittorrent_username` | `QBITTORRENT_USERNAME` | qBittorrent username | no | none | qBittorrent WebUI username. |
-| `arrs` | `radarr_api_key` | `RADARR_API_KEY` | Radarr API key | yes | none | Radarr API key (Settings → General). |
-| `arrs` | `radarr_default_quality_profile` | `RADARR_DEFAULT_QUALITY_PROFILE` | Radarr default quality profile | no | none | Quality profile id used when adding movies. |
-| `arrs` | `radarr_url` | `RADARR_URL` | Radarr URL | no | none | Radarr base URL, e.g. http://localhost:7878 (no trailing slash). |
-| `arrs` | `sabnzbd_api_key` | `SABNZBD_API_KEY` | SABnzbd API key | yes | none | SABnzbd API key (Config → General). |
-| `arrs` | `sabnzbd_url` | `SABNZBD_URL` | SABnzbd URL | no | none | SABnzbd base URL, e.g. http://localhost:8080 (no trailing slash). |
-| `arrs` | `sonarr_api_key` | `SONARR_API_KEY` | Sonarr API key | yes | none | Sonarr API key (Settings → General). |
-| `arrs` | `sonarr_default_quality_profile` | `SONARR_DEFAULT_QUALITY_PROFILE` | Sonarr default quality profile | no | none | Quality profile id used when adding series. |
-| `arrs` | `sonarr_url` | `SONARR_URL` | Sonarr URL | no | none | Sonarr base URL, e.g. http://localhost:8989 (no trailing slash). |
-| `arrs` | `tautulli_api_key` | `TAUTULLI_API_KEY` | Tautulli API key | yes | none | Tautulli API key (Settings → Web Interface). |
-| `arrs` | `tautulli_url` | `TAUTULLI_URL` | Tautulli URL | no | none | Tautulli base URL incl. port, e.g. http://localhost:8181. |
-| `arrs` | `tracearr_url` | `TRACEARR_URL` | Tracearr URL | no | none | Tracearr base URL for its public API, e.g. http://localhost:3000 (no trailing slash). |
 | `bytestash` | `bytestash_api_key` | `BYTESTASH_API_KEY` | API Key | yes | `plugins/bytestash/scripts/setup.sh` | Optional ByteStash API key for public/read-only endpoints. Snippet writes still require JWT on current ByteStash. |
 | `bytestash` | `bytestash_password` | `BYTESTASH_PASSWORD` | Password | yes | `plugins/bytestash/scripts/setup.sh` | ByteStash password used by the hook to mint a JWT for snippet API calls. |
 | `bytestash` | `bytestash_token` | `BYTESTASH_TOKEN` | JWT Token | yes | `plugins/bytestash/scripts/setup.sh` | Optional pre-minted ByteStash JWT. Used when username/password are not configured. |

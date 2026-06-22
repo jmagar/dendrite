@@ -218,11 +218,6 @@
       "description": "Session, repo status, GitHub review, and CI workflow skills for branch/worktree readiness audits, quick push, session documentation, PR comments, and CI debugging."
     },
     {
-      "name": "arrs",
-      "source": "./plugins/arrs",
-      "description": "The *arr / media-automation stack \u2014 Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr \u2014 each via its own REST API."
-    },
-    {
       "name": "testing",
       "source": "./plugins/testing",
       "description": "App-testing and MCP-tooling skills: live web/Android/desktop app QA, MCP server smoke-testing (mcporter), MCP-UI validation (mcpjam), and claude-in-mobile device automation."

@@ -4,6 +4,10 @@ All notable changes to Dendrite are recorded here.
 
 ## Unreleased
 
+### Removed
+
+- Removed the `arrs` plugin. Its ten per-service skills (Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, Tracearr) were merged into the standalone `rustarr` plugin (github.com/jmagar/rustarr), which now exposes the same services through its MCP server and CLI. De-registered from the Claude and Codex marketplace manifests and regenerated the inventory docs.
+
 ### Added
 
 - Added the `gog` skill to the Vibin plugin for safe Google Workspace automation (Gmail, Calendar, Drive, Docs, Sheets, Contacts) with stable JSON output, scoped auth, and command guards; regenerated the README and plugin-matrix inventories.

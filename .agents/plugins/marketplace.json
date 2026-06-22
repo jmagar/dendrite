@@ -134,36 +134,6 @@
       }
     },
     {
-      "name": "arrs",
-      "description": "The *arr / media-automation stack in one plugin: Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr \u2014 each operated via its own REST API. Credentials are configured here and bridged to the skills via a generated env file.",
-      "source": {
-        "source": "local",
-        "path": "./plugins/arrs"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Media",
-      "interface": {
-        "displayName": "Arrs",
-        "shortDescription": "Operate the Radarr, Sonarr, Prowlarr, Plex, Jellyfin, and downloader stack.",
-        "longDescription": "Arrs bundles media-automation skills for Radarr, Sonarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, and Tracearr using each service API directly.",
-        "developerName": "Jacob Magar",
-        "category": "Media",
-        "capabilities": [
-          "Read",
-          "Write"
-        ],
-        "defaultPrompt": [
-          "Use Arrs to check the media stack.",
-          "Find stalled downloads across the Arr stack.",
-          "Search for a movie and prepare a Radarr add request."
-        ],
-        "brandColor": "#F59E0B"
-      }
-    },
-    {
       "name": "beads",
       "description": "AI-supervised issue tracker for coding workflows.",
       "source": {
