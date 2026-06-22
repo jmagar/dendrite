@@ -6,10 +6,10 @@
 |---|---|---:|---:|---:|---|---|---:|---|---:|---:|
 | `acp` | Rust implementation patterns for ACP, rmcp-derived MCP servers, and Lab runtime work. | yes | yes | yes | `rust` | none | 1 | none | yes | yes |
 | `adguard` | Skill for operating adguard via the lab MCP server / CLI. | yes | yes | yes | `adguard` | none | 1 | none | yes | yes |
-| `agent-os` | Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | yes | yes | yes | `agent-os` | none | 1 | `agent-os.md` | yes | yes |
+| `agent-os` | Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | yes | yes | yes | `agent-os` | `windows-mcp` | 1 | `agent-os.md` | yes | yes |
 | `broadcastr` | Helper assets for Broadcastr plugin tooling. | no | no | yes | none | none | 0 | none | no | no |
 | `bytestash` | Skills for operating a ByteStash snippet manager. | yes | yes | yes | `bytestash` | none | 1 | none | yes | yes |
-| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | yes | yes | yes | `dozzle` | none | 1 | none | yes | yes |
+| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | yes | yes | yes | `dozzle` | `dozzle` | 1 | none | yes | yes |
 | `immich` | Skill for operating immich via the lab MCP server / CLI. | yes | yes | yes | `immich` | none | 1 | none | yes | yes |
 | `linkding` | Skills for operating a Linkding bookmark manager. | yes | yes | yes | `linkding` | none | 1 | none | yes | yes |
 | `loggifly` | Skill for operating loggifly via the lab MCP server / CLI. | yes | yes | yes | `loggifly` | none | 1 | none | yes | yes |
@@ -22,10 +22,10 @@
 | `radicale` | CalDAV and CardDAV workflow skills for Radicale. | yes | yes | yes | `radicale` | none | 1 | none | yes | yes |
 | `scripts` | Shared Dendrite plugin maintenance scripts. | no | no | yes | none | none | 0 | none | no | no |
 | `scrutiny` | Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API. | yes | yes | yes | `scrutiny` | none | 1 | none | yes | yes |
-| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | no | no | yes | `swag` | none | 1 | none | yes | yes |
+| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | no | no | yes | `swag` | `swag-mcp`, `swag-mcp-remote` | 1 | none | yes | yes |
 | `tei` | Inspect and query a Text Embeddings Inference server through its HTTP API. | yes | yes | yes | `tei` | none | 1 | none | yes | yes |
 | `testing` | App-testing and MCP-tooling skills: live QA of web, Android, and desktop apps; MCP server smoke-testing (mcporter); MCP-UI / Apps validation (mcpjam); and claude-in-mobile device automation. | yes | yes | yes | `android-app-testing`, `claude-in-mobile`, `desktop-app-testing`, `mcpjam-ui-testing`, `mcporter`, `web-app-testing` | none | 6 | none | yes | yes |
 | `upstream-skills` | Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills. | yes | yes | yes | `acpx`, `agent-transcript`, `autoreview`, `chatgpt-apps`, `define-goal`, `gog`, `handoff`, `meme-maker`, `openai-docs`, `session-viewer`, `yeet` | none | 11 | none | yes | yes |
 | `uptime-kuma` | Read-only monitoring of a self-hosted Uptime Kuma instance via direct HTTP — Prometheus /metrics (API-key auth) and public status-page JSON. No monitor management (that requires Uptime Kuma's socket.io API). | yes | yes | yes | `uptime-kuma` | none | 1 | none | yes | yes |
 | `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | yes | yes | yes | `check-skill-clis`, `chrome`, `claude-android-ninja`, `clipboard`, `compose-skill`, `create-swag-config`, `fastmcp-client-cli`, `gh-fix-ci`, `gh-pr`, `hand-off`, `homelab-map`, `jetpack-compose-expert`, `mcp-gateway-tools`, `monolith-check`, `nircmd`, `paperless-ngx`, `quick-push`, `rclone`, `refresh-docs`, `repo-status`, `save-to-md`, `screenshots`, `sysinternals`, `using-rmcp`, `validate-skill`, `work-it`, `worktree-setup` | none | 27 | `scaffold-claude-plugin.md` | yes | yes |
-| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | yes | yes | yes | `zsnoop-mcp` | none | 1 | none | yes | yes |
+| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | yes | yes | yes | `zsnoop-mcp` | `zsnoop` | 1 | none | yes | yes |

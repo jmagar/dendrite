@@ -1,5 +1,5 @@
 {
-  "name": "dendrite-no-mcp",
+  "name": "dendrite",
   "owner": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"
@@ -930,8 +930,7 @@
       "description": "Precise local semantic code search via MCP. Indexes your codebase with Go AST parsing and vector embeddings \u2014 Ollama, LM Studio, or HuggingFace TEI.",
       "source": {
         "source": "url",
-        "url": "https://github.com/jmagar/lumen.git",
-        "ref": "marketplace-no-mcp"
+        "url": "https://github.com/jmagar/lumen.git"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -961,8 +960,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/axon.git",
-        "path": "plugins/axon",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/axon"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1054,8 +1052,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rarcane.git",
-        "path": "plugins/rarcane",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/rarcane"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1086,8 +1083,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rtemplate-mcp.git",
-        "path": "plugins/rtemplate",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/rtemplate"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -1269,8 +1265,7 @@
       "description": "Download audio/video from any yt-dlp-supported site, embed metadata and cover art, organize by artist, and rsync to an SSH remote with separate audio/video destinations.",
       "source": {
         "source": "url",
-        "url": "https://github.com/jmagar/ytdl-mcp.git",
-        "ref": "marketplace-no-mcp"
+        "url": "https://github.com/jmagar/ytdl-mcp.git"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -2136,8 +2131,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/lab.git",
-        "path": "plugins/labby",
-        "ref": "marketplace-no-mcp"
+        "path": "plugins/labby"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -2338,11 +2332,7 @@
         "longDescription": "A bundle of agent skills vendored verbatim from their upstream repositories (openclaw and openai orgs). Each skill folder is mirrored whole; the sync-upstream-skills tool detects and applies upstream drift via per-skill content hashes.",
         "developerName": "Jacob Magar",
         "category": "Developer Tools",
-        "capabilities": [
-          "Read",
-          "Write",
-          "Automation"
-        ],
+        "capabilities": ["Read", "Write", "Automation"],
         "defaultPrompt": [
           "Use the meme-maker skill to caption an image.",
           "Use the handoff skill to summarize this session."

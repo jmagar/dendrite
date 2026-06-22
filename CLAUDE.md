@@ -42,11 +42,21 @@ subdirectory source.
   gateway-oriented alternate ref.
 - The `.github/workflows/sync-marketplace-no-mcp.yml` workflow keeps
   `marketplace-no-mcp` current after pushes to `main` and on a daily schedule:
-  it merges `main`, runs `plugins/scripts/apply-no-mcp-marketplace`,
-  validates both marketplace manifests, runs the no-MCP invariant check, and
-  pushes the branch only when that produces a change. The transform regenerates
-  Gemini manifests, the README inventory, and generated docs as part of its
-  deterministic rewrite.
+  it brings `main`'s tree into the branch, runs
+  `plugins/scripts/apply-no-mcp-marketplace`, validates both marketplace
+  manifests, runs the no-MCP invariant check, and pushes the branch only when
+  that produces a change. The transform regenerates Gemini manifests, the README
+  inventory, and generated docs as part of its deterministic rewrite.
+  - The merge step records a merge commit but takes `main`'s tree **wholesale**
+    (`git read-tree --reset -u origin/main`) instead of a content merge.
+    `marketplace-no-mcp` is a deterministic transform of `main`, so a content
+    merge conflicts on every transform-derived file (README, generated docs,
+    deleted `.mcp.json`); taking main's tree and re-deriving via the transform
+    is conflict-proof. Do not revert this to a plain `git merge`.
+- **Just push to `main` — the no-MCP branch is automatic.** The pre-push hook
+  does NOT block main pushes on no-MCP drift (that drift is transient and the
+  sync workflow self-heals it on every main push). No `--no-verify` or manual
+  reconciliation is needed for normal main work.
 - The `.github/workflows/check-no-mcp-drift.yml` workflow runs
   `plugins/scripts/check-no-mcp-drift --compare-ref` on a schedule and on
   manual dispatch. It compares `origin/marketplace-no-mcp` with `origin/main`
@@ -55,7 +65,9 @@ subdirectory source.
 - `marketplace-no-mcp` should allow GitHub Actions to push sync commits, but
   humans should not casually push, merge, or close it. Direct human writes are
   release-maintenance work and must be followed by
-  `plugins/scripts/check-no-mcp-drift --compare-ref`.
+  `plugins/scripts/check-no-mcp-drift --compare-ref`. The pre-push hook still
+  hard-enforces the drift compare on direct pushes to `marketplace-no-mcp` (only
+  there — main pushes are not gated, see above).
 - Keep the no-MCP transform deterministic. If a new MCP-backed marketplace entry
   needs the alternate ref, add its plugin name to `NO_MCP_REF_NAMES` in
   `plugins/scripts/apply-no-mcp-marketplace` instead of hand-editing the

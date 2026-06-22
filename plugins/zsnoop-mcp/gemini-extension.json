@@ -2,6 +2,14 @@
   "name": "zsnoop-mcp",
   "version": "0.1.0",
   "description": "ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server.",
+  "mcpServers": {
+    "zsnoop": {
+      "command": "uvx",
+      "args": [
+        "zsnoop-mcp"
+      ]
+    }
+  },
   "settings": [
     {
       "name": "Zsnoop Config",
