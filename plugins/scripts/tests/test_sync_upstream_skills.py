@@ -274,5 +274,55 @@ class TestApplySkill(unittest.TestCase):
         self.assertTrue((dest / "SKILL.md").exists())
 
 
+class TestAddSkill(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        sus.SKILLS_DIR = base / "skills"
+        sus.MANIFEST_PATH = base / "upstream-sources.json"
+        self._orig_resolve = sus.resolve_tip_sha
+        self._orig_fetch = sus.fetch_subtree
+        sus.resolve_tip_sha = lambda repo, branch, path: "e" * 40
+
+        def fetch(repo, sha, src_path, dest):
+            dest.mkdir(parents=True, exist_ok=True)
+            (dest / "SKILL.md").write_text(
+                "---\nname: gog\ndescription: Do gog.\n---\n"
+            )
+        sus.fetch_subtree = fetch
+
+    def tearDown(self):
+        sus.resolve_tip_sha = self._orig_resolve
+        sus.fetch_subtree = self._orig_fetch
+        self.tmp.cleanup()
+
+    def test_add_writes_entry_and_openai(self):
+        entry = sus.add_skill(
+            "https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md"
+        )
+        self.assertEqual(entry["name"], "gog")
+        data = sus.load_manifest()
+        self.assertEqual([s["name"] for s in data["skills"]], ["gog"])
+        self.assertTrue((sus.SKILLS_DIR / "gog/agents/openai.yaml").exists())
+
+    def test_duplicate_rejected_without_force(self):
+        url = "https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md"
+        sus.add_skill(url)
+        with self.assertRaises(SystemExit):
+            sus.add_skill(url)
+
+    def test_entry_validates_against_schema(self):
+        from jsonschema import Draft7Validator
+        schema_path = (
+            Path(__file__).resolve().parents[2]
+            / "schemas" / "upstream-sources.schema.json"
+        )
+        validator = Draft7Validator(json.loads(schema_path.read_text()))
+        sus.add_skill(
+            "https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md"
+        )
+        self.assertEqual(list(validator.iter_errors(sus.load_manifest())), [])
+
+
 if __name__ == "__main__":
     unittest.main()

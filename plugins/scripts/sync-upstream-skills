@@ -156,6 +156,27 @@ def apply_skill(entry: dict) -> None:
     entry["content_hash"] = compute_content_hash(dest, entry["local_only"])
 
 
+def add_skill(url: str, force: bool = False) -> dict:
+    parsed = parse_skill_url(url)
+    data = load_manifest()
+    exists = any(skill["name"] == parsed["name"] for skill in data["skills"])
+    if exists and not force:
+        raise SystemExit(
+            f"Skill '{parsed['name']}' already in manifest (use --force to re-add)"
+        )
+    entry = {
+        **parsed,
+        "pinned_sha": "",
+        "content_hash": "",
+        "local_only": list(DEFAULT_LOCAL_ONLY),
+    }
+    apply_skill(entry)
+    data["skills"] = [s for s in data["skills"] if s["name"] != parsed["name"]]
+    data["skills"].append(entry)
+    save_manifest(data)
+    return entry
+
+
 def generate_openai_yaml(skill_md_text: str, name: str) -> str:
     fm = parse_frontmatter(skill_md_text)
     display = fm.get("name", name).replace("-", " ").replace("_", " ").title()
