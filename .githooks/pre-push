@@ -1,5 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Always validate the state being pushed: manifests, schemas, generated docs,
+# plugin docs, marketplace alignment.
 plugins/scripts/check-all
-plugins/scripts/check-no-mcp-drift --compare-ref --skip-if-missing-refs
+
+# The no-MCP drift compare checks that origin/marketplace-no-mcp equals
+# origin/main plus the deterministic no-MCP transform. That is a cross-ref
+# release-maintenance invariant — it has nothing to do with the contents of an
+# arbitrary feature-branch push, and it legitimately fails whenever main has
+# advanced past the last sync (CI reconciles it via sync-marketplace-no-mcp.yml
+# and the scheduled check-no-mcp-drift.yml). Enforcing it on every push blocks
+# unrelated feature pushes on pre-existing drift. Only enforce it when this push
+# actually updates main or the no-MCP branch, where the invariant must hold.
+enforce_drift_check=false
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main | refs/heads/marketplace-no-mcp)
+      enforce_drift_check=true
+      ;;
+  esac
+done
+
+if [ "$enforce_drift_check" = true ]; then
+  plugins/scripts/check-no-mcp-drift --compare-ref --skip-if-missing-refs
+else
+  echo "pre-push: skipping no-MCP drift compare (push does not target main or marketplace-no-mcp)" >&2
+fi
