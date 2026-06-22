@@ -376,5 +376,36 @@ class TestCheckSkill(unittest.TestCase):
         self.assertIn("UPDATE_AVAILABLE", sus.check_skill(self._entry(digest)))
 
 
+class TestMainCheckExit(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        sus.SKILLS_DIR = base / "skills"
+        sus.MANIFEST_PATH = base / "upstream-sources.json"
+        self._orig_check = sus.check_skill
+
+    def tearDown(self):
+        sus.check_skill = self._orig_check
+        self.tmp.cleanup()
+
+    def _write_manifest(self):
+        sus.save_manifest({"skills": [{
+            "name": "gog", "repo": "openclaw/gogcli", "branch": "main",
+            "src_path": ".agents/skills/gog", "pinned_sha": "a" * 40,
+            "content_hash": "sha256:" + "b" * 64,
+            "local_only": ["agents/openai.yaml"],
+        }]})
+
+    def test_check_clean_returns_zero(self):
+        self._write_manifest()
+        sus.check_skill = lambda entry: []
+        self.assertEqual(sus.main(["check"]), 0)
+
+    def test_check_drift_returns_one(self):
+        self._write_manifest()
+        sus.check_skill = lambda entry: ["UPDATE_AVAILABLE"]
+        self.assertEqual(sus.main(["check"]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

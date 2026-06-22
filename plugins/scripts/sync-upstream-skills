@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import io
 import json
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 from pathlib import Path
@@ -211,3 +213,68 @@ def generate_openai_yaml(skill_md_text: str, name: str) -> str:
         f"  short_description: {_yaml_quote(short)}\n"
         f"  default_prompt: {_yaml_quote(prompt)}\n"
     )
+
+
+def _cmd_add(args) -> int:
+    entry = add_skill(args.url, force=args.force)
+    print(f"Added {entry['name']} @ {entry['pinned_sha'][:12]} "
+          f"(review `git diff` and run plugins/scripts/check-all)")
+    return 0
+
+
+def _cmd_check(args) -> int:
+    data = load_manifest()
+    drifted = 0
+    for entry in data["skills"]:
+        statuses = check_skill(entry)
+        label = ", ".join(statuses) if statuses else "ok"
+        print(f"{entry['name']:<20} {label}")
+        if statuses:
+            drifted += 1
+    if drifted:
+        print(f"{drifted} skill(s) drifted", file=sys.stderr)
+        return 1
+    print("All upstream skills in sync")
+    return 0
+
+
+def _cmd_apply(args) -> int:
+    data = load_manifest()
+    names = {s["name"] for s in data["skills"]} if args.all else set(args.names)
+    if not names:
+        print("Nothing to apply (pass names or --all)", file=sys.stderr)
+        return 1
+    for entry in data["skills"]:
+        if entry["name"] in names:
+            apply_skill(entry)
+            print(f"Applied {entry['name']} @ {entry['pinned_sha'][:12]}")
+    save_manifest(data)
+    print("Review `git diff` and commit.")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Vendor upstream skill folders and keep them in sync."
+    )
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    add = sub.add_parser("add", help="Vendor a skill from a GitHub folder URL")
+    add.add_argument("url")
+    add.add_argument("--force", action="store_true")
+    add.set_defaults(func=_cmd_add)
+
+    check = sub.add_parser("check", help="Report drift (exit 1 if any)")
+    check.set_defaults(func=_cmd_check)
+
+    apply_p = sub.add_parser("apply", help="Pull upstream updates into vendored skills")
+    apply_p.add_argument("names", nargs="*")
+    apply_p.add_argument("--all", action="store_true")
+    apply_p.set_defaults(func=_cmd_apply)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
