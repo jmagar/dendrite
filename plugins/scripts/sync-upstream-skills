@@ -81,32 +81,62 @@ def _yaml_quote(value: str) -> str:
 
 
 def load_manifest() -> dict:
-    if MANIFEST_PATH.exists():
+    if not MANIFEST_PATH.exists():
+        return {"skills": []}
+    try:
         return json.loads(MANIFEST_PATH.read_text())
-    return {"skills": []}
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Corrupt manifest {MANIFEST_PATH}: {exc}")
 
 
 def save_manifest(data: dict) -> None:
     data["skills"].sort(key=lambda skill: skill["name"])
     MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(json.dumps(data, indent=2) + "\n")
+    tmp = MANIFEST_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=2) + "\n")
+    tmp.replace(MANIFEST_PATH)
+
+
+def _gh(args: list[str], *, text: bool) -> subprocess.CompletedProcess:
+    """Run `gh` and turn failures into actionable messages (not raw tracebacks)."""
+    try:
+        return subprocess.run(
+            ["gh", *args], check=True, capture_output=True, text=text
+        )
+    except FileNotFoundError:
+        raise SystemExit(
+            "`gh` CLI not found on PATH. Install GitHub CLI and run `gh auth login`."
+        )
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors="replace")
+        raise SystemExit(
+            f"gh {' '.join(args)} failed (exit {exc.returncode}): "
+            f"{(stderr or '').strip()}"
+        )
 
 
 def _download_tarball(repo: str, sha: str) -> bytes:
-    result = subprocess.run(
-        ["gh", "api", f"repos/{repo}/tarball/{sha}"],
-        check=True, capture_output=True,
-    )
-    return result.stdout
+    return _gh(["api", f"repos/{repo}/tarball/{sha}"], text=False).stdout
 
 
 def resolve_tip_sha(repo: str, branch: str, src_path: str) -> str:
-    result = subprocess.run(
-        ["gh", "api",
-         f"repos/{repo}/commits?path={src_path}&sha={branch}&per_page=1"],
-        check=True, capture_output=True, text=True,
+    result = _gh(
+        ["api", f"repos/{repo}/commits?path={src_path}&sha={branch}&per_page=1"],
+        text=True,
     )
-    commits = json.loads(result.stdout)
+    try:
+        commits = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(
+            f"Unexpected gh api output for {repo}@{branch} (path={src_path}): {exc}"
+        )
+    if not isinstance(commits, list):
+        raise SystemExit(
+            f"gh api returned a non-list for {repo}@{branch} (path={src_path}): "
+            f"{commits!r}"
+        )
     if not commits:
         raise RuntimeError(f"No commits for {src_path} in {repo}@{branch}")
     return commits[0]["sha"]
@@ -123,14 +153,22 @@ def fetch_subtree(repo: str, sha: str, src_path: str, dest: Path) -> None:
         if dest.exists():
             shutil.rmtree(dest)
         dest.mkdir(parents=True)
+        dest_root = dest.resolve()
         extracted = False
         for member in members:
             if not member.isfile() or not member.name.startswith(want):
                 continue
             rel = member.name[len(want):]
-            target = dest / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
+            target = (dest / rel).resolve()
+            if not target.is_relative_to(dest_root):
+                raise RuntimeError(
+                    f"Refusing path-traversal member {member.name!r} from "
+                    f"{repo}@{sha}"
+                )
             source = tar.extractfile(member)
+            if source is None:
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(source.read())
             extracted = True
         if not extracted:
@@ -150,11 +188,19 @@ def apply_skill(entry: dict) -> None:
         path = dest / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
+    skill_md_path = dest / "SKILL.md"
+    if not skill_md_path.exists():
+        raise SystemExit(
+            f"No SKILL.md in '{entry['name']}' after fetching {entry['repo']}@"
+            f"{sha[:12]} (src_path={entry['src_path']}). Check the URL points at "
+            f"the skill folder."
+        )
     openai_path = dest / "agents" / "openai.yaml"
     if not openai_path.exists():
-        skill_md = (dest / "SKILL.md").read_text()
         openai_path.parent.mkdir(parents=True, exist_ok=True)
-        openai_path.write_text(generate_openai_yaml(skill_md, entry["name"]))
+        openai_path.write_text(
+            generate_openai_yaml(skill_md_path.read_text(), entry["name"])
+        )
     entry["pinned_sha"] = sha
     entry["content_hash"] = compute_content_hash(dest, entry["local_only"])
 
@@ -191,7 +237,14 @@ def add_skill(url: str, force: bool = False) -> dict:
         "content_hash": "",
         "local_only": list(DEFAULT_LOCAL_ONLY),
     }
-    apply_skill(entry)
+    dest = SKILLS_DIR / parsed["name"]
+    preexisting = dest.exists()
+    try:
+        apply_skill(entry)
+    except BaseException:
+        if not preexisting and dest.exists():
+            shutil.rmtree(dest)  # don't leave an orphaned folder with no manifest entry
+        raise
     data["skills"] = [s for s in data["skills"] if s["name"] != parsed["name"]]
     data["skills"].append(entry)
     save_manifest(data)
@@ -226,7 +279,12 @@ def _cmd_check(args) -> int:
     data = load_manifest()
     drifted = 0
     for entry in data["skills"]:
-        statuses = check_skill(entry)
+        try:
+            statuses = check_skill(entry)
+        except (SystemExit, RuntimeError) as exc:
+            print(f"{entry['name']:<20} ERROR: {exc}", file=sys.stderr)
+            drifted += 1
+            continue
         label = ", ".join(statuses) if statuses else "ok"
         print(f"{entry['name']:<20} {label}")
         if statuses:

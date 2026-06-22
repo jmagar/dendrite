@@ -413,5 +413,212 @@ class TestMainCheckExit(unittest.TestCase):
         self.assertEqual(self._silent_main(["check"]), 1)
 
 
+class TestParseSkillUrlEdges(unittest.TestCase):
+    def test_rejects_repo_root_url(self):
+        with self.assertRaises(ValueError):
+            sus.parse_skill_url("https://github.com/owner/repo")
+
+    def test_trailing_slash_normalized(self):
+        got = sus.parse_skill_url(
+            "https://github.com/openclaw/openclaw/tree/main/skills/meme-maker/"
+        )
+        self.assertEqual(got["name"], "meme-maker")
+        self.assertEqual(got["src_path"], "skills/meme-maker")
+
+    def test_blob_non_skill_md_uses_parent_dir(self):
+        got = sus.parse_skill_url(
+            "https://github.com/o/r/blob/main/skills/x/scripts/run.sh"
+        )
+        self.assertEqual(got["src_path"], "skills/x/scripts")
+
+
+class TestContentHashMore(unittest.TestCase):
+    def _make(self, root, files):
+        for rel, data in files.items():
+            p = root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(data)
+
+    def test_removed_file_changes_hash(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            ra, rb = Path(a), Path(b)
+            self._make(ra, {"SKILL.md": "x", "references/r.md": "y"})
+            self._make(rb, {"SKILL.md": "x"})
+            self.assertNotEqual(
+                sus.compute_content_hash(ra, []),
+                sus.compute_content_hash(rb, []),
+            )
+
+    def test_empty_dir_is_stable_and_formatted(self):
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            digest = sus.compute_content_hash(Path(a), [])
+            self.assertEqual(digest, sus.compute_content_hash(Path(b), []))
+            self.assertRegex(digest, r"^sha256:[0-9a-f]{64}$")
+
+
+class TestOpenaiYamlEdges(unittest.TestCase):
+    def test_long_description_truncated(self):
+        skill = "---\nname: x\ndescription: " + ("a" * 200) + "\n---\n"
+        out = sus.generate_openai_yaml(skill, "x")
+        self.assertIn("...", out)
+        for line in out.splitlines():
+            if line.strip().startswith("short_description:"):
+                value = line.split(":", 1)[1].strip().strip('"')
+                self.assertLessEqual(len(value), 120)
+
+    def test_quotes_and_backslashes_escaped(self):
+        skill = '---\nname: x\ndescription: he said \\ and "hi"\n---\n'
+        out = sus.generate_openai_yaml(skill, "x")
+        self.assertIn('\\"', out)
+        self.assertIn("\\\\", out)
+
+    def test_display_name_title_cased(self):
+        skill = "---\nname: foo-bar-baz\ndescription: d\n---\n"
+        out = sus.generate_openai_yaml(skill, "foo-bar-baz")
+        self.assertIn("Foo Bar Baz", out)
+
+
+class TestFetchSubtreeErrors(unittest.TestCase):
+    def setUp(self):
+        self._orig = sus._download_tarball
+
+    def tearDown(self):
+        sus._download_tarball = self._orig
+
+    def test_no_matching_files_raises(self):
+        tb = _make_tarball("o-r-sha", {"README.md": "top", "skills/other/SKILL.md": "x"})
+        sus._download_tarball = lambda repo, sha: tb
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(RuntimeError):
+                sus.fetch_subtree("o/r", "sha", "skills/meme-maker", Path(d) / "m")
+
+    def test_path_traversal_member_refused(self):
+        tb = _make_tarball("o-r-sha", {"skills/x/../../escape.txt": "evil"})
+        sus._download_tarball = lambda repo, sha: tb
+        with tempfile.TemporaryDirectory() as d:
+            dest = Path(d) / "nested" / "x"
+            with self.assertRaises(RuntimeError):
+                sus.fetch_subtree("o/r", "sha", "skills/x", dest)
+            self.assertFalse((Path(d) / "escape.txt").exists())
+
+
+class TestResolveTipSha(unittest.TestCase):
+    def setUp(self):
+        self._orig = sus._gh
+
+    def tearDown(self):
+        sus._gh = self._orig
+
+    def test_empty_commits_raises(self):
+        class R:
+            stdout = "[]"
+        sus._gh = lambda args, text: R()
+        with self.assertRaises(RuntimeError):
+            sus.resolve_tip_sha("o/r", "main", "skills/x")
+
+
+class TestAddForce(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        sus.SKILLS_DIR = base / "skills"
+        sus.MANIFEST_PATH = base / "upstream-sources.json"
+        self._orig_resolve = sus.resolve_tip_sha
+        self._orig_fetch = sus.fetch_subtree
+        sus.resolve_tip_sha = lambda repo, branch, path: "e" * 40
+
+        def fetch(repo, sha, src_path, dest):
+            dest.mkdir(parents=True, exist_ok=True)
+            (dest / "SKILL.md").write_text("---\nname: gog\ndescription: d\n---\n")
+        sus.fetch_subtree = fetch
+
+    def tearDown(self):
+        sus.resolve_tip_sha = self._orig_resolve
+        sus.fetch_subtree = self._orig_fetch
+        self.tmp.cleanup()
+
+    def test_force_readd_replaces_entry(self):
+        url = "https://github.com/openclaw/gogcli/blob/main/.agents/skills/gog/SKILL.md"
+        sus.add_skill(url)
+        sus.add_skill(url, force=True)
+        names = [s["name"] for s in sus.load_manifest()["skills"]]
+        self.assertEqual(names, ["gog"])
+
+
+class TestApplyCmd(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        sus.SKILLS_DIR = base / "skills"
+        sus.MANIFEST_PATH = base / "upstream-sources.json"
+        self._orig_apply = sus.apply_skill
+        self.applied = []
+        sus.apply_skill = lambda entry: self.applied.append(entry["name"])
+        sus.save_manifest({"skills": [
+            {"name": "gog", "repo": "o/r", "branch": "main", "src_path": "p",
+             "pinned_sha": "a" * 40, "content_hash": "sha256:" + "b" * 64,
+             "local_only": ["agents/openai.yaml"]},
+            {"name": "yeet", "repo": "o/r2", "branch": "main", "src_path": "p2",
+             "pinned_sha": "c" * 40, "content_hash": "sha256:" + "d" * 64,
+             "local_only": ["agents/openai.yaml"]},
+        ]})
+
+    def tearDown(self):
+        sus.apply_skill = self._orig_apply
+        self.tmp.cleanup()
+
+    def _silent_main(self, argv):
+        sink = io.StringIO()
+        with contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+            return sus.main(argv)
+
+    def test_apply_no_args_returns_one(self):
+        self.assertEqual(self._silent_main(["apply"]), 1)
+        self.assertEqual(self.applied, [])
+
+    def test_apply_all_visits_every_entry(self):
+        self.assertEqual(self._silent_main(["apply", "--all"]), 0)
+        self.assertEqual(sorted(self.applied), ["gog", "yeet"])
+
+    def test_apply_named_subset(self):
+        self.assertEqual(self._silent_main(["apply", "gog"]), 0)
+        self.assertEqual(self.applied, ["gog"])
+
+
+class TestPureLocalDrift(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        sus.SKILLS_DIR = Path(self.tmp.name) / "skills"
+        self._orig_resolve = sus.resolve_tip_sha
+        self._orig_fetch = sus.fetch_subtree
+
+    def tearDown(self):
+        sus.resolve_tip_sha = self._orig_resolve
+        sus.fetch_subtree = self._orig_fetch
+        self.tmp.cleanup()
+
+    def test_only_local_drift_when_upstream_matches_recorded(self):
+        dest = sus.SKILLS_DIR / "gog"
+        dest.mkdir(parents=True)
+        (dest / "SKILL.md").write_text("locally-edited")
+        # upstream content equals the recorded hash; local differs from recorded
+        upstream_body = "pristine-upstream"
+
+        def fetch(repo, sha, src_path, d):
+            d.mkdir(parents=True, exist_ok=True)
+            (d / "SKILL.md").write_text(upstream_body)
+        sus.fetch_subtree = fetch
+        sus.resolve_tip_sha = lambda repo, branch, path: "0" * 40
+        tmpdir = Path(self.tmp.name) / "u"
+        fetch("", "", "", tmpdir)
+        recorded_hash = sus.compute_content_hash(tmpdir, ["agents/openai.yaml"])
+        entry = {
+            "name": "gog", "repo": "o/r", "branch": "main", "src_path": "p",
+            "pinned_sha": "f" * 40, "content_hash": recorded_hash,
+            "local_only": ["agents/openai.yaml"],
+        }
+        self.assertEqual(sus.check_skill(entry), ["LOCAL_DRIFT"])
+
+
 if __name__ == "__main__":
     unittest.main()
