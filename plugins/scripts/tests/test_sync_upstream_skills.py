@@ -1,6 +1,10 @@
 import contextlib
 import importlib.machinery
 import importlib.util
+import io
+import json
+import tarfile
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -42,7 +46,6 @@ class TestParseSkillUrl(unittest.TestCase):
             sus.parse_skill_url("https://example.com/foo/bar")
 
 
-import tempfile
 
 
 class TestContentHash(unittest.TestCase):
@@ -125,7 +128,6 @@ class TestOpenaiYaml(unittest.TestCase):
         self.assertIn("Yeet", out)
 
 
-import json
 
 
 class TestManifestIO(unittest.TestCase):
@@ -180,8 +182,6 @@ class TestManifestSchema(unittest.TestCase):
         self.assertTrue(list(self.validator.iter_errors({"skills": [bad]})))
 
 
-import io
-import tarfile
 
 
 def _make_tarball(prefix, files):
@@ -514,6 +514,20 @@ class TestResolveTipSha(unittest.TestCase):
             stdout = "[]"
         sus._gh = lambda args, text: R()
         with self.assertRaises(RuntimeError):
+            sus.resolve_tip_sha("o/r", "main", "skills/x")
+
+    def test_commit_missing_sha_raises(self):
+        class R:
+            stdout = '[{"not_sha": 1}]'
+        sus._gh = lambda args, text: R()
+        with self.assertRaises(SystemExit):
+            sus.resolve_tip_sha("o/r", "main", "skills/x")
+
+    def test_non_list_response_raises(self):
+        class R:
+            stdout = '{"message": "Not Found"}'
+        sus._gh = lambda args, text: R()
+        with self.assertRaises(SystemExit):
             sus.resolve_tip_sha("o/r", "main", "skills/x")
 
 

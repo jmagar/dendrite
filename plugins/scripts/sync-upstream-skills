@@ -139,7 +139,13 @@ def resolve_tip_sha(repo: str, branch: str, src_path: str) -> str:
         )
     if not commits:
         raise RuntimeError(f"No commits for {src_path} in {repo}@{branch}")
-    return commits[0]["sha"]
+    top = commits[0]
+    if not isinstance(top, dict) or "sha" not in top:
+        raise SystemExit(
+            f"gh api commit object missing 'sha' for {repo}@{branch} "
+            f"(path={src_path}): {top!r}"
+        )
+    return top["sha"]
 
 
 def fetch_subtree(repo: str, sha: str, src_path: str, dest: Path) -> None:
@@ -159,6 +165,7 @@ def fetch_subtree(repo: str, sha: str, src_path: str, dest: Path) -> None:
             if not member.isfile() or not member.name.startswith(want):
                 continue
             rel = member.name[len(want):]
+            # Security: a crafted tarball member (e.g. ../) must not escape dest.
             target = (dest / rel).resolve()
             if not target.is_relative_to(dest_root):
                 raise RuntimeError(
@@ -184,6 +191,8 @@ def apply_skill(entry: dict) -> None:
             preserved[rel] = path.read_bytes()
     sha = resolve_tip_sha(entry["repo"], entry["branch"], entry["src_path"])
     fetch_subtree(entry["repo"], sha, entry["src_path"], dest)
+    # Restore local-only files the upstream wipe removed. content_hash (computed
+    # last, below) excludes local_only, so drift tracks upstream content only.
     for rel, data in preserved.items():
         path = dest / rel
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -245,6 +254,8 @@ def add_skill(url: str, force: bool = False) -> dict:
         if not preexisting and dest.exists():
             shutil.rmtree(dest)  # don't leave an orphaned folder with no manifest entry
         raise
+    # Replace any existing entry (only reachable with --force; the guard above
+    # blocks a non-force duplicate).
     data["skills"] = [s for s in data["skills"] if s["name"] != parsed["name"]]
     data["skills"].append(entry)
     save_manifest(data)
