@@ -58,192 +58,51 @@ The wrapper resolves auth in this order: `BYTESTASH_TOKEN` → `BYTESTASH_USERNA
 
 ## Commands
 
-All commands use the bash script wrapper in `scripts/bytestash-api.sh`.
+All commands use the bash wrapper `scripts/bytestash-api.sh`. Run it from this
+skill directory (or call it by absolute path); output is JSON by default. These
+five cover the common path — the full command catalog (update, push,
+share/unshare/view-share, jq recipes, bulk workflows) is in
+`references/quick-reference.md`.
 
-### List Snippets
 ```bash
-cd plugins/bytestash/skills/bytestash
+# List all snippets
 ./scripts/bytestash-api.sh list
-```
 
-### Search Snippets
-```bash
 # Search by title (case-insensitive partial match)
 ./scripts/bytestash-api.sh search "docker"
 
 # Search by category
 ./scripts/bytestash-api.sh search --category "bash"
-```
 
-### Get Snippet Details
-```bash
+# Get one snippet's full detail
 ./scripts/bytestash-api.sh get <snippet-id>
-```
 
-### Create Snippet
-```bash
-# Single fragment (inline code)
+# Create a single-fragment snippet
 ./scripts/bytestash-api.sh create \
   --title "Docker Compose Example" \
-  --description "Production-ready compose file" \
   --categories "docker,devops" \
   --code "version: '3.8'..." \
   --language "yaml" \
   --filename "docker-compose.yml"
-
-# Multiple fragments (from files)
-./scripts/bytestash-api.sh push \
-  --title "FastAPI Setup" \
-  --description "Complete FastAPI project structure" \
-  --categories "python,api" \
-  --files "app.py,requirements.txt,Dockerfile"
 ```
 
-### Update Snippet
-```bash
-./scripts/bytestash-api.sh update <snippet-id> \
-  --title "New Title" \
-  --description "Updated description" \
-  --categories "new,tags"
-```
+Multi-file snippets use `push --files "a.py,b.txt,Dockerfile"`; each file becomes
+an ordered fragment (`file_name`, `code`, `language`, `position`). The full
+snippet data model is documented in `references/api-endpoints.md`.
 
-### Delete Snippet
-```bash
-# Prompts for confirmation
-./scripts/bytestash-api.sh delete <snippet-id>
-```
+## Safety
 
-### Share Management
-```bash
-# Create public share link
-./scripts/bytestash-api.sh share <snippet-id>
-
-# Create protected share (requires auth)
-./scripts/bytestash-api.sh share <snippet-id> --protected
-
-# Create expiring share (24 hours)
-./scripts/bytestash-api.sh share <snippet-id> --expires 86400
-
-# List all shares for a snippet
-./scripts/bytestash-api.sh shares <snippet-id>
-
-# Delete share link
-./scripts/bytestash-api.sh unshare <share-id>
-
-# View shared snippet
-./scripts/bytestash-api.sh view-share <share-id>
-```
-
-## Workflow
-
-When the user asks about ByteStash:
-
-1. **"Save this code as a snippet"**
-   - Determine if single or multiple files
-   - If single: Use `create` command with inline code
-   - If multiple: Use `push` command with file paths
-   - Always include title, description, and categories
-
-2. **"Find my Docker snippets"**
-   - Use `search --category docker` or `search "docker"`
-   - Present results with ID, title, description, and categories
-   - If user wants details: Use `get <id>` to show full snippet
-
-3. **"Share this snippet publicly"**
-   - Use `share <snippet-id>` to create public link
-   - Return share URL: `{BYTESTASH_URL}/s/{share-id}`
-   - Optionally use `--protected` or `--expires` flags
-
-4. **"What snippets do I have?"**
-   - Use `list` command
-   - Group by categories for better organization
-   - Show total count and recent updates
-
-5. **"Delete this snippet"**
-   - Confirm with user before deletion
-   - Use `delete <snippet-id>`
-   - Verify deletion with success message
-
-6. **"Organize my snippets by category"**
-   - List all snippets with `list`
-   - Identify missing/inconsistent categories
-   - Suggest category updates with `update` command
-
-### Multi-Fragment Snippets
-
-ByteStash supports snippets with multiple code fragments (files). Each fragment has:
-- **file_name**: Display name (e.g., `app.py`, `Dockerfile`)
-- **code**: The actual code content
-- **language**: Syntax highlighting language (e.g., `python`, `dockerfile`)
-- **position**: Display order (0-indexed)
-
-**When to use multi-fragment:**
-- Related configuration files (docker-compose.yml + .env)
-- Full project structures (API + tests + docs)
-- Before/after code examples
-- Multi-language implementations
-
-## Notes
-
-**Data Model:**
-```json
-{
-  "id": 123,
-  "title": "Snippet Title",
-  "description": "Detailed description",
-  "categories": ["tag1", "tag2"],
-  "fragments": [
-    {
-      "id": 456,
-      "file_name": "example.py",
-      "code": "print('hello')",
-      "language": "python",
-      "position": 0
-    }
-  ],
-  "updated_at": "2024-01-01T00:00:00Z",
-  "share_count": 2
-}
-```
-
-**Authentication:**
-- Uses `bytestashauth: bearer <jwt>` header. The wrapper obtains the JWT from
-  `BYTESTASH_TOKEN`, or by logging in with `BYTESTASH_USERNAME`/`BYTESTASH_PASSWORD`.
-- Snippet endpoints (`/api/snippets*`) are JWT-gated on ByteStash ≤ 1.0.0; the
-  `x-api-key` header is rejected there (see the warning at the top of this skill).
-- API keys still authenticate the read-only public endpoints (`/api/public/snippets`).
-
-**Share Links:**
-- Public shares: Anyone with link can view
-- Protected shares: Requires authentication to view
-- Expiring shares: Auto-delete after specified seconds
-- Share IDs are random strings (e.g., `abc123def456`)
-
-**Destructive Operations:**
-- Delete snippet: Permanently removes snippet and all fragments
-- Delete share: Invalidates share link (snippet remains)
-- Both require user confirmation before execution
-
-**Output Format:**
-- All commands return JSON by default
-- Use `jq` for filtering/formatting (e.g., `./bytestash-api.sh list | jq '.[] | select(.categories[] == "docker")'`)
-- Errors return HTTP status codes with JSON error messages
-
-**Limitations:**
-- JWT required for all snippet operations (API keys rejected on v1.0.0; see top warning)
-- List endpoint returns `{data:[...], pagination}` — the wrapper unwraps `.data` for you
-- Categories are tags (no hierarchical structure)
-- No bulk operations (must process snippets individually)
-- Share links cannot be updated (must delete and recreate)
-- Some deployments may require JWT auth for share endpoints (`/api/share*`)
+- `delete <snippet-id>` permanently removes the snippet and all fragments, and
+  prompts for confirmation. Always confirm with the user first.
+- `unshare <share-id>` invalidates a share link (the snippet remains).
+- No bulk operations — snippets are processed individually.
 
 ## Reference
 
-- **API Endpoints**: See `references/api-endpoints.md` for complete API reference
-- **Quick Reference**: See `references/quick-reference.md` for command examples
-- **Troubleshooting**: See `references/troubleshooting.md` for common failures
-- **Official Docs**: API documentation at `{BYTESTASH_URL}/api-docs/`
-- **Web Interface**: Full-featured UI at `{BYTESTASH_URL}`
+- `references/quick-reference.md` — full command catalog, jq filters, and bulk workflows
+- `references/api-endpoints.md` — complete REST API reference and snippet data model
+- `references/troubleshooting.md` — auth (401 on ≤1.0.0), connectivity, and share-endpoint failures
+- Official API docs: `{BYTESTASH_URL}/api-docs/` — Web UI: `{BYTESTASH_URL}`
 
 ---
 

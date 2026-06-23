@@ -2,7 +2,7 @@
 name: rust
 version: "1.1.0"
 description: >-
-  Use when working on Rust code in Jacob's repos, especially the rmcp MCP server family and Lab runtime. Covers rmcp-template derived server patterns, action-dispatched MCP tools, CLI/MCP/API parity, service-layer architecture, config/auth/scope contracts, testing strategy, release/build conventions, and ACP runtime/provider work.
+  Scoped to Jacob's homelab Rust repos — the rmcp MCP-server family (rustifi, rustify, rustscale, unrust, rarcane, rustarr, apprise-mcp, cortex, synapse2, rmcp-template) and the Lab runtime/ACP work. Use when editing those repos: covers rmcp-template-derived server patterns, action-dispatched MCP tools, CLI/MCP/API parity, service-layer architecture, config/auth/scope contracts, testing strategy, release/build conventions, and ACP runtime/provider work. Not a general-purpose Rust skill.
 ---
 
 # Rust Patterns
@@ -72,42 +72,7 @@ Hard rule: if you are writing business logic in `mcp/tools.rs`, `api.rs`, `cli.r
 
 ### Repo-specific architecture deltas
 
-`lab` is not a normal rmcp clone. It uses `crates/lab/src/dispatch/<service>/`
-as the surface-neutral semantic layer between CLI, MCP, API, web, and
-`lab-apis`. Migrated services are directory-first from day one:
-
-```text
-crates/lab/src/dispatch/<service>.rs
-crates/lab/src/dispatch/<service>/catalog.rs
-crates/lab/src/dispatch/<service>/client.rs
-crates/lab/src/dispatch/<service>/params.rs
-crates/lab/src/dispatch/<service>/dispatch.rs
-```
-
-In Lab, `catalog.rs` owns `ActionSpec` / `ParamSpec`; `client.rs` owns env,
-instance, auth, and client construction; `params.rs` owns coercion; and
-`dispatch.rs` owns action routing and help payloads. `node`, `security`,
-`upstream`, `gateway/code_mode`, and `snippets` have documented layout
-exceptions. Do not cite those shared subsystems as precedent for skipping
-`client.rs` or `params.rs` in a normal upstream-backed service.
-
-`rustarr` is descriptor-driven for most domain actions. The generic
-`ACTION_SPECS` set is intentionally small; curated media commands live as
-`CommandDescriptor` const slices under `src/actions/commands/<cap>.rs`, then
-flow through `curated_commands()`, schema generation, help text, CLI usage, and
-the shared `execute_service_action` path. Do not add a giant enum variant and
-match arm for every curated action.
-
-`cortex` keeps the MCP action registry under `src/mcp/actions.rs`, not root
-`src/actions.rs`, and its action metadata includes `Scope`, `Cost`, and an
-`ActionHandler`. That cost metadata is part of agent planning and help/schema
-behavior, so preserve it when adding actions.
-
-`axon` is an application/platform server whose direct REST API is now the
-canonical product API. Its `/v1/actions` action-envelope endpoint has been
-removed. Use typed direct routes, `services::client_contract::*`, OpenAPI
-generation, and `docs/reference/api-parity.md` when changing API-facing
-behavior.
+Several repos diverge from the baseline (Lab's `dispatch/<service>/` layer, rustarr's descriptor-driven curated commands, cortex's `src/mcp/actions.rs` registry with `Cost` metadata, axon's typed direct REST product API). Full per-repo architecture deltas — plus parity, action-dispatch, auth, and testing deltas — are in `references/repo-deltas.md`. Check that reference (and the target repo's own docs) before assuming the template shape applies.
 
 ## Surface Parity
 
@@ -129,20 +94,7 @@ For a new or changed action, update all relevant surfaces in one pass:
 - Skill/plugin docs and `help` output.
 - Tests for parser, service behavior, schema drift, CLI, and MCP dispatch.
 
-Do not assume parity means the same shape in every repo:
-
-- Lab service actions use dotted `<resource>.<verb>` names, with built-in
-  `help` and `schema` actions and `lab://<service>/actions` catalog resources.
-  Historical bare aliases may exist only as deprecated aliases; new actions must
-  be dotted.
-- Rustarr's MCP grammar is one tool with global snake_case action names, while
-  its CLI grammar is service-grouped (`rustarr <service> <verb>`). The
-  bidirectional parity guard lives in `tests/parity.rs`.
-- Axon tracks CLI/MCP/direct-REST parity in `docs/reference/api-parity.md`.
-  Some local commands (`setup`, `config`, `mcp`, `serve`, `monitor`, `smoke`,
-  etc.) are intentionally deferred from remote REST.
-- Cortex explicitly keeps lifecycle mutations CLI-only while the MCP surface
-  stays query/admin-action oriented.
+Do not assume parity means the same shape in every repo (Lab dotted `<resource>.<verb>` names, rustarr's split MCP/CLI grammars, axon's REST-deferred local commands, cortex's CLI-only lifecycle mutations) — see "Surface parity deltas" in `references/repo-deltas.md`.
 
 ## Action Dispatch And Schemas
 
@@ -168,16 +120,7 @@ match action {
 
 Do not duplicate action strings in unrelated docs without a check. Template repos use contract checks such as `cargo xtask contract-audit`, schema-doc sync scripts, or `just template-check` to catch drift.
 
-Patterns that are stale or too narrow:
-
-- Do not maintain a static `HELP_TEXT` or static action enum when the repo has
-  a registry-derived help/schema system.
-- Do not assume every action is an enum variant. Rustarr curated commands are
-  descriptor rows plus a single `Curated { name, params }` carrier.
-- Do not assume every repo's action metadata is root `src/actions.rs`. Cortex
-  and Axon use different module ownership.
-- Do not hand-maintain separate action lists for schema, scope gates, docs, and
-  help. Every reviewed repo has moved toward one registry/contract source.
+Patterns that are stale or too narrow (don't keep static `HELP_TEXT`/action enums when a registry exists, don't assume every action is an enum variant or that metadata lives in root `src/actions.rs`, don't hand-maintain parallel action lists) — see "Action dispatch / schema deltas" in `references/repo-deltas.md`.
 
 ## Auth And Scopes
 
@@ -192,23 +135,7 @@ Non-loopback HTTP servers must refuse to start without authentication unless the
 
 Scope rules belong in `actions.rs` and are enforced in the MCP/REST auth paths. Write scope can satisfy read scope where the repo's `scopes_satisfy()` says so. Unknown actions should map to a deny scope, not accidentally fall through as public.
 
-Repo-specific auth deltas:
-
-- Lab uses `ActionSpec.destructive` as the central dangerous-operation flag.
-  MCP confirms destructive calls through elicitation, CLI requires `-y` /
-  `--yes`, and HTTP callers use an explicit confirmation parameter. New Lab
-  code should not invent a second confirmation policy.
-- Rustarr uses read/write scopes, but curated commands also carry
-  `confirm_required` and `mutates`; `mutates=true` implies
-  `confirm_required=true` and is mechanically tested.
-- Cortex has `cortex:read` plus `cortex:admin`, not just read/write. Static
-  bearer tokens are read-only unless `CORTEX_STATIC_TOKEN_ADMIN=true`.
-- Cortex's `/api/*` router forces mounted bearer auth even when the listener
-  would otherwise be `LoopbackDev`; do not treat LoopbackDev as a universal REST
-  bypass there.
-- Axon has read/write/full-access scopes and protects destructive admin REST
-  routes with an unconditional guard even in LoopbackDev. Write routes may be
-  blocked in local no-auth mode instead of allowed through.
+Repo-specific auth deltas (Lab's `ActionSpec.destructive` confirmation model, rustarr's `confirm_required`/`mutates`, cortex's `cortex:read`/`cortex:admin` split and forced `/api/*` bearer, axon's full-access scope and LoopbackDev admin guard) — see "Auth / scope deltas" in `references/repo-deltas.md`.
 
 ## Config And Secrets
 
@@ -261,120 +188,11 @@ mod tests;
 
 Live tests must assert semantic fields, not just `is_error: false`. Never include destructive, notification-sending, delete, update, or authorization-mutating actions in default live smoke tests unless the target is disposable and explicitly gated by env.
 
-Repo-specific checks to look for:
-
-- Lab: architecture/catalog lints, generated action catalog checks, and
-  service-layout tests in `crates/lab/tests/architecture_orchestrator.rs`.
-- Rustarr: `tests/parity.rs` for curated command MCP/CLI coverage and
-  `mutates => confirm_required`.
-- Axon: `cargo test --test http_api_parity_inventory -- --nocapture`,
-  OpenAPI export/checks, and route-contract tests from
-  `services::client_contract`.
-- Cortex: `scripts/smoke-test.sh` and mcporter tests for all MCP actions, plus
-  API auth invariants for forced `/api/*` bearer behavior.
+Repo-specific checks to look for (Lab architecture/catalog lints, rustarr `tests/parity.rs`, axon `http_api_parity_inventory` + OpenAPI checks, cortex `scripts/smoke-test.sh` + `/api/*` auth invariants) — see "Testing deltas" in `references/repo-deltas.md`.
 
 ## Build And Release Conventions
 
-The rmcp family assumes host-level Cargo config for fast local builds. Do not add repo-local linker settings unless the repo has a documented exception.
-
-Important conventions from `rmcp-template/docs/RUST.md`:
-
-- Rust stable tracks the family MSRV/current stable policy.
-- `mold`/`clang`, sccache, global job limits, and dev profile tuning live in `~/.cargo/config.toml`.
-- Per-repo `.cargo/config.toml` is minimal: xtask alias and target-specific fallback only.
-- Do not add `[target.x86_64-unknown-linux-gnu].rustflags` in repo config if it would shadow global mold flags.
-- Windows release/cross-compile settings must avoid machine-specific `target-cpu=native`.
-
-Current global Cargo baseline on Jacob's machines:
-
-```toml
-[build]
-# Keep conservative for multiple concurrent agents. Solo builds can override.
-jobs = 4
-rustc-wrapper = "/home/jmagar/.local/bin/sccache-wrapper"
-
-[env]
-CARGO_PROFILE_DEV_CODEGEN_BACKEND = "llvm"
-SCCACHE_SERVER_UDS = "/tmp/sccache-jmagar.sock"
-
-[unstable]
-codegen-backend = true
-
-[target.x86_64-unknown-linux-gnu]
-linker = "clang"
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-
-[profile.dev]
-debug = 1
-codegen-units = 8
-split-debuginfo = "unpacked"
-incremental = false
-opt-level = 0
-
-[profile.test]
-debug = 1
-codegen-units = 8
-
-[profile.dev.package."*"]
-opt-level = 1
-```
-
-Interpretation:
-
-- `rustc -> clang -> mold`: `clang` is the linker driver; `-fuse-ld=mold`
-  chooses the fast linker backend. Prefer this over `linker = "mold"`.
-- Global `jobs = 4` is intentional for many simultaneous agent builds. For a
-  solo local build on the current 20-logical-CPU host, override per command:
-
-  ```bash
-  CARGO_BUILD_JOBS=16 cargo build --release --locked --bin <name>
-  CARGO_BUILD_JOBS=16 cargo build --profile release-fast --locked --bin <name>
-  ```
-
-- Do not make `jobs = 16` global unless the machine is dedicated to one build at
-  a time.
-- Cranelift is not the current default. The config keeps
-  `CARGO_PROFILE_DEV_CODEGEN_BACKEND=llvm` because Cranelift-backed dev/test
-  links have failed in aws-lc-backed binaries in this environment. Consider
-  Cranelift only as a repo-specific experiment after verifying `cargo check`,
-  `cargo test`, and any native TLS/aws-lc/ring paths.
-- sccache is enabled through `/home/jmagar/.local/bin/sccache-wrapper`, not by
-  pointing Cargo directly at `sccache`. The wrapper bypasses clippy, resolves
-  rustup toolchain paths to stable version-pinned paths for sccache-dist safety,
-  exports `SCCACHE_SERVER_UDS=/tmp/sccache-jmagar.sock`, and then execs the
-  mise-pinned `/home/jmagar/.local/sccache`.
-- Some repos add a repo-local rustc wrapper for project-specific side effects.
-  Axon's `.cargo/config.toml` points at `scripts/cargo-rustc-wrapper`, which
-  delegates to sccache and copies completed `axon` binaries into local PATH.
-  Keep that kind of install-copy behavior repo-local or explicitly opt-in; do
-  not make it global for all Rust projects without a collision policy.
-
-Use a repo-local fast release profile when the command should be portable across
-CI, containers, and clean hosts. Example:
-
-```toml
-[profile.release-fast]
-inherits = "release"
-lto = false
-codegen-units = 16
-```
-
-This keeps `opt-level = 3` from `release`, but skips whole-program ThinLTO and
-lets the final crate codegen run with more parallelism. It is appropriate for
-local deployable binaries and smoke testing. Keep full `release` for published
-artifacts, benchmark-sensitive builds, and size-sensitive binaries.
-
-Benchmark profile changes with warm rebuilds, not the first build of a new
-profile:
-
-```bash
-touch src/main.rs
-time CARGO_BUILD_JOBS=16 cargo build --profile release-fast --locked --bin <name>
-touch src/main.rs
-time CARGO_BUILD_JOBS=16 cargo build --release --locked --bin <name>
-```
-
-Release workflows attach built artifacts to GitHub Releases. Do not commit generated binaries or release tarballs back to `main`.
+Builds rely on host-level Cargo config (`~/.cargo/config.toml`) — `mold`/`clang`, sccache via `sccache-wrapper`, conservative global `jobs = 4` for concurrent agents, LLVM (not Cranelift) dev backend. Keep per-repo `.cargo/config.toml` minimal; don't shadow global mold flags. For solo builds override with `CARGO_BUILD_JOBS=16`; use the `release-fast` profile for portable local/CI builds and full `release` for published artifacts. Full baseline `config.toml`, sccache-wrapper rationale, profile definitions, and warm-rebuild benchmarking are in `references/build-release.md`.
 
 ## ACP Work
 

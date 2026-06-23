@@ -1,5 +1,35 @@
 # claude-in-mobile Tooling Notes
 
+## Tool Families
+
+Core meta-tools (each dispatches many actions, kept token-efficient):
+
+- `device`: list devices, set/get active target, and enable/disable modules.
+- `input`: tap, long press, swipe, text, and key events.
+- `screen`: capture and annotate screenshots.
+- `ui`: inspect trees, find elements, tap text, wait, and assert UI state.
+- `app`: launch, stop, install, and list apps.
+- `system`: shell, logs, info, URLs, clipboard, permissions, files, and metrics.
+- `flow_batch`: execute multiple sequential operations in one round trip.
+- `flow_run`: run conditional or repeated automation flows.
+- `flow_parallel`: fan out the same action across multiple devices.
+
+Quality tools:
+
+- `accessibility`: audit for labels, touch targets, focus order, and duplicates.
+- `visual`: save baselines and compare screenshots for visual regressions.
+- `recorder`: record and replay taps, swipes, and text input.
+- `sync`: coordinate multi-device test barriers.
+- `autopilot`: explore apps with BFS/DFS and self-healing locators.
+- `performance`: collect CPU, memory, FPS, and snapshot metrics.
+
+Optional modules:
+
+- `browser`: Chrome/Chromium navigation, clicks, form fill, screenshots, and JS.
+- `desktop`: app launch, windows, focus, resize, clipboard, performance, and
+  monitor operations.
+- `store`: Google Play, Huawei AppGallery, and RuStore upload/release workflows.
+
 ## Current Upstream
 
 Last verified: 2026-05-23 against npm `claude-in-mobile@3.8.1`.

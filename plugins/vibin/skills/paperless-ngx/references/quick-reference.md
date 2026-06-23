@@ -2,6 +2,57 @@
 
 Quick command examples for common operations.
 
+> The examples below use `./scripts/<script>.sh` for brevity (run from the skill
+> directory). When invoking from elsewhere, prefer the
+> `bash "$SKILL_DIR/scripts/<script>.sh"` form shown in `SKILL.md`.
+
+## Best Practices
+
+1. **Tag consistently:** Use lowercase, hyphens for multi-word (e.g., "project-alpha")
+2. **Set correspondents:** Makes searching by sender/recipient easier
+3. **Use document types:** Categories help with organization and workflows
+4. **Archive serial numbers:** Track original paper document storage
+5. **Search before upload:** Avoid duplicates
+
+## Detailed Flows
+
+### Document Upload
+
+```
+User: "Upload this receipt to Paperless and tag it as expense"
+
+1. Verify file path exists and is readable
+2. Upload document with metadata:
+   bash "$SKILL_DIR/scripts/paperless-api.sh" upload /path/to/receipt.pdf --tags "expense"
+3. Paperless processes document (OCR, thumbnail generation)
+4. Return document ID and success confirmation
+5. Optionally ask if user wants to set correspondent or document type
+```
+
+### Search and Organize
+
+```
+User: "Find all documents from last month that need review"
+
+1. Calculate date range (last month)
+2. Search documents by date range
+3. Filter results by tag or keyword "review"
+4. Present results with metadata
+5. Offer to bulk-tag results or export list
+```
+
+### Bulk Tagging
+
+```
+User: "Tag all invoices from Q1 as archived"
+
+1. Search for invoices in Q1 date range
+2. Extract document IDs from results
+3. Find or create "archived" tag
+4. Use bulk operation to add tag to all documents
+5. Report number of documents tagged
+```
+
 ## Setup
 
 ```bash

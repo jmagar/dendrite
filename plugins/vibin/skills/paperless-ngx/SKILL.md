@@ -92,107 +92,107 @@ bash "$SKILL_DIR/scripts/paperless-api.sh" list --ordering "-created"
 
 **Get document details:**
 ```bash
-bash scripts/paperless-api.sh get <document-id>
+bash "$SKILL_DIR/scripts/paperless-api.sh" get <document-id>
 ```
 
 **Download/export document:**
 ```bash
-bash scripts/paperless-api.sh download <document-id>
-bash scripts/paperless-api.sh download <document-id> --output /path/to/save.pdf
+bash "$SKILL_DIR/scripts/paperless-api.sh" download <document-id>
+bash "$SKILL_DIR/scripts/paperless-api.sh" download <document-id> --output /path/to/save.pdf
 ```
 
 **Update document:**
 ```bash
-bash scripts/paperless-api.sh update <document-id> --title "New Title"
-bash scripts/paperless-api.sh update <document-id> --add-tags "urgent,reviewed"
-bash scripts/paperless-api.sh update <document-id> --correspondent "Jane Smith"
-bash scripts/paperless-api.sh update <document-id> --document-type "Invoice"
-bash scripts/paperless-api.sh update <document-id> --archive-serial-number "2024-001"
+bash "$SKILL_DIR/scripts/paperless-api.sh" update <document-id> --title "New Title"
+bash "$SKILL_DIR/scripts/paperless-api.sh" update <document-id> --add-tags "urgent,reviewed"
+bash "$SKILL_DIR/scripts/paperless-api.sh" update <document-id> --correspondent "Jane Smith"
+bash "$SKILL_DIR/scripts/paperless-api.sh" update <document-id> --document-type "Invoice"
+bash "$SKILL_DIR/scripts/paperless-api.sh" update <document-id> --archive-serial-number "2024-001"
 ```
 
 **Delete document:**
 ```bash
-bash scripts/paperless-api.sh delete <document-id>  # Prompts for confirmation
+bash "$SKILL_DIR/scripts/paperless-api.sh" delete <document-id>  # Prompts for confirmation
 ```
 
 ### Tag Management
 
 **List tags:**
 ```bash
-bash scripts/tag-api.sh list
-bash scripts/tag-api.sh list --ordering "name"
+bash "$SKILL_DIR/scripts/tag-api.sh" list
+bash "$SKILL_DIR/scripts/tag-api.sh" list --ordering "name"
 ```
 
 **Create tag:**
 ```bash
-bash scripts/tag-api.sh create "project-alpha"
-bash scripts/tag-api.sh create "urgent" --color "#ff0000"
+bash "$SKILL_DIR/scripts/tag-api.sh" create "project-alpha"
+bash "$SKILL_DIR/scripts/tag-api.sh" create "urgent" --color "#ff0000"
 ```
 
 **Get tag details:**
 ```bash
-bash scripts/tag-api.sh get <tag-id>
+bash "$SKILL_DIR/scripts/tag-api.sh" get <tag-id>
 ```
 
 **Update tag:**
 ```bash
-bash scripts/tag-api.sh update <tag-id> --name "new-name"
-bash scripts/tag-api.sh update <tag-id> --color "#00ff00"
+bash "$SKILL_DIR/scripts/tag-api.sh" update <tag-id> --name "new-name"
+bash "$SKILL_DIR/scripts/tag-api.sh" update <tag-id> --color "#00ff00"
 ```
 
 **Delete tag:**
 ```bash
-bash scripts/tag-api.sh delete <tag-id>  # Prompts for confirmation
+bash "$SKILL_DIR/scripts/tag-api.sh" delete <tag-id>  # Prompts for confirmation
 ```
 
 ### Correspondent Management
 
 **List correspondents:**
 ```bash
-bash scripts/correspondent-api.sh list
+bash "$SKILL_DIR/scripts/correspondent-api.sh" list
 ```
 
 **Create correspondent:**
 ```bash
-bash scripts/correspondent-api.sh create "Acme Corporation"
+bash "$SKILL_DIR/scripts/correspondent-api.sh" create "Acme Corporation"
 ```
 
 **Get correspondent details:**
 ```bash
-bash scripts/correspondent-api.sh get <correspondent-id>
+bash "$SKILL_DIR/scripts/correspondent-api.sh" get <correspondent-id>
 ```
 
 **Update correspondent:**
 ```bash
-bash scripts/correspondent-api.sh update <correspondent-id> --name "New Name"
+bash "$SKILL_DIR/scripts/correspondent-api.sh" update <correspondent-id> --name "New Name"
 ```
 
 **Delete correspondent:**
 ```bash
-bash scripts/correspondent-api.sh delete <correspondent-id>  # Prompts for confirmation
+bash "$SKILL_DIR/scripts/correspondent-api.sh" delete <correspondent-id>  # Prompts for confirmation
 ```
 
 ### Bulk Operations
 
 **Bulk tag documents:**
 ```bash
-bash scripts/bulk-api.sh add-tag <tag-id> --documents "1,2,3"
-bash scripts/bulk-api.sh remove-tag <tag-id> --documents "1,2,3"
+bash "$SKILL_DIR/scripts/bulk-api.sh" add-tag <tag-id> --documents "1,2,3"
+bash "$SKILL_DIR/scripts/bulk-api.sh" remove-tag <tag-id> --documents "1,2,3"
 ```
 
 **Bulk set correspondent:**
 ```bash
-bash scripts/bulk-api.sh set-correspondent <correspondent-id> --documents "1,2,3"
+bash "$SKILL_DIR/scripts/bulk-api.sh" set-correspondent <correspondent-id> --documents "1,2,3"
 ```
 
 **Bulk set document type:**
 ```bash
-bash scripts/bulk-api.sh set-document-type <type-id> --documents "1,2,3"
+bash "$SKILL_DIR/scripts/bulk-api.sh" set-document-type <type-id> --documents "1,2,3"
 ```
 
 **Bulk delete documents:**
 ```bash
-bash scripts/bulk-api.sh delete --documents "1,2,3"  # Prompts for confirmation
+bash "$SKILL_DIR/scripts/bulk-api.sh" delete --documents "1,2,3"  # Prompts for confirmation
 ```
 
 ## Workflow
@@ -229,42 +229,8 @@ When the user asks about Paperless-ngx:
    - Use `correspondent-api.sh create "Supplier Name"`
    - Return correspondent ID for future document uploads
 
-### Detailed Flow: Document Upload
-
-```
-User: "Upload this receipt to Paperless and tag it as expense"
-
-1. Verify file path exists and is readable
-2. Upload document with metadata:
-   bash scripts/paperless-api.sh upload /path/to/receipt.pdf --tags "expense"
-3. Paperless processes document (OCR, thumbnail generation)
-4. Return document ID and success confirmation
-5. Optionally ask if user wants to set correspondent or document type
-```
-
-### Detailed Flow: Search and Organize
-
-```
-User: "Find all documents from last month that need review"
-
-1. Calculate date range (last month)
-2. Search documents by date range
-3. Filter results by tag or keyword "review"
-4. Present results with metadata
-5. Offer to bulk-tag results or export list
-```
-
-### Detailed Flow: Bulk Tagging
-
-```
-User: "Tag all invoices from Q1 as archived"
-
-1. Search for invoices in Q1 date range
-2. Extract document IDs from results
-3. Find or create "archived" tag
-4. Use bulk operation to add tag to all documents
-5. Report number of documents tagged
-```
+Step-by-step transcripts for upload, search-and-organize, and bulk-tagging
+flows live in `references/quick-reference.md` under "Detailed Flows".
 
 ## Notes
 
@@ -310,33 +276,13 @@ Delete operations require confirmation:
 
 Always confirm with user before executing delete operations.
 
-### Best Practices
+### Best Practices and Errors
 
-1. **Tag consistently:** Use lowercase, hyphens for multi-word (e.g., "project-alpha")
-2. **Set correspondents:** Makes searching by sender/recipient easier
-3. **Use document types:** Categories help with organization and workflows
-4. **Archive serial numbers:** Track original paper document storage
-5. **Search before upload:** Avoid duplicates
-
-### Common Errors
-
-**401 Unauthorized:**
-- Check API token in `.env`
-- Token may have expired (regenerate in Paperless UI)
-- Verify user permissions
-
-**404 Not Found:**
-- Verify document/tag/correspondent ID exists
-- Check PAPERLESS_URL is correct
-
-**400 Bad Request:**
-- Invalid metadata (e.g., non-existent tag ID)
-- Malformed file upload
-- Check script output for specific error message
-
-**Connection refused:**
-- Paperless-ngx instance not running
-- Verify URL in `.env`
+Organization best practices (consistent tags, correspondents, document types,
+archive serial numbers, search-before-upload) live in
+`references/quick-reference.md` under "Best Practices". Common errors (401, 404,
+400, connection refused) and full diagnostics live in
+`references/troubleshooting.md`.
 
 ## Reference
 

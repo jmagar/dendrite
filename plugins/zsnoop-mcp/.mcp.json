@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "zsnoop": {
+      "command": "uvx",
+      "args": [
+        "zsnoop-mcp"
+      ]
+    }
+  }
+}

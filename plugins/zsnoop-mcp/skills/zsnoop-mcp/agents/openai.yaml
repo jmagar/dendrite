@@ -1,4 +1,4 @@
 interface:
   display_name: "Zsnoop MCP"
-  short_description: "Explore ZFS snapshots and recover files through zsnoop-mcp."
-  default_prompt: "Use $zsnoop-mcp to inspect ZFS snapshots, compare versions, fetch files, or perform an explicitly confirmed restore."
+  short_description: "Use to restore a file from a ZFS snapshot, find when a file was deleted or changed, check zpool health, compare snapshots, grep inside a snapshot, or show snapshot cadence via zsnoop-mcp."
+  default_prompt: "Use $zsnoop-mcp to inspect ZFS pools, datasets, and snapshots, check zpool health, compare snapshots, find when a file appeared or was deleted, grep/read/fetch files inside snapshots, or perform an explicitly confirmed restore."

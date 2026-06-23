@@ -1,6 +1,7 @@
 ---
 name: mcporter
 description: Use when the user mentions mcporter, says "test an MCP server", "smoke-test these tools", "automate MCP testing", "call a tool from the shell", "list MCP tools", "exercise the gateway tools", or asks for a script that hits MCP endpoints. Covers using mcporter to discover, inspect, and call MCP servers from the shell, and to write repeatable regression or smoke-test scripts. Not for designing new MCP servers, writing server-side handlers, or generic API testing unrelated to MCP.
+argument-hint: "[server] [tool]"
 ---
 
 ## Context
@@ -89,65 +90,22 @@ The template at `scripts/smoke.sh` (in this skill folder) does three things `mcp
 2. **Robust error detection** — treats transport failure, wrapper warnings, MCP protocol errors (`MCP error -32xxx`), and tool-level `isError: true` envelopes as failures (each tagged differently in the report).
 3. **String + regex assertions** — see below. Avoids depending on `mcporter call --output json`, which currently emits Node `util.inspect` format (not parseable JSON) on most servers.
 
-### Case format
-
-Each row in `CASES=()`:
-
-```
-"label|args|assertion"
-```
-
-| Field | Meaning |
-|---|---|
-| `label` | Tool name (`search`) or resource URI (`ui://server/status`) |
-| `args` | Appended to `mcporter call`. `key=value` flat, `--args '{...}'` nested, empty for resources |
-| `assertion` | One of the five forms below |
-
-| Assertion form | What it checks |
-|---|---|
-| *(empty)* | Liveness — call must succeed, no error envelope |
-| `contains: TEXT` | Response text must include `TEXT` |
-| `regex: PATTERN` | Bash ERE matched against response text |
-| `jq: FILTER` | Response text parsed as JSON, `jq -e FILTER` must be truthy |
-| `error: KIND` | Expects an error envelope; passes if `.kind == KIND` or message contains `KIND` |
-
-### Helper modes
+Each `CASES=()` row is `"label|args|assertion"` — a tool name (or `ui://` resource URI) as the label, the `mcporter call` args, and one of five assertion forms (empty=liveness, `contains:`, `regex:`, `jq:`, `error:`). Bootstrap a server's case list with `./smoke.sh --init <server>`, then fill in real values:
 
 ```bash
-./smoke.sh --list-tools <server>   # one tool name per line — pipe to grep
-./smoke.sh --init <server>         # print skeleton CASES=() from the schema
-                                   # required args are pre-filled with TODO
+./smoke.sh --init lab > cases.sh.fragment   # skeleton CASES=() with TODO args
+# paste tools into smoke.sh, replace each TODO with a value + assertion, run
 ```
-
-Typical flow: `./smoke.sh --init lab > cases.sh.fragment`, paste the relevant tools into `smoke.sh`, replace each `TODO` with a real value plus an assertion, run.
-
-### Env flags
-
-| Var | Effect |
-|---|---|
-| `TIMEOUT_MS=8000` | Per-call timeout (default 15000) |
-| `VERBOSE=1` | Dump raw response on any failure |
-| `NO_PREFLIGHT=1` | Skip schema preflight (e.g. to test the server's own validation) |
-
-### Why not `--output json`?
-
-`mcporter call --output json` currently emits Node `util.inspect` output (unquoted keys, single quotes, string concatenation with `+`) — verified against multiple servers. `jq` cannot parse it. The script uses `--output text` for assertions and `--output raw` only to inspect the envelope for `isError` and the error kind. If a tool's response *is* a JSON string, the `jq:` assertion form parses that string with jq.
-
-### `set -e` traps to know
-
-If you copy snippets out of `smoke.sh`, two patterns will bite you under `set -e`:
-
-- `((counter++))` returns the *old* value of counter — when it was 0, exit code is 1 and the script dies. Use `((++counter))` or `counter=$((counter+1))`.
-- `[[ test ]] && command` returns the failed test's exit when the test is false — fine inside `if`/`while`/`||` lists, fatal as a standalone statement. Use `if [[ test ]]; then command; fi`.
-
-### Resources
-
-Same loop — URI is the `label`, `args` is empty. The harness routes URI labels through `mcporter resource`, not `mcporter call`.
 
 ```bash
-"ui://server/status||contains: ok"
-"file://docs/readme.md||regex: ^# "
+# example CASES=() rows
+"search|q=hello|contains: result"           # tool call + substring assert
+"ui://server/status||contains: ok"          # resource read (empty args)
 ```
+
+The full case-format / assertion-form tables, helper modes, env flags (`TIMEOUT_MS`, `VERBOSE`, `NO_PREFLIGHT`), and the `set -e` snippet traps are in [`references/tips-gotchas.md`](references/tips-gotchas.md).
+
+Note: don't assert on `--output json` — it emits Node `util.inspect` format (not parseable JSON) on most servers. The harness uses `--output text` for assertions and `--output raw` only to inspect the `isError` envelope.
 
 ## Common failure modes
 
@@ -180,6 +138,6 @@ mcporter generate-cli --server <s> --compile ./bin/<s>       # ship a binary
 
 - [`references/cli-commands.md`](references/cli-commands.md) — full flag tables for every subcommand (`list`, `call`, `auth`, `generate-cli`, `emit-ts`, `config`, `daemon`). Load when you need exact flag semantics beyond the quick reference above.
 - [`references/configuration.md`](references/configuration.md) — `mcporter.json` format, config resolution order, `allowedTools`/`blockedTools`, OAuth cache, and all environment variables.
-- [`references/tips-gotchas.md`](references/tips-gotchas.md) — real footguns in rough order of frequency: `--help` coverage gaps, function-call quoting, `generate-cli` input exclusivity, Bun requirement for `--compile`, daemon limitations, and `string`-field coercion.
+- [`references/tips-gotchas.md`](references/tips-gotchas.md) — real footguns in rough order of frequency: `--help` coverage gaps, function-call quoting, `generate-cli` input exclusivity, Bun requirement for `--compile`, daemon limitations, and `string`-field coercion. Also holds the full `smoke.sh` case-format/assertion tables, helper modes, env flags, and `set -e` snippet traps.
 - [`references/typescript-api.md`](references/typescript-api.md) — `callOnce()`, `createRuntime()`, `createServerProxy()` API surface and when to use each. Load when the user wants a TypeScript client rather than a shell script.
 - [`scripts/smoke.sh`](scripts/smoke.sh) — the test harness template. Copy and populate `CASES=()` for a new server.

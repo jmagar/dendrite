@@ -63,6 +63,19 @@ RADICALE_PASSWORD="<radicale-password>"
 - Generated config and `.env` files are local-only; never commit credentials
 - The plugin hook sets generated config permissions to `600`
 
+## Destructive and write actions
+
+This skill writes to live calendar and contact data. Creates and deletes take
+effect immediately on the Radicale server, with **no confirmation prompt and no
+undo**. Before running any write operation — `events create`, `events delete`,
+`contacts create`, or `contacts delete` — confirm the action and its parameters
+(target calendar/addressbook, title, date/time, UID) with the user. Deletions
+are permanent: always show the user which event or contact (by summary/name and
+UID) you are about to delete and get explicit confirmation first.
+
+Read operations (`calendars list`, `events list`, `contacts list`,
+`contacts addressbooks`, `contacts search`) are safe to run without confirmation.
+
 ## Core Operations
 
 All operations use the `scripts/radicale-api.py` wrapper script. Output is JSON format for easy parsing.
@@ -120,6 +133,15 @@ python scripts/radicale-api.py events create \
 - `--description` - Event description
 
 **Important:** Use ISO 8601 datetime format (YYYY-MM-DDTHH:MM:SS). End must be after start.
+
+> **⚠️ Timezone limitation — read before creating events.** This skill has **no
+> timezone support**: datetimes are stored as-is in the Radicale server's local
+> time. If the user gives a time in a specific zone (e.g. "7PM EST"), you MUST
+> convert it to the server's local time yourself before passing it — passing the
+> raw zoned time will silently create a wrong-time event. There is also **no
+> recurring-event support** and no reminders/alarms; create recurring or
+> reminder events one-off and tell the user about the limitation. When in doubt
+> about the target timezone, confirm with the user.
 
 #### Delete Event
 
@@ -187,86 +209,29 @@ python scripts/radicale-api.py contacts delete \
 
 Get UID from `contacts list` or `contacts search` output.
 
-## Natural Language Translation
+## Mapping requests to commands
 
-When users make natural language requests, translate them to script commands:
+Pick the operation from the user's intent, then identify the target and extract
+parameters:
 
-### Calendar Examples
+- Calendar query ("show", "list", "what's on") → `events list`
+- Calendar create ("add", "schedule") → `events create`
+- Calendar delete ("remove", "cancel") → `events delete` (confirm first)
+- Contact query ("find", "who is", "what's their email") → `contacts search`
+- Contact create ("add contact") → `contacts create`
+- Contact delete ("delete contact") → `contacts delete` (confirm first)
 
-**User:** "What's my calendar look like this week?"
+Defaults: calendar `"Personal"`, addressbook `"Contacts"` (confirm with the user
+if ambiguous). Then run the command, parse the JSON, and present results in
+human-readable form.
 
-**Action:**
-1. Calculate current week date range
-2. Run: `python scripts/radicale-api.py events list --calendar "Personal" --start "YYYY-MM-DD" --end "YYYY-MM-DD"`
-3. Present events in human-readable format
+**Date/time:** use ISO 8601 `YYYY-MM-DDTHH:MM:SS`; default event duration 1 hour
+if no end given. Times are stored in the **server's local timezone** — convert
+any zoned time the user gives (see the timezone limitation under *Create Event*).
+Resolve relative dates ("this week", "tomorrow", "7PM") yourself before calling.
 
-**User:** "Add to my calendar Billy Strings in Athens, GA 02/07/2026 7PM EST"
-
-**Action:**
-1. Parse: title="Billy Strings", location="Athens, GA", start="2026-02-07T19:00:00", end="2026-02-07T23:00:00" (assume 4hr concert)
-2. Run: `python scripts/radicale-api.py events create --calendar "Personal" --title "Billy Strings" --start "2026-02-07T19:00:00" --end "2026-02-07T23:00:00" --location "Athens, GA"`
-3. Confirm creation
-
-### Contact Examples
-
-**User:** "What's David Ryan's work email?"
-
-**Action:**
-1. Run: `python scripts/radicale-api.py contacts search --addressbook "Contacts" --query "David Ryan"`
-2. Extract email field from results
-3. Present: "David Ryan's email is david.ryan@example.com"
-
-**User:** "Add John Doe to my contacts, email john@example.com"
-
-**Action:**
-1. Run: `python scripts/radicale-api.py contacts create --addressbook "Contacts" --name "John Doe" --email "john@example.com"`
-2. Confirm creation
-
-## Decision Tree
-
-When user mentions calendars or contacts:
-
-1. **Determine operation type:**
-   - Calendar query ("show", "list", "what's on") → Use `events list`
-   - Calendar create ("add", "create event", "schedule") → Use `events create`
-   - Calendar delete ("remove", "delete", "cancel") → Use `events delete`
-   - Contact query ("find", "search", "what's", "who is") → Use `contacts search`
-   - Contact create ("add contact", "save contact") → Use `contacts create`
-   - Contact delete ("remove contact", "delete contact") → Use `contacts delete`
-
-2. **Identify target:**
-   - Calendar operations → Ask which calendar (default: "Personal")
-   - Contact operations → Ask which addressbook (default: "Contacts")
-
-3. **Extract parameters:**
-   - For events: Parse title, location, date/time from natural language
-   - For contacts: Parse name, email, phone from natural language
-
-4. **Execute command:**
-   - Run appropriate script command
-   - Parse JSON output
-
-5. **Present results:**
-   - Format JSON as human-readable text
-   - Include relevant details (event times, contact info)
-   - Confirm successful operations
-
-## Date/Time Handling
-
-**Important considerations:**
-- All times are local to the Radicale server timezone
-- Use ISO 8601 format for consistency: `YYYY-MM-DDTHH:MM:SS`
-- When user specifies "7PM EST", convert to 24-hour local time
-- For all-day events, use same date for start/end with different times
-- Default event duration: 1 hour (if user doesn't specify end time)
-
-**Common translations:**
-- "this week" → Calculate Mon-Sun dates from current date
-- "next week" → Calculate Mon-Sun dates for following week
-- "today" → Current date
-- "tomorrow" → Current date + 1 day
-- "7PM" → "19:00:00"
-- "noon" → "12:00:00"
+Worked natural-language → command examples (calendar and contacts) live in
+`references/quick-reference.md`.
 
 ## Error Handling
 
