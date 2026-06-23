@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Rewrote the `zsnoop-mcp` skill description to lead with concrete trigger phrases and mirrored the framing into the OpenAI companion.
+
 ## 2026-06-16
 
 ### Added
