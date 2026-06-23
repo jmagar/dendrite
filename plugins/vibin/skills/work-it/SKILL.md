@@ -1,139 +1,220 @@
 ---
 name: work-it
-description: Use when the user asks to "work it", execute a superpowers executing-plans document in a worktree, create a PR as soon as the implemented plan is green, or run a complete review-and-fix loop over all touched files.
+description: Use when the user asks to "work it", execute a plan in a worktree, create a progress-tracked PR, or run a mandatory review-and-fix loop over all touched files until lint, tests, CI, and reviews are green.
 ---
 
 # Work It
 
 ## Overview
 
-Use this skill to run a plan to completion in an isolated `.worktrees/` checkout. Treat the whole worktree as owned for the duration: pre-existing failures, stale tests, lint issues, review findings, and PR comments in that worktree must be fixed before claiming completion.
+Use this skill to run a plan to completion in a tracked worktree PR. Treat the
+active worktree as owned for the duration: pre-existing failures, stale tests,
+lint issues, review findings, CI failures, and PR comments in that worktree must
+be fixed before claiming completion.
 
-## Required vs optional dependencies
+## Required Dependencies
 
-This skill names several agents, skills, and commands. Degrade predictably when
-any are absent: announce the substitution in the final report and keep going.
+Hard-stop if any required dependency or equivalent capability is unavailable:
 
-**Required (hard-stop if unavailable):**
+- `vibin:worktree-setup` — invoke this first for any new worktree and read its
+  `SKILL.md` plus its referenced files/resources before creating or syncing the
+  worktree.
+- `superpowers:executing-plans` — the implementation agent must execute the
+  requested plan through this workflow.
+- `vibin:review-pr` — Codex-compatible PR Review Toolkit flow for the
+  mandatory PR review sweep.
+- `vibin:merge-status` — final read-only merge-readiness gate before completion.
+- Agent dispatch — implementation must happen in a dedicated implementation
+  agent inside the worktree, not in the coordinator session.
+- `lavra:lavra-review` or the repo's closest full independent review
+  equivalent.
+- GitHub/forge CLI access for PR creation, CI status, and comment resolution.
+- `vibin:quick-push` for final publish and session logging.
 
-- `superpowers:executing-plans` — the implementation agent must run the plan
-  through this workflow. If neither it nor any agent-dispatch mechanism exists,
-  stop and report the implementation phase as **blocked**. Do not self-implement
-  in the coordinator session.
+Review passes are not optional. If an exact named review tool is unavailable,
+use the closest repo-local equivalent. If no credible equivalent exists, stop
+and report the workflow as blocked instead of skipping the review.
 
-**Optional (degrade with a fallback, never block):**
+## Worktree Policy
 
-- `lavra-review` — first independent review wave. Fallback: the closest
-  repo-local review skill, script, or CLI; otherwise note the wave was skipped.
-- `code_simplifier` / `code-simplifier` — three simplification passes. Fallback:
-  any available simplifier agent, or a single manual simplification pass.
-- `pr-review-toolkit` — full review sweep. Fallback: whatever review agents the
-  repo does expose; otherwise note reduced coverage.
-- `gh-fetch-comments` / `vibin:gh-pr` — PR comment resolution. Fallback: `gh pr
-  view --json comments` / `gh api` to fetch threads, then resolve manually.
-- `vibin:save-to-md` — session note capture. Fallback: hand-write the equivalent
-  markdown artifact in the repo's session location and state the substitution.
+- If currently on the local `main`/`master`/default checkout, always create a
+  new `.worktrees/<slug>` checkout through `vibin:worktree-setup` before editing.
+- If already inside a worktree and there are no signs of other agent or human
+  activity in that worktree, do not create another worktree. Run the
+  `worktree-setup` doctor/sync path as needed, then continue there.
+- If already inside a worktree but ownership is unclear — dirty files you did
+  not create, unexpected recent commits, an active branch/PR owned by someone
+  else, or other evidence of concurrent activity — stop and ask, or create a
+  separate worktree from the intended base if the user asked for autonomous
+  execution.
+
+Signs of other activity include dirty files that predate the task, unpushed
+commits not made by this run, background processes, active PR updates by another
+actor, or worktree metadata showing another session is operating there.
 
 ## Non-Negotiables
 
-- Create and work inside a `.worktrees/<slug>` checkout unless the user explicitly names an existing worktree.
-- Read the requested plan file before implementation, then dispatch a dedicated implementation agent inside the worktree to execute it with the repo's `superpowers:executing-plans` workflow.
-- Do not implement the plan directly in the coordinator session unless the user explicitly overrides this skill. If agent dispatch is unavailable, report the workflow as blocked rather than silently self-implementing.
-- Keep all implementation, review fixes, verification, commits, PR creation, and PR comment resolution inside the worktree.
-- Fix every issue surfaced by verification, `lavra-review`, three `code_simplifier` passes, all available `pr-review-toolkit` agents, and `gh-fetch-comments`.
-- Create the PR immediately after the plan is fully implemented and the worktree is green of all known issues, including pre-existing issues. This starts external review from CodeRabbit, Copilot, cubic-dev, and similar reviewers while later review waves run.
-- Do not resolve GitHub comments until the matching code or documentation change is committed or the comment is proven obsolete with evidence.
-- Execute `vibin:save-to-md` before the final `git add .` so the session note is captured and can be included in the final commit when the repo expects it.
-- Before final completion, run `git add .`, commit all remaining worktree changes, and push to the worktree branch's remote. If the branch has no upstream, set it with `git push -u origin HEAD` or the repo's correct remote.
-- Do not finish while background jobs or review agents are still running.
+- Invoke `vibin:worktree-setup` before creating, entering, or reusing the
+  implementation worktree. Follow its `.worktrees/` placement, warm-sync, and
+  safety rules.
+- Read the requested plan file before implementation. Copy it into the worktree
+  before dispatching the implementation agent, preserving the relative path when
+  possible or using `docs/plans/imported/` when the source is outside the repo.
+- Dispatch a dedicated implementation agent inside the worktree. Its prompt must
+  require `superpowers:executing-plans`, the copied plan path, the base branch,
+  worktree path, branch name, PR URL if already created, repo validation hints,
+  and the requirement that all implementation and repair work happen inside the
+  worktree.
+- Create a draft PR as soon as the worktree branch exists and has been pushed,
+  before implementation begins when possible. This makes progress trackable via
+  commits and CI while the work proceeds. If the forge requires a non-empty diff,
+  create the PR immediately after the first focused commit.
+- Commit early and commit often. Prefer small, reviewable commits after coherent
+  plan slices, verification repairs, and review-fix batches.
+- Keep all implementation, review fixes, verification, commits, PR updates, and
+  PR comment resolution inside the worktree.
+- Fix every issue surfaced by verification, mandatory review waves, CI, and PR
+  comments. Pre-existing issues in the worktree are in scope.
+- Continue review/fix waves until diminishing returns are visible. If review
+  passes still find substantive issues, run another review wave before final
+  publish.
+- Do not resolve PR comments until the matching code or documentation change is
+  committed, pushed, and verified, or the comment is proven obsolete with
+  evidence.
+- Do not finish while background jobs, review agents, or CI checks are still
+  running.
 
 ## Workflow
 
-1. **Prepare the isolated checkout**
-   - Inspect the current repo state with `git status --short --branch`, `git branch --show-current`, and `git remote -v`.
-   - Create a branch and worktree under `.worktrees/`, for example:
+1. **Prepare or reuse the worktree**
+   - Inspect live state: `git status --short --branch`, `git branch
+     --show-current`, `git remote -v`, and `git worktree list --porcelain`.
+   - Apply the worktree policy above.
+   - Invoke `vibin:worktree-setup`. For a new branch, create under
+     `.worktrees/<slug>`; for an existing worktree, run the sync/doctor flow.
+   - Enter the worktree for all remaining commands and record base branch,
+     worktree path, branch name, and HEAD.
 
-     ```bash
-     git worktree add -b <branch> .worktrees/<slug> HEAD
-     ```
+2. **Load and copy the plan**
+   - Read the plan path supplied by the user.
+   - Copy the plan into the worktree before dispatch. Preserve repo-relative
+     paths when the plan is inside the source checkout; otherwise copy to
+     `docs/plans/imported/<original-name>.md`.
+   - Convert the plan into a coordinator checklist for the implementation agent,
+     PR tracking, review waves, and final gates.
 
-   - Enter the worktree for all remaining commands.
-   - Re-check status in the worktree and record the base branch.
+3. **Create the tracking PR**
+   - Push the branch with upstream tracking.
+   - Create a draft PR with `gh pr create` as soon as the branch can support it.
+   - Include the plan summary, copied plan path, intended verification, and note
+     that implementation is in progress.
+   - If a PR cannot be created until the first diff exists, make the first
+     focused implementation commit and create the PR immediately afterward.
 
-2. **Load the plan**
-   - Read the plan path supplied by the user, such as `docs/superpowers/plans/<date>-<name>.md`.
-   - Confirm the `superpowers:executing-plans` skill is available for the implementation agent and include that requirement in the dispatch prompt.
-   - Convert the plan into a coordinator checklist for tracking the implementation agent handoff and later review phases.
-   - Treat ambiguous plan items as requirements to clarify through repo evidence before editing.
+4. **Dispatch implementation agent to green**
+   - Dispatch one implementation agent whose working directory is the worktree
+     root.
+   - Require the agent to invoke `superpowers:executing-plans` and execute the
+     copied plan file from inside the worktree.
+   - Require scoped commits as plan slices are completed.
+   - Require the agent to iterate until the whole worktree is green: lint,
+     formatting, tests, build, typecheck, generated artifacts, config examples,
+     docs, and repo-specific gates.
+   - Require a concise handoff with changed files, plan items completed,
+     verification commands and results, remaining risks, and whether the
+     worktree is clean or dirty.
+   - Require that handoff to be captured in the session log through
+     `vibin:save-to-md`. If the implementation agent cannot invoke that skill
+     safely, the coordinator must carry the handoff into the `quick-push` /
+     `save-to-md` session log before final completion.
+   - When the agent returns, inspect `git status --short`, review changed files
+     enough to understand the implementation, and rerun the reported
+     verification before proceeding.
 
-3. **Dispatch implementation agent to green**
-   - Dispatch one implementation agent whose working directory is the worktree root.
-   - Instruct the agent to invoke `superpowers:executing-plans` and execute the plan file from inside the worktree.
-   - Give the agent the plan path, base branch, worktree path, branch name, repo validation hints, and this constraint: all implementation, focused tests, full verification, and any repair work must happen inside the worktree.
-   - Require the agent to make scoped changes that satisfy every plan item, include any pre-existing worktree failures in the repair scope, and iterate until the entire worktree is green: tests, lint, formatting, build, typecheck, generated artifacts, or any repo-specific gates.
-   - Require the agent to return a concise handoff with changed files, plan items completed, verification commands and results, remaining risks, and whether the worktree is clean or dirty.
-   - When the agent returns, inspect `git status --short`, review the changed files enough to understand the implementation, and run or re-run the reported verification before proceeding.
-
-4. **Create the PR immediately**
-   - Commit as soon as the plan is fully implemented and the worktree is green of all known issues, including pre-existing failures.
-   - Push the branch and create a PR with `gh pr create`.
-   - Include the plan summary, implemented changes, and verification evidence in the PR body.
-   - Keep the PR open while the remaining review waves run so external reviewers have time to produce comments.
-
-5. **Run first independent review wave**
-   - Run `lavra-review` in the worktree.
+5. **Run mandatory independent review**
+   - Run `lavra:lavra-review` or the closest full independent review equivalent
+     inside the worktree.
    - Address every finding, regardless of severity.
-   - Re-run relevant verification after each fix batch and push follow-up commits to the PR.
+   - Re-run relevant verification after each fix batch and push follow-up
+     commits to the PR.
 
-6. **Run three simplification passes**
-   - Dispatch three `code_simplifier` agents against all touched files.
-   - Give each agent the touched-file list, the plan path, and the instruction to report concrete issues or patch directly when the environment supports it.
-   - When they finish, address every issue from all three passes.
-   - Re-run verification after simplifier-driven changes and push follow-up commits to the PR.
+6. **Run mandatory PR review toolkit sweep**
+   - Invoke `vibin:review-pr` inside the worktree against the PR and all
+     touched files in `apply-fixes` mode.
+   - Pass the PR URL/number, copied plan path, touched-file list, base branch,
+     and verification commands/results.
+   - Require every applicable PR Review Toolkit pass: code, tests, comments,
+     silent failures, type design, docs/config drift, and simplification.
+   - Address every finding, rerun verification, and push follow-up commits.
 
-7. **Run full PR review toolkit sweep**
-   - Dispatch every available `pr-review-toolkit` agent against all touched files in the PR.
-   - Ask for a systematic sweep of correctness, tests, silent failures, type design, comments, and simplification where the toolkit offers those roles.
-   - Address every finding.
-   - Re-run the complete verification gate and push follow-up commits.
+7. **Repeat reviews until diminishing returns**
+   - If the mandatory review passes still surface substantive issues, run
+     another review wave using the strongest available review agents.
+   - Stop repeating only when new review waves produce no actionable findings or
+     only duplicate/non-actionable findings with evidence.
 
-8. **Resolve PR comments**
-   - Run `gh-fetch-comments` or the repo-local equivalent for the PR just created.
-   - Address every open comment in the worktree.
-   - Push fixes, verify again, then resolve comments with the repo's accepted resolver only after the fix is present remotely.
-   - Repeat fetch, fix, verify, push, and resolve until there are zero unresolved actionable comments.
+8. **Resolve PR comments and CI**
+   - Fetch open PR comments/reviews with the repo's accepted tooling or `gh`
+     CLI/API fallback.
+   - Address every actionable comment in the worktree.
+   - Push fixes, verify again, and resolve comments only after fixes are present
+     remotely.
+   - Repeat fetch, fix, verify, push, and resolve until there are zero
+     unresolved actionable comments.
+   - Check CI status and wait/retry as needed until all CI is green.
 
-9. **Save the session**
-   - Execute `vibin:save-to-md` in the worktree after step 8 (PR comment resolution) and before step 10's final `git add .`.
-   - Save the markdown note in the repo's normal session location, usually `docs/sessions/`, unless the user provides a different path.
-   - Include concrete repo context: branch, HEAD, worktree path, PR URL, verification commands, review waves run, comments resolved, remaining risks, and open questions.
-   - If the save-to-md skill or command is unavailable, manually create the same markdown artifact and state the substitution in the final report.
+9. **Log the final session state**
+   - Invoke `vibin:quick-push` from the worktree before the final readiness
+     gate, so required session-log writes are committed and pushed before the
+     final HEAD is validated.
+   - `quick-push` is expected to invoke `vibin:save-to-md`. If no session log
+     was created or updated during quick-push, invoke `vibin:save-to-md`
+     immediately and commit/push that session-log update before continuing.
+   - For repeated quick-pushes in the same session, update the previously
+     created session log only when there is substantive new information to add.
+   - Ensure the session log captures branch, HEAD, worktree path, PR URL,
+     verification commands/results, review waves run, comments resolved,
+     remaining risks, and open questions.
 
-10. **Final publish**
-   - Run `git status --short` and review exactly what will be included.
-   - Run `git add .` from the worktree root.
-   - If required deliverables are ignored, such as session notes under `docs/sessions/`, force-add them explicitly with `git add -f <path>`.
-   - Commit the staged changes with a message that reflects the completed plan or final review/comment cleanup.
-   - Push to the worktree branch's configured upstream. If no upstream exists, repair tracking and push with `git push -u origin HEAD` or the repo's correct remote.
+10. **Final gate**
+   - Invoke `vibin:merge-status` from the worktree, using its collector script
+     and `--run-checks` when the local checks are safe to execute.
+   - If merge-status reports `not_ready`, `blocked`, or `unverified`, loop back
+     into fixes or stop with the blocking evidence. Do not publish as complete.
+   - Linting must be clean.
+   - All tests must pass.
+   - All CI must be green.
+   - Any and all pre-existing issues in the worktree must be resolved.
+   - Review/comment queues must be empty or explicitly non-actionable with
+     evidence.
+   - `git status --short` must be clean except for intentionally untracked
+     ignored artifacts.
 
-11. **Final gate**
-   - Confirm `git status --short` is clean except for intentionally untracked ignored artifacts.
-   - Confirm all required validation commands pass in the worktree.
-   - Confirm review/comment queues are empty or explicitly non-actionable with evidence.
-   - Report the worktree path, branch, PR URL, commits, validation commands, and review/comment resolution status.
+11. **Publish final status**
+    - Do not create new commits after the final gate. If any final report or
+      note would change tracked files, write it before rerunning the final gate.
+    - Push only if the final gate left already-validated commits unpushed, then
+      re-check CI for the pushed HEAD before claiming completion.
 
 ## Agent Dispatch Guidance
 
-Use agents when the current runtime supports them and the user has asked for this full workflow. Keep ownership explicit:
+Use agents when the runtime supports them and the user asked for this full
+workflow. Keep ownership explicit:
 
-- Implementation agent: execute the plan with `superpowers:executing-plans` inside the worktree and return only after the plan is implemented and verification is green.
-- `code_simplifier` pass 1: touched implementation files.
-- `code_simplifier` pass 2: touched tests and fixtures.
-- `code_simplifier` pass 3: touched docs, config, generated surfaces, and cross-file consistency.
-- `pr-review-toolkit` agents: dispatch every available toolkit role with the PR number, branch, touched-file list, and verification commands.
+- Implementation agent: execute the copied plan with
+  `superpowers:executing-plans` inside the worktree and return only after the
+  plan is implemented and verification is green.
+- Review agents: run all mandatory review passes; none are optional.
+- Follow-up review agents: run additional waves until diminishing returns are
+  observed.
 
-If an exact named review agent or command is unavailable, use the closest repo-local skill, script, or CLI equivalent and state the substitution in the final report. This fallback does not apply to the implementation agent: if no agent-dispatch mechanism exists, stop and report the implementation phase as blocked.
+If no agent-dispatch mechanism exists, stop and report the implementation phase
+as blocked. Do not silently self-implement the plan in the coordinator session.
 
 ## Completion Standard
 
-Completion means all plan items are implemented, all pre-existing and newly introduced worktree issues are fixed, the worktree is green, the PR exists, independent review waves have no outstanding actionable findings, and fetched PR comments are resolved. Anything less is blocked, not done.
+Completion means all plan items are implemented, pre-existing and newly
+introduced worktree issues are fixed, lint/tests/CI are green, the PR exists,
+mandatory review waves have no outstanding actionable findings, PR comments are
+resolved, session logging is complete, and the worktree is clean. Anything less
+is blocked, not done.

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Added `review-pr` so Codex can run the PR Review Toolkit command flow as a
+  Vibin skill, including code, tests, comments, silent failures, type design,
+  and simplification passes.
+- Added `merge-status` for read-only merge readiness checks across dirty state,
+  mergeability, branch/worktree overlap, lint/tests/CI, docs, and config
+  example drift.
+- Updated `work-it` to reuse safe existing worktrees, route creation through
+  `worktree-setup`, copy plans into the worktree, open an early draft PR,
+  invoke `review-pr` for the mandatory PR review sweep, require mandatory review
+  waves, commit early/often, and finish through `quick-push`.
+- Reinforced `quick-push` session logging so repeat pushes update an existing
+  session log only when there is substantive new information.
 - Removed the `summarize` skill from Vibin.
 - Removed the duplicate `yt-dlp` skill because the dedicated `ytdl-mcp` marketplace plugin now owns that capability.
 - Restored `create-swag-config` to Vibin with variableized SWAG deployment settings after removing the retired standalone `swag-mcp` marketplace entry.

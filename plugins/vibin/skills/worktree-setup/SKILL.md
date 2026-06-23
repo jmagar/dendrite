@@ -236,3 +236,11 @@ development: created under `.worktrees/`, same secrets and configuration, the
 same tools loaded and trusted, a warm cache, and the repo's normal checks
 passing. A worktree that builds cold, prompts about trust, or is missing `.env`
 is not done.
+
+## Handoff To PR-Tracked Workflows
+
+This skill stops at a warm, safe worktree. It does not create pull requests on
+its own because many callers only need a prepared checkout. PR-tracked workflows
+such as `vibin:work-it` should create a draft PR immediately after entering the
+prepared worktree and pushing its branch, so progress can be tracked through
+commits, CI, and review comments.

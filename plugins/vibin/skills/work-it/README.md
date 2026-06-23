@@ -1,20 +1,21 @@
 # work-it
 
-End-to-end worktree execution workflow: take a plan file, create an isolated worktree, dispatch an implementation agent to execute the plan there, verify, open a PR, run cleanup + review sweeps, address review comments, save a session log, and commit/push the final state.
+End-to-end worktree execution workflow: take a plan file, prepare or reuse a safe worktree, copy the plan into it, open an early draft PR, dispatch an implementation agent, run mandatory review waves, address PR comments, verify merge readiness, save the session log, and publish through `vibin:quick-push`.
 
 ## What it does
 
-1. **Worktree** — isolate the work in a fresh worktree.
+1. **Worktree** — create a fresh `.worktrees/<slug>` checkout from local main/default checkouts, or reuse the current worktree when it is clearly owned and quiet.
 2. **Dispatch implementation** — send an agent into the worktree to run `superpowers:executing-plans`; it iterates until tests/lints/build are green.
-3. **PR immediately** — open the PR as soon as it's green so CodeRabbit etc. can start reviewing in parallel.
-4. **Cleanup** — `lavra-review` pass.
-5. **Three `code_simplifier` passes** — impl files, tests, docs (one pass each).
-6. **`pr-review-toolkit`** sweeps for architecture / security / performance issues.
-7. **Address PR comments** — via `gh-address-comments` (mandatory resolution tracking).
-8. **`vibin:save-to-md`** — capture the session log (after step 7, before step 9's commit).
-9. **Final `git add . && commit && push`**.
+3. **PR immediately** — open a draft PR as soon as the branch can support it so progress is visible through commits and CI.
+4. **Independent review** — run `lavra:lavra-review` or the closest full independent review equivalent.
+5. **PR Review Toolkit sweep** — invoke `vibin:review-pr` in `apply-fixes` mode for code, tests, comments, silent failures, type design, docs/config drift, and simplification.
+6. **Repeat reviews** — keep running review/fix waves until new passes show diminishing returns.
+7. **Address PR comments and CI** — fetch, fix, verify, push, and resolve every actionable comment and failing check.
+8. **Log and publish commits** — run `vibin:quick-push` before the final readiness gate so the session log is committed and pushed as part of the HEAD being validated.
+9. **Merge readiness** — invoke `vibin:merge-status` and treat `not_ready`, `blocked`, or `unverified` as a loop-back or blocker.
+10. **Final status** — do not create new commits after the final gate; push only already-validated commits and re-check CI for the pushed HEAD.
 
-Completion standard: every item ticked, every thread resolved or explicitly dismissed.
+Completion standard: every plan item implemented, mandatory reviews clean, lint/tests/CI green, merge-status ready, PR comments resolved, session logging complete, and the worktree clean.
 
 ## Invoke
 

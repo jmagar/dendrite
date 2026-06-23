@@ -5,9 +5,9 @@ and `GEMINI.md` must be symlinks to this file.
 
 ## Purpose
 
-Dendrite owns the portable Claude Code and Codex plugin marketplace. It carries
-plugin sources, skills, MCP config snippets, commands, hooks, scripts, and
-OpenAI agent companion files.
+Dendrite owns the portable Claude Code, Codex, and Gemini plugin marketplace.
+It carries plugin sources, skills, MCP config snippets, commands, hooks,
+scripts, Gemini extension manifests, and OpenAI agent companion files.
 
 The Lab control-plane plugin is the exception: `plugins/labby` stays in
 `jmagar/lab` and is referenced from marketplace manifests as a GitHub
@@ -33,12 +33,12 @@ subdirectory source.
 - `marketplace-no-mcp` is an intentional long-lived marketplace variant branch,
   not stale cleanup. It keeps the same skill/plugin catalog available while
   removing bundled MCP server registrations for environments where those MCP
-  servers are already connected through the Labby gateway. Leave the branch and
-  its worktree in place unless Jacob explicitly asks to retire the no-MCP
-  marketplace variant.
+  servers are already connected through a separate MCP gateway or aggregator.
+  Leave the branch and its worktree in place unless the repository owner
+  explicitly asks to retire the no-MCP marketplace variant.
 - Do not merge `marketplace-no-mcp` into `main` by default. `main` is the
   canonical full marketplace for normal users and should keep bundled MCP server
-  registrations where a plugin owns them; `marketplace-no-mcp` is Jacob's
+  registrations where a plugin owns them; `marketplace-no-mcp` is the
   gateway-oriented alternate ref.
 - The `.github/workflows/sync-marketplace-no-mcp.yml` workflow keeps
   `marketplace-no-mcp` current after pushes to `main` and on a daily schedule:
@@ -138,10 +138,11 @@ plugins/scripts/sync-upstream-skills add <github-folder-url>
 plugins/scripts/sync-upstream-skills check
 plugins/scripts/sync-upstream-skills apply --all
 
-# Regenerate docs/plugin-matrix.md, docs/configuration-matrix.md,
-# docs/marketplace-sources.md, docs/schema-provenance.md, and
-# docs/no-mcp-variant.md after changing manifests, config, schemas, or no-MCP
-# marketplace rules.
+# Regenerate README inventory plus docs/plugin-matrix.md,
+# docs/configuration-matrix.md, docs/marketplace-sources.md,
+# docs/schema-provenance.md, and docs/no-mcp-variant.md after changing
+# manifests, config, schemas, skills, or no-MCP marketplace rules.
+plugins/scripts/generate-readme-inventory
 plugins/scripts/generate-docs
 
 # Enable the tracked pre-push hook in a clone.

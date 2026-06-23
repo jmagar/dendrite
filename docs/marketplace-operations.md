@@ -7,10 +7,11 @@ entries.
 
 - `main` is the full/default marketplace for normal users. It may include local
   `.mcp.json` files and Gemini `mcpServers` entries.
-- `marketplace-no-mcp` is generated from `main` for Jacob's gateway-oriented
-  install. It keeps skills/plugins but removes bundled MCP server registrations.
-- `plugins/labby` is not copied into this repo. Reference it from
-  `jmagar/lab`, path `plugins/labby`.
+- `marketplace-no-mcp` is generated from `main` for installs that do not want
+  bundled MCP server registrations. It keeps skills/plugins while removing
+  bundled MCP config.
+- External plugin sources should be referenced from the marketplace manifests
+  instead of copied into this repository.
 
 ## Add Or Update A Local Plugin
 
@@ -41,9 +42,9 @@ plugins/scripts/smoke-marketplace-install
 ## MCP-Backed Entries
 
 For the full marketplace, keep MCP registrations where they are useful for a
-normal user. For Jacob's no-MCP variant, add the plugin name to
-`NO_MCP_REF_NAMES` in `plugins/scripts/apply-no-mcp-marketplace` only when that
-remote plugin also has a `marketplace-no-mcp` ref.
+normal user. For the no-MCP variant, add the plugin name to `NO_MCP_REF_NAMES`
+in `plugins/scripts/apply-no-mcp-marketplace` only when that remote plugin also
+has a `marketplace-no-mcp` ref.
 
 Never hand-edit `marketplace-no-mcp` as the primary fix. Change `main` and the
 transform, then let `.github/workflows/sync-marketplace-no-mcp.yml` publish the

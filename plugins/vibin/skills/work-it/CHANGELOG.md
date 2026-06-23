@@ -2,6 +2,13 @@
 
 All notable changes to the `work-it` skill are recorded here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/).
 
+## Unreleased
+- Reworked the flow around safe worktree reuse, early draft PR creation,
+  mandatory `vibin:review-pr` sweeps, repeated review waves until diminishing
+  returns, final `vibin:merge-status`, and `vibin:quick-push` publishing.
+- Removed stale three-pass `code_simplifier` and raw `git add . && commit &&
+  push` guidance from the README.
+
 ## [0.1.2] - 2026-05-26
 - Changed the implementation phase so the coordinator dispatches a dedicated implementation agent inside the worktree.
 - Required that implementation agent to invoke `superpowers:executing-plans` and return a verification handoff.
