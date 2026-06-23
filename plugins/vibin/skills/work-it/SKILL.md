@@ -9,6 +9,31 @@ description: Use when the user asks to "work it", execute a superpowers executin
 
 Use this skill to run a plan to completion in an isolated `.worktrees/` checkout. Treat the whole worktree as owned for the duration: pre-existing failures, stale tests, lint issues, review findings, and PR comments in that worktree must be fixed before claiming completion.
 
+## Required vs optional dependencies
+
+This skill names several agents, skills, and commands. Degrade predictably when
+any are absent: announce the substitution in the final report and keep going.
+
+**Required (hard-stop if unavailable):**
+
+- `superpowers:executing-plans` — the implementation agent must run the plan
+  through this workflow. If neither it nor any agent-dispatch mechanism exists,
+  stop and report the implementation phase as **blocked**. Do not self-implement
+  in the coordinator session.
+
+**Optional (degrade with a fallback, never block):**
+
+- `lavra-review` — first independent review wave. Fallback: the closest
+  repo-local review skill, script, or CLI; otherwise note the wave was skipped.
+- `code_simplifier` / `code-simplifier` — three simplification passes. Fallback:
+  any available simplifier agent, or a single manual simplification pass.
+- `pr-review-toolkit` — full review sweep. Fallback: whatever review agents the
+  repo does expose; otherwise note reduced coverage.
+- `gh-fetch-comments` / `vibin:gh-pr` — PR comment resolution. Fallback: `gh pr
+  view --json comments` / `gh api` to fetch threads, then resolve manually.
+- `vibin:save-to-md` — session note capture. Fallback: hand-write the equivalent
+  markdown artifact in the repo's session location and state the substitution.
+
 ## Non-Negotiables
 
 - Create and work inside a `.worktrees/<slug>` checkout unless the user explicitly names an existing worktree.

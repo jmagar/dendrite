@@ -12,6 +12,14 @@ Use this skill to enforce the repository monolith policy:
 - Rust functions fail above 120 effective lines.
 - Allowlist entries in `.monolith-allowlist` are temporary and checked for expiry.
 
+`<skill-dir>` in the commands below is this skill's own directory — the
+directory containing this `SKILL.md` (its `scripts/enforce_monoliths.py` ships
+with the skill). Resolve it before running, e.g. `SKILL_DIR="$(dirname
+"$0")"`-style, or just substitute the absolute path of this skill directory.
+The `--staged`, `--file`, and `--base/--head` checks read tracked files and the
+host repo's `.monolith-allowlist` from the current working directory, so run
+them from the repo root being audited.
+
 ## Commands
 
 Run against staged changes:

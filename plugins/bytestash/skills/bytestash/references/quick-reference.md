@@ -18,7 +18,7 @@ ByteStash <= 1.0.0; API keys are limited to public/read-only endpoints there.
 ### List All Snippets
 
 ```bash
-cd plugins/bytestash/skills/bytestash
+# Run from this skill directory (or use an absolute path to the wrapper).
 ./scripts/bytestash-api.sh list | jq .
 ```
 

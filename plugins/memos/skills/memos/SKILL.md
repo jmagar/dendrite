@@ -54,88 +54,45 @@ MEMOS_API_TOKEN="<your_api_token>"
 All commands return JSON output for LLM parsing. Scripts source credentials from
 the generated plugin config automatically.
 
-### Memo Operations
+**Invocation:** All script paths below are written relative to the skill
+directory, so run them with the skill directory as the working directory (this
+is where the Bash tool starts for a skill's own scripts). Each script resolves
+its own location internally, so a relative `bash scripts/<name>.sh ...` is all
+that is needed — use this `bash scripts/...` form consistently.
 
-**Create a memo:**
-```bash
-bash scripts/memo-api.sh create "Your memo content here"
-bash scripts/memo-api.sh create "Memo with tags" --tags "work,project"
-bash scripts/memo-api.sh create "Private memo" --visibility PRIVATE
-```
+### Core scripts
 
-**List memos:**
-```bash
-bash scripts/memo-api.sh list
-bash scripts/memo-api.sh list --limit 10
-bash scripts/memo-api.sh list --filter 'tag == "work"'
-```
+| Script | Covers |
+|--------|--------|
+| `scripts/memo-api.sh` | create, list, get, update, delete, archive memos |
+| `scripts/search-api.sh` | full-text search with tag/date/visibility filters |
+| `scripts/tag-api.sh` | list / search / stats / rename tags |
+| `scripts/resource-api.sh` | upload, list, delete, download attachments |
+| `scripts/user-api.sh` | whoami, tokens, profile |
 
-**Get specific memo:**
+Common examples:
+
 ```bash
+# Create / list / get / update / delete / archive
+bash scripts/memo-api.sh create "Your memo content here" --tags "work,project"
+bash scripts/memo-api.sh list --limit 10 --filter 'tag == "work"'
 bash scripts/memo-api.sh get <memo-id>
-```
-
-**Update memo:**
-```bash
 bash scripts/memo-api.sh update <memo-id> "Updated content"
-bash scripts/memo-api.sh update <memo-id> --add-tags "urgent"
-```
-
-**Delete memo:**
-```bash
 bash scripts/memo-api.sh delete <memo-id>
-```
-
-**Archive memo:**
-```bash
 bash scripts/memo-api.sh archive <memo-id>
-```
 
-### Search Operations
+# Search and tags
+bash scripts/search-api.sh "docker kubernetes" --tags "devops" --from "2024-01-01"
+bash scripts/tag-api.sh list
+bash scripts/tag-api.sh search "project-x"
 
-**Search by content:**
-```bash
-bash scripts/search-api.sh "search query"
-bash scripts/search-api.sh "docker kubernetes" --tags "devops"
-bash scripts/search-api.sh "meeting notes" --from "2024-01-01"
-```
-
-**Search by tag:**
-```bash
-bash scripts/tag-api.sh list                    # List all tags
-bash scripts/tag-api.sh search "project-x"      # Find memos with tag
-```
-
-### Attachment Operations
-
-**Upload file:**
-```bash
-bash scripts/resource-api.sh upload /path/to/file.pdf
+# Attachments and user
 bash scripts/resource-api.sh upload image.png --memo-id <id>
-```
-
-**List attachments:**
-```bash
-bash scripts/resource-api.sh list
-bash scripts/resource-api.sh list --memo-id <id>
-```
-
-**Delete attachment:**
-```bash
-bash scripts/resource-api.sh delete <attachment-name>
-```
-
-### User Operations
-
-**Get current user:**
-```bash
 bash scripts/user-api.sh whoami
 ```
 
-**List access tokens:**
-```bash
-bash scripts/user-api.sh tokens
-```
+Every script supports `--help`. For the full per-command option tables and
+worked examples, see `references/quick-reference.md`.
 
 ## Workflow
 
@@ -203,8 +160,8 @@ External:
 
 ## Agent Tool Usage
 
-Run this skill's scripts with the Bash tool directly:
+Run this skill's scripts with the Bash tool directly, from the skill directory:
 
 ```bash
-./scripts/memo-api.sh [args]
+bash scripts/memo-api.sh [args]
 ```

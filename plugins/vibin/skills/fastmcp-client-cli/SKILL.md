@@ -1,6 +1,6 @@
 ---
 name: "fastmcp-client-cli"
-description: "Query MCP servers from the shell using fastmcp discover, list, and call. Use when you need to discover configured servers, list tools/resources/prompts, call tools, read resources, get prompts, or bridge MCP servers into shell-based workflows."
+description: "Drives the FastMCP client CLI (discover, list, call) to inspect and exercise MCP servers from the shell. Use when the user wants to 'list the tools on this MCP server', 'call this MCP tool from the shell', asks 'what MCP servers are configured', wants to 'smoke-test an MCP server's tools', 'inspect an MCP tool's schema', read a resource, get a prompt, or bridge MCP servers into shell-based workflows."
 metadata:
   doc_type: "skill"
   status: "active"
@@ -8,15 +8,6 @@ metadata:
   audience:
     - "agents"
     - "maintainers"
-  scope: "v0"
-  source_of_truth: false
-  upstream_refs: []
-  related: []
-  last_reviewed: "2026-05-13"
-  last_modified: "2026-05-13"
-  modified_on_branch: "main"
-  modified_at_version: "0.1.0"
-  modified_at_commit: "unborn"
   review_basis: "local command guidance; refresh against upstream FastMCP docs before version-sensitive edits"
 ---
 

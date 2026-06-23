@@ -78,7 +78,7 @@ The bearer token lives in plugin userConfig (secure OS storage) — and, if you 
 
 **Bring the VM back up** (container down): `ssh "$CLAUDE_PLUGIN_OPTION_AGENT_OS_VM_HOST" 'docker compose -f "$CLAUDE_PLUGIN_OPTION_AGENT_OS_COMPOSE_FILE" up -d'` (container `$CLAUDE_PLUGIN_OPTION_AGENT_OS_CONTAINER_NAME`; the VM disk persists across restarts).
 
-**If the MCP is unreachable**, repair outward through the four layers: container up on the Docker host (`ssh "$CLAUDE_PLUGIN_OPTION_AGENT_OS_VM_HOST" 'docker ps | grep "$CLAUDE_PLUGIN_OPTION_AGENT_OS_CONTAINER_NAME"'`) → guest Tailscale up (see **Tailscale maintenance**) → `tailscale serve` mapping present → server listening on `:8000` → `lab gateway reload`. Full symptom/fix grid in **Troubleshooting**. The plugin's SessionStart hook reports this status automatically; `/agent-os status` runs it on demand. If `agent_os_autostart` is `"true"`, the hook also tries to `docker compose up -d` the VM when it's down (it only *starts* an already-provisioned VM — it does not install Windows-MCP).
+**If the MCP is unreachable**, repair outward through the four layers: container up on the Docker host (`ssh "$CLAUDE_PLUGIN_OPTION_AGENT_OS_VM_HOST" 'docker ps | grep "$CLAUDE_PLUGIN_OPTION_AGENT_OS_CONTAINER_NAME"'`) → guest Tailscale up (see `references/tailscale.md`) → `tailscale serve` mapping present → server listening on `:8000` → `lab gateway reload`. Full symptom/fix grid in `references/troubleshooting.md`. The plugin's SessionStart hook reports this status automatically; `/agent-os status` runs it on demand. If `agent_os_autostart` is `"true"`, the hook also tries to `docker compose up -d` the VM when it's down (it only *starts* an already-provisioned VM — it does not install Windows-MCP).
 
 ## Tool surface
 
@@ -125,81 +125,7 @@ Use the Windows-MCP tools directly once the server is up. In examples below, `Sc
 
 ## Recipes
 
-### Open an app and do something
-
-```
-App {"name": "Notepad"}
-# wait until Notepad's title bar paints
-Wait {"seconds": 1}
-Type {"text": "hello from claude"}
-Shortcut {"keys": "Ctrl+s"}
-```
-
-### Run PowerShell directly (preferred for headless work)
-
-```
-PowerShell {"command": "Get-Process | Where-Object {$_.CPU -gt 10} | Select-Object Name,CPU,Id -First 10 | ConvertTo-Json"}
-```
-
-You get stdout back as text. JSON-out makes the result trivial to parse. Use `PowerShell` for anything that's expressible as a command — it sidesteps every GUI hazard.
-
-### Driving native / GPUI desktop apps
-
-Custom desktop apps — especially ones built on **GPUI** (Zed's Rust GUI framework) and other non-standard toolkits — often don't expose a usable accessibility tree, so `Snapshot`/`Click`-by-coordinate and plain `Type` can be unreliable. Launch, focus, and input must run through Windows-MCP's **desktop-attached** PowerShell, not a plain SSH session: SSH can start the process but typically can't foreground it or deliver synthetic input to the interactive desktop.
-
-Use a `WScript.Shell` harness for launch/focus/input:
-
-```powershell
-$ws = New-Object -ComObject WScript.Shell
-$null = $ws.Run('"C:\path\to\app.exe"', 1, $false)
-Start-Sleep -Seconds 2
-$null = $ws.AppActivate('Window Title')
-$ws.SendKeys('status{ENTER}')
-```
-
-Lessons for these apps:
-
-- Prefer `WScript.Shell` `Run` + `AppActivate` over `Start-Process` — the latter launches but often leaves synthetic keyboard input unreliable for GPUI windows.
-- Run it through Windows-MCP `PowerShell` (desktop-attached), not non-interactive SSH — the SSH path can't foreground the window.
-- GPUI text inputs frequently ignore clipboard paste; literal `SendKeys('<command>{ENTER}')` is the reliable path.
-- Kill and relaunch the app between captures when testing command output, so input/mode state doesn't leak from one operation into the next.
-
-For launch-blocking and capture failures on these apps (SmartScreen/`Unblock-File`, firewall prompts, missing `cv2` screenshot fallback, the ~120s MCP-call timeout), see **Troubleshooting**.
-
-### Click by accessibility coordinates instead of vision-guessing
-
-```
-Snapshot {}                      # returns interactive elements with labels + their coordinates
-Click {"x": 412, "y": 287}       # pass the coordinates Snapshot reported for the element you want
-```
-
-`Click` still takes `(x, y)` — you don't click by element name. The win is that `Snapshot` gives you each element's coordinates straight from the accessibility tree, so you copy those in instead of guessing pixels from a Screenshot. Use Snapshot whenever you need to *interact*; use Screenshot when you just need to *look*.
-
-### Install software via winget
-
-```
-PowerShell {"command": "winget install --id Microsoft.PowerToys --silent --accept-package-agreements --accept-source-agreements"}
-```
-
-### Push and paste a long string (bypass typing)
-
-```
-Clipboard {"action": "set", "text": "<your long or symbol-heavy string>"}
-Click {"x": ..., "y": ...}        # focus the field
-Shortcut {"keys": "Ctrl+v"}
-```
-
-### Send a desktop notification when a long task ends
-
-```
-Notification {"title": "agent-os", "message": "winget install finished"}
-```
-
-### Persist a Windows setting
-
-```
-Registry {"action": "write", "path": "HKCU\\Software\\YourApp", "name": "Setting", "type": "REG_SZ", "value": "x"}
-```
+Task patterns — open an app and act on it, run PowerShell headless, drive native/GPUI desktop apps (the `WScript.Shell` launch/focus/input harness), click by accessibility coordinates, install via winget, clipboard-paste long strings, desktop notifications, and persist registry settings — live in `references/recipes.md`.
 
 ## Visual debugging via the noVNC fallback
 
@@ -225,30 +151,10 @@ These predate Windows-MCP but remain useful where the MCP path is awkward:
 - For *anything* expressible as PowerShell, prefer `PowerShell` over clicking. It's faster, more reliable, and leaves a paper trail in the command rather than in pixel coordinates.
 - Don't paste credentials via `Type` — round-trip through `Clipboard` so they don't end up in screenshots or logs of the typing stream.
 
-## Tailscale maintenance (read before bouncing the guest's Tailscale)
+## Tailscale maintenance
 
-The guest runs its own `tailscaled`, and `ssh agent-os` connects **over that same Tailscale IP** (`100.109.125.128`). That creates a footgun:
-
-- **Never run `tailscale down` (or restart the Tailscale service) over `ssh agent-os`.** The moment Tailscale drops, your SSH session is severed mid-command — so the follow-up `tailscale up` never executes and the node is left **stopped** (no Tailscale, MCP/gateway unreachable).
-- **Do Tailscale maintenance via the host port-forward instead:** `ssh -p "${CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_PORT:-2222}" "${CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_SSH:?set agent_os_host_forward_ssh in plugin settings}"`. This path goes through Docker/host forwarding, not the guest's Tailscale, so it survives `tailscale down/up`.
-- **Windows `tailscale up` won't run bare** when non-default prefs are set (this VM uses `--exit-node-allow-lan-access --unattended`). It errors and tells you to either re-list every non-default flag or use `tailscale up --reset`. Easiest reliable bounce: `Restart-Service Tailscale -Force` then `tailscale up --reset` (or re-list the flags).
-- **"offline but reachable" is expected here.** The control plane can show the node `offline / not in map poll` while it's still reachable via a direct LAN route (`10.1.0.2`) — fine on-LAN (SSH/MCP work), but unreliable from a remote network. A clean `tailscale up` after a service restart re-establishes the map poll and clears it.
-- If the gateway shows `agent-os_windows-mcp` as upstream discovery timed out, first check the guest's Tailscale is actually up with the configured host-forward SSH target, then reload the gateway.
+**Read `references/tailscale.md` before bouncing the guest's Tailscale.** Key footgun: never run `tailscale down` or restart the Tailscale service over `ssh agent-os` (that path rides the same Tailscale IP and severs mid-command, leaving the node stopped). Do Tailscale maintenance via the host port-forward SSH instead. The reference covers the bare-`tailscale up` prefs error, the `Restart-Service Tailscale -Force` + `tailscale up --reset` bounce, and the expected "offline but reachable" / not-in-map-poll state.
 
 ## Troubleshooting
 
-Work top to bottom — most failures are "the VM/MCP isn't reachable," and the checks are layered from outermost (container) to innermost (the tool call).
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `mcp__windows-mcp__*` tools missing / "server not found" | windows-mcp server or VM container down | On `$CLAUDE_PLUGIN_OPTION_AGENT_OS_VM_HOST`: `docker ps \| grep "$CLAUDE_PLUGIN_OPTION_AGENT_OS_CONTAINER_NAME"`. If absent: `docker compose -f "$CLAUDE_PLUGIN_OPTION_AGENT_OS_COMPOSE_FILE" up -d`. Then reload the gateway. |
-| Gateway shows `agent-os_windows-mcp` upstream discovery timeout | guest Tailscale down/flapping, or MCP slow to list tools | `ssh -p "${CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_PORT:-2222}" "$CLAUDE_PLUGIN_OPTION_AGENT_OS_HOST_FORWARD_SSH" tailscale status` (host-forward path). If Tailscale is down, bring it up (see **Tailscale maintenance**). Then reload the gateway. |
-| `ssh agent-os` times out but host-forward SSH works | guest Tailscale is stopped/offline | Bring Tailscale up via the host-forward path — see **Tailscale maintenance**. Never `tailscale down` over `ssh agent-os`. |
-| Node shows `offline` in `tailscale status` but pings/SSH work on-LAN | "not in map poll" — control-plane session not held (NAT churn) | Expected on-LAN; for remote access do a clean `Restart-Service Tailscale -Force` + `tailscale up --reset` via host-forward. |
-| `Snapshot`/`Screenshot` fail (Python `cv2` missing) | Windows-MCP image missing OpenCV | Capture in PowerShell instead: `System.Drawing.Graphics.CopyFromScreen` with the window rect from `user32!GetWindowRect`. |
-| MCP call dies around ~120s on a long op | MCP call layer timeout (not your `timeout` arg) | Split long work into chunks; write a manifest beside outputs. Kick off via `PowerShell`, poll with `Screenshot`. |
-| GUI app launches but synthetic input/focus unreliable (esp. GPUI windows) | `Start-Process` / non-interactive SSH not desktop-attached | Drive through Windows-MCP `PowerShell` with `WScript.Shell` `Run` + `AppActivate` + `SendKeys` (see **Driving native / GPUI desktop apps**). |
-| Downloaded `.exe`/`.ps1` blocked, SmartScreen/publisher prompt | Mark-of-the-Web on copied files | `Unblock-File` the file; set `SEE_MASK_NOZONECHECKS=1` before launching child exes. |
-| First run of an app raises a Windows Firewall prompt | new listener needs an allow rule | Pre-create a firewall rule, or accept once from the desktop (via noVNC) before expecting unattended runs. |
-| Need to *see* the desktop to debug | — | noVNC at `http://tootie:8006/vnc.html?autoconnect=1&resize=remote` (visual only — fix through Windows-MCP). |
-| Installed software/files vanished after reboot | something written outside `/storage` | Only `/storage` (the VM disk) persists; the container is reachable again after `docker compose up -d`. Re-install if it landed on an ephemeral layer. |
+Most failures are "the VM/MCP isn't reachable." The full symptom → cause → fix grid — missing tools, gateway discovery timeout, `ssh agent-os` timeouts, offline-in-map-poll, `cv2` capture failure, the ~120s MCP-call timeout, GPUI input/focus, Mark-of-the-Web/SmartScreen blocks, firewall prompts, and lost-after-reboot state — is in `references/troubleshooting.md`. The layered repair model itself lives in **Connection** above; Tailscale fixes in `references/tailscale.md`.

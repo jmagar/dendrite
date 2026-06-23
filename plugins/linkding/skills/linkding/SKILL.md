@@ -30,151 +30,58 @@ the API token. `LINKDING_TOKEN` is accepted as a local alias when
 
 ## Quick Reference
 
-### List/Search Bookmarks
+All commands use the bash wrapper `scripts/linkding-api.sh`; output is JSON. These
+cover the common path. The full command catalog (update, archive/unarchive,
+delete, tag-create, bundles, date filters) and copy-paste workflow recipes live
+in `references/quick-reference.md`.
 
 ```bash
-# List recent bookmarks
+# List recent bookmarks (defaults to most recent)
 ./scripts/linkding-api.sh bookmarks
 
 # Search bookmarks
 ./scripts/linkding-api.sh bookmarks --query "python tutorial"
 
-# List archived
-./scripts/linkding-api.sh bookmarks --archived
-
-# Filter by date
-./scripts/linkding-api.sh bookmarks --modified-since "2025-01-01T00:00:00Z"
-```
-
-### Create Bookmark
-
-```bash
-# Basic
-./scripts/linkding-api.sh create "https://example.com"
-
-# With metadata
+# Save a link for later (read-later); --unread is a real create flag
 ./scripts/linkding-api.sh create "https://example.com" \
-  --title "Example Site" \
-  --description "A great resource" \
-  --tags "reference,docs"
+  --title "Example Site" --tags "toread" --unread
 
-# Archive immediately
-./scripts/linkding-api.sh create "https://example.com" --archived
-```
-
-### Check if URL Exists
-
-```bash
+# Check whether a URL is already saved (returns the existing bookmark + scraped metadata)
 ./scripts/linkding-api.sh check "https://example.com"
-```
 
-Returns existing bookmark data if found, plus scraped metadata.
-
-### Update Bookmark
-
-```bash
-./scripts/linkding-api.sh update 123 --title "New Title" --tags "newtag1,newtag2"
-```
-
-### Archive/Unarchive
-
-```bash
-./scripts/linkding-api.sh archive 123
-./scripts/linkding-api.sh unarchive 123
-```
-
-### Delete
-
-```bash
-./scripts/linkding-api.sh delete 123
-```
-
-### Tags
-
-```bash
 # List all tags
 ./scripts/linkding-api.sh tags
-
-# Create tag
-./scripts/linkding-api.sh tag-create "mytag"
 ```
 
-### Bundles (saved searches)
+The full bookmark response model (`id`, `url`, `title`, `tag_names`,
+`is_archived`, `unread`, `shared`, `date_added`, …) is documented in
+`references/api-endpoints.md`.
+
+## Tag updates replace, not append
+
+`update <id> --tags` **replaces** the whole tag set. To add a tag without losing
+the others, read the current tags first and pass the merged list:
 
 ```bash
-# List bundles
-./scripts/linkding-api.sh bundles
-
-# Create bundle
-./scripts/linkding-api.sh bundle-create "Work Resources" \
-  --search "productivity" \
-  --any-tags "work,tools" \
-  --excluded-tags "personal"
+current=$(./scripts/linkding-api.sh get 123 | jq -r '.tag_names | join(",")')
+./scripts/linkding-api.sh update 123 --tags "${current},reviewed"
 ```
 
-## Response Format
+See `references/quick-reference.md` ("Batch Tag Addition") for applying this
+across many bookmarks.
 
-All responses are JSON. Bookmark object:
+## Safety
 
-```json
-{
-  "id": 1,
-  "url": "https://example.com",
-  "title": "Example",
-  "description": "Description",
-  "notes": "Personal notes",
-  "is_archived": false,
-  "unread": false,
-  "shared": false,
-  "tag_names": ["tag1", "tag2"],
-  "date_added": "2020-09-26T09:46:23.006313Z",
-  "date_modified": "2020-09-26T16:01:14.275335Z"
-}
-```
-
-## Common Patterns
-
-**Save current page for later:**
-```bash
-./scripts/linkding-api.sh create "$URL" --tags "toread" --unread
-```
-
-**Quick search and display:**
-```bash
-./scripts/linkding-api.sh bookmarks --query "keyword" --limit 10 | jq -r '.results[] | "\(.title) - \(.url)"'
-```
-
-**Bulk tag update:** Update via API PATCH with new tag_names array.
-
-## Workflow
-
-When the user asks about bookmarks:
-
-1. **"Save this link for later"** → Run `create <url>` with appropriate metadata and tags
-2. **"Find my bookmarks about Python"** → Run `bookmarks --query "python"`
-3. **"Is example.com already saved?"** → Run `check "https://example.com"`
-4. **"Archive old bookmarks"** → Search first, then `archive <id>` for each
-5. **"What tags do I have?"** → Run `tags`
-6. **"Show recent bookmarks"** → Run `bookmarks` (defaults to recent)
-
-## Notes
-
-- Requires network access to your Linkding server
-- Uses Linkding REST API v1
-- All data operations return JSON
-- **Delete operations are permanent** - always confirm before deleting
-- URL checking includes automatic metadata scraping
-- Tags are created automatically when used in bookmarks
-- Bundles are saved searches with filter criteria
-
----
+- **Delete is permanent** — always confirm with the user before `delete <id>`.
+- Tags are created automatically when first used on a bookmark.
+- Requires network access to your Linkding server (REST API v1).
 
 ## Reference
 
 Bundled references (load as needed):
-- `references/api-endpoints.md` — REST API endpoint reference
-- `references/quick-reference.md` — command examples
-- `references/troubleshooting.md` — common errors and fixes
+- `references/quick-reference.md` — full command catalog, jq patterns, and workflow recipes
+- `references/api-endpoints.md` — REST API endpoint reference and bookmark response model
+- `references/troubleshooting.md` — auth, URL validation, pagination, and connectivity fixes
 
 ## Agent Tool Usage
 

@@ -1,6 +1,6 @@
 ---
 name: zsnoop-mcp
-description: Use when the user wants to inspect ZFS pools, datasets, snapshots, snapshot cadence, or zpool health through zsnoop-mcp; compare snapshots; find when a file appeared, changed, or disappeared; grep/read files inside snapshots; fetch snapshot files or directories to the local workstation; or restore files/directories from ZFS snapshots with zsnoop's opt-in restore tools. Also use when configuring or troubleshooting the zsnoop MCP server, hosts.toml, SSH transport, local transport, sudo mode, or restore allowlists.
+description: Use for ZFS snapshot exploration and recovery through zsnoop-mcp. Triggers include "restore a file from a ZFS snapshot", "when did this file get deleted", "check my zpool health", "compare two snapshots", "grep inside a snapshot", "show snapshot cadence", "list ZFS pools/datasets/snapshots", "find when a file appeared or changed", "fetch a file out of a snapshot to my workstation", and "read a file inside a snapshot". Also use when configuring or troubleshooting the zsnoop MCP server, hosts.toml, SSH or local transport, sudo mode, or restore allowlists.
 ---
 
 # Zsnoop MCP

@@ -52,7 +52,11 @@ optional resource/tool/render checks while passing target/auth flags through to
 
 7. Test rendering in Inspector.
    - Start or open Inspector with `mcpjam inspector start` or `mcpjam inspector open`.
-   - Then call the UI tool with the CLI's UI rendering flag if available
+   - Confirm the render flags exist before relying on them: run `mcpjam tools call --help` and
+     look for the UI rendering flags (`--ui`, `--require-render`). Flag names vary by CLI version;
+     do not guide toward a flag the installed CLI doesn't list. If no render flag is present, fall
+     back to opening Inspector and visually confirming the widget renders.
+   - When the flags exist, call the UI tool with them
      (`mcpjam tools call ... --ui --require-render`).
    - A pass means the JSON output includes `inspectorRender.status == "rendered"`, not merely that
      the tool call exits 0 or `resources/read` returns HTML. If render is skipped, follow
@@ -72,7 +76,8 @@ Axon's MCP-UI dashboard contract.
 - Conformance passes but UI does not render: use Inspector and check HTML runtime errors, sandbox/CSP metadata, and whether the tool result contains structured data.
 - Inspector skipped/no active client: open/start Inspector first, then rerun `tools call --ui`.
 - `tools call --ui` exits 0 but no widget is visible: inspect `inspectorRender.status`; require
-  `rendered` or rerun with `--require-render` so skipped renders fail the check.
+  `rendered` or, if `mcpjam tools call --help` lists it, rerun with `--require-render` so skipped
+  renders fail the check.
 - HTTP `406` or SSE errors: ensure the client sends `Accept: application/json, text/event-stream`; MCPJam normally handles this.
 - Auth errors: verify bearer/OAuth config before debugging UI.
 

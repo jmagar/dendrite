@@ -1,11 +1,12 @@
 ---
 name: claude-in-mobile
-description: "This skill should be used when the user wants to automate an iOS Simulator, drive an Android device or emulator via MCP tools, test on multiple devices simultaneously, run a visual regression baseline on mobile, audit accessibility on a real device, release an app to the Play Store, or use the claude-in-mobile CLI or MCP server. Does not apply for structured end-to-end test reports (use android-app-testing or desktop-app-testing for those)."
+description: "This skill is the RAW claude-in-mobile MCP/CLI driver — use it to issue individual device-automation calls: drive an iOS Simulator, tap/swipe/type on an Android device or emulator, capture or diff screenshots, inspect the UI tree, audit accessibility, fan out across multiple devices, or run guarded Play Store release operations. Triggers: \"drive my emulator\", \"tap this element\", \"screenshot the simulator\", \"call a claude-in-mobile tool\", \"run an autopilot flow\". Does NOT produce a structured works/doesn't-work test report — for an end-to-end APK test run with a written report, use android-app-testing (or desktop-app-testing); this skill is the low-level driver those harnesses sit on top of."
 ---
 
 # Claude in Mobile
 
-Use this skill for `claude-in-mobile` MCP and native CLI workflows.
+Use this skill for `claude-in-mobile` MCP and native CLI workflows — the raw,
+call-by-call driver for mobile and desktop automation.
 
 ## What It Is
 
@@ -13,6 +14,17 @@ Use this skill for `claude-in-mobile` MCP and native CLI workflows.
 iOS Simulator, macOS desktop apps, Aurora OS devices, Chrome/Chromium sessions,
 quality checks, and app-store release operations. It exposes token-efficient
 meta-tools instead of many single-purpose tools.
+
+## Scope vs android-app-testing
+
+This skill is the **low-level driver**: you issue individual tool calls
+(`device list`, `tap`, `screenshot`, `ui tree`, `autopilot`) and interpret the
+results yourself. It does **not** enumerate an app's features, exercise them in
+order, or emit a structured works/doesn't-work + UX report. When the user wants
+that end-to-end report for an APK, use `android-app-testing` (or
+`desktop-app-testing`) — those harnesses *call this driver underneath*. If the
+ask is "test my app and tell me what breaks," prefer the testing harness; if the
+ask is "tap that button" or "screenshot the simulator," stay here.
 
 ## MCP Configuration
 
@@ -116,31 +128,12 @@ Important details:
 
 ## Core Tool Families
 
-- `device`: list devices, set/get active target, and enable/disable modules.
-- `input`: tap, long press, swipe, text, and key events.
-- `screen`: capture and annotate screenshots.
-- `ui`: inspect trees, find elements, tap text, wait, and assert UI state.
-- `app`: launch, stop, install, and list apps.
-- `system`: shell, logs, info, URLs, clipboard, permissions, files, and metrics.
-- `flow_batch`: execute multiple sequential operations in one round trip.
-- `flow_run`: run conditional or repeated automation flows.
-- `flow_parallel`: fan out the same action across multiple devices.
-
-Quality tools:
-
-- `accessibility`: audit for labels, touch targets, focus order, and duplicates.
-- `visual`: save baselines and compare screenshots for visual regressions.
-- `recorder`: record and replay taps, swipes, and text input.
-- `sync`: coordinate multi-device test barriers.
-- `autopilot`: explore apps with BFS/DFS and self-healing locators.
-- `performance`: collect CPU, memory, FPS, and snapshot metrics.
-
-Optional modules:
-
-- `browser`: Chrome/Chromium navigation, clicks, form fill, screenshots, and JS.
-- `desktop`: app launch, windows, focus, resize, clipboard, performance, and
-  monitor operations.
-- `store`: Google Play, Huawei AppGallery, and RuStore upload/release workflows.
+The server exposes token-efficient meta-tools: core (`device`, `input`,
+`screen`, `ui`, `app`, `system`, `flow_batch`, `flow_run`, `flow_parallel`),
+quality (`accessibility`, `visual`, `recorder`, `sync`, `autopilot`,
+`performance`), and optional modules (`browser`, `desktop`, `store`). See
+[references/tooling.md](references/tooling.md) for the per-action breakdown of
+each family.
 
 ## Common Workflows
 
