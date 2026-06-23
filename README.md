@@ -1,142 +1,106 @@
 # Dendrite
 
-Dendrite is the Claude Code, Codex, and Gemini marketplace home for agent
-plugins, skills, MCP integrations, hooks, commands, and OpenAI agent companion
-files.
+Dendrite is a portable plugin catalog for Claude Code, Codex, and Gemini. It
+packages agent skills, MCP server registrations, commands, hooks, config
+helpers, Gemini extension manifests, and OpenAI companion metadata in one place.
 
-It is split out from `jmagar/lab` so the Lab control plane can stay focused on
-the `labby` runtime while the agent capability catalog can evolve as its own
-public repo.
+Use it when you want a single marketplace that can install the same practical
+agent capabilities across multiple runtimes.
 
-## Marketplace Files
+## What You Get
 
-- `.claude-plugin/marketplace.json`: Claude Code marketplace manifest.
-- `.agents/plugins/marketplace.json`: Codex/OpenAI agent marketplace manifest.
-- `plugins/*/gemini-extension.json`: Gemini CLI extension manifests for local
-  extension installs.
-- `plugins/`: local plugin sources carried by this repo.
+A Dendrite plugin can ship one or more of these pieces:
 
-`plugins/labby` intentionally stays in `jmagar/lab`. The marketplace still
-publishes `labby` as an external GitHub subdirectory source:
-`https://github.com/jmagar/lab.git`, path `plugins/labby`.
+- **Skills** — reusable operating guides that teach an agent how to do a
+  specific job, such as testing a web app, preparing a worktree, managing
+  Paperless, or querying Qdrant.
+- **MCP server registrations** — runtime config for tools that expose actions to
+  the agent. The default marketplace includes these when the plugin owns or
+  bootstraps the server configuration.
+- **Commands and hooks** — Claude Code command docs and automation hooks where
+  that runtime supports them.
+- **OpenAI companion files** — `agents/openai.yaml` metadata so Codex can list
+  and invoke the same skills cleanly.
+- **Gemini extension manifests** — `gemini-extension.json` files for installing
+  individual plugins into Gemini CLI.
+
+Some plugins are local to this repo. Others are curated marketplace entries
+that point at external repositories or subdirectories.
+
+## Marketplace Installation
+
+Install the default marketplace when you want the full catalog, including
+plugin-provided MCP registrations:
+
+```bash
+claude plugin marketplace add jmagar/dendrite
+codex plugin marketplace add jmagar/dendrite
+```
+
+Install the no-MCP marketplace when you want the same skills and plugin entries
+without bundled MCP server registrations:
+
+```bash
+claude plugin marketplace add 'jmagar/dendrite#marketplace-no-mcp'
+codex plugin marketplace add jmagar/dendrite --ref marketplace-no-mcp
+```
+
+Gemini installs individual extension directories rather than one Dendrite-wide
+marketplace catalog:
+
+```bash
+gemini extensions install plugins/acp --consent --skip-settings
+gemini extensions link plugins/acp
+```
+
+See [docs/installation.md](docs/installation.md) for Codex plugin install
+examples and Gemini no-MCP checkout commands.
 
 ## Marketplace Variants
 
-`main` is the canonical full marketplace branch. It may include plugin metadata
-for MCP-backed plugins when those plugins own or bootstrap their MCP server
-configuration. This is the default for normal users.
+`main` is the canonical full marketplace branch. It includes the plugin
+metadata and MCP server registrations needed for the default installation path.
 
-`marketplace-no-mcp` is an intentional long-lived alternate ref for installs
-where MCP servers are already registered through the Labby gateway. That branch
-keeps the skills and plugin entries available, but strips bundled MCP server
-registrations so installing the marketplace does not duplicate servers already
-provided by the gateway. This exists for Jacob's gateway-based setup; do not
-assume other users operate that way. Treat it as an active release variant, not
-stale branch cleanup.
+`marketplace-no-mcp` is the same marketplace catalog without bundled MCP server
+registrations. Use it when you want the skills and plugin metadata without
+automatically adding MCP servers to the agent runtime.
 
-The no-MCP branch is synchronized from `main` by
-`.github/workflows/sync-marketplace-no-mcp.yml`. On every push to `main` and on
-a daily schedule, the workflow merges `main` into `marketplace-no-mcp`, runs
-`plugins/scripts/apply-no-mcp-marketplace`, validates both marketplace
-manifests, runs the no-MCP invariant check, and pushes the branch when there is
-a resulting change. The transform regenerates Gemini manifests, the README
-inventory, and generated docs as part of the rewrite. Add new MCP-backed
-alternate-ref entries to `NO_MCP_REF_NAMES` in that script so the branch stays
-reproducible.
+The no-MCP variant is useful when:
 
-Drift is checked by `.github/workflows/check-no-mcp-drift.yml` and
-`plugins/scripts/check-no-mcp-drift --compare-ref`. The drift check builds an
-expected tree from `origin/main` plus the no-MCP transform and compares it with
-`origin/marketplace-no-mcp`; it also verifies that local plugin MCP configs and
-Gemini `mcpServers` entries are absent from the no-MCP variant.
+- You only want the plugin skills and CLIs, and do not want MCP tool definitions
+  adding context overhead.
+- You already run MCP servers through a separate MCP gateway or aggregator.
+- You want skills that can still work through their fallback path: MCP first,
+  then CLI, then direct HTTP calls where the skill supports it.
 
-The no-MCP branch should allow GitHub Actions to push sync commits, but humans
-should not casually push, merge, or close it. Treat direct human writes as
-release-maintenance work: explain why the automation was not enough, run the
-drift check afterward, and leave the branch as a long-lived variant.
+## Choosing Plugins
 
-Marketplace install smoke tests live in
-`plugins/scripts/smoke-marketplace-install`. They add the marketplace to
-isolated Claude and Codex homes, install the `acp` plugin, assert the Codex
-catalog count matches the manifest, and install the matching Gemini extension.
-CI runs that smoke against the current checkout and against both remote refs in
-the scheduled no-MCP drift workflow.
+Start with the generated inventory below. The local plugin table tells you what
+ships directly in this repo:
 
-Marketplace parity is enforced by `plugins/scripts/check-marketplace-sync` and
-`.github/workflows/validate-marketplaces.yml`. The check fails on duplicate
-plugin names, entries that exist in only one marketplace, or Claude/Codex source
-targets that do not normalize to the same repo/path/ref. It also checks local
-plugin packaging: any `plugins/*` directory with `.claude-plugin/plugin.json` or
-`.codex-plugin/plugin.json` must have a sibling `gemini-extension.json`.
+- **Skills** lists the skill names installed by that plugin.
+- **MCP servers** lists bundled MCP registrations, or `none` when the plugin is
+  skill-only / CLI-only / direct-HTTP.
+- **OpenAI agents** is the number of Codex companion metadata files included for
+  those skills.
+- **Commands** lists Claude command docs when a plugin includes them.
 
-Schema and runtime validation lives in `plugins/scripts/validate-plugin-schemas`:
-Claude marketplace/plugin JSON is checked against the published SchemaStore
-schemas; Codex marketplace/plugin JSON is checked against local schemas derived
-from the OpenAI Codex plugin docs and current parser behavior; Gemini extension
-JSON is checked against a local schema derived from the Gemini CLI extension
-reference and `ExtensionConfig`, then every local Gemini extension is checked
-with `gemini extensions validate`. OpenAI and Gemini do not currently publish
-standalone JSON Schema files for those plugin/extension manifests, so the local
-schemas live under `plugins/schemas/` with provenance notes in each schema
-description. Cross-runtime parity still comes from
-`plugins/scripts/check-marketplace-sync`. Run `plugins/scripts/check-all` before
-pushing, or enable the tracked hook with:
+The curated marketplace table lists entries installed by reference from other
+repositories. Those entries may bring their own skills, agents, commands, hooks,
+or MCP config from their source repo.
 
-```bash
-git config core.hooksPath .githooks
-```
+Useful starting points:
 
-To review or refresh the schema provenance, run:
-
-```bash
-plugins/scripts/audit-upstream-schema-sources
-```
-
-Primary upstream references:
-
-- Claude SchemaStore:
-  `https://json.schemastore.org/claude-code-plugin-manifest.json` and
-  `https://json.schemastore.org/claude-code-marketplace.json`
-- Codex docs/spec:
-  `https://developers.openai.com/codex/plugins/build` and
-  `https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/plugin-creator/references/plugin-json-spec.md`
-- Codex parser sources:
-  `https://github.com/openai/codex/blob/main/codex-rs/core-plugins/src/manifest.rs`
-  and
-  `https://github.com/openai/codex/blob/main/codex-rs/core-plugins/src/marketplace.rs`
-- Gemini extension reference:
-  `https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/reference.md`
-- Gemini source/validator:
-  `https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/config/extension.ts`
-  and
-  `https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/validate.ts`
-
-Operational docs live under `docs/`:
-
-- `docs/installation.md`: install commands for Claude, Codex, Gemini, full
-  marketplace, and no-MCP variant.
-- `docs/marketplace-operations.md`: maintainer workflow for adding, updating,
-  removing, and validating marketplace entries.
-- `docs/plugin-documentation-standard.md`: README/CHANGELOG expectations and
-  docs-quality enforcement.
-- `docs/configuration.md`: plugin settings, generated env files, and secret
-  handling.
-- `docs/release-and-changelog.md`: root vs plugin changelog policy.
-
-- `docs/plugin-matrix.md`: local plugin packaging across Claude, Codex, Gemini,
-  skills, commands, README, and CHANGELOG coverage.
-- `docs/configuration-matrix.md`: plugin config keys, env vars, sensitivity,
-  descriptions, and consuming files.
-- `docs/marketplace-sources.md`: Claude/Codex marketplace source, selector,
-  and no-MCP ref inventory.
-- `docs/schema-provenance.md`: local schema files and upstream references.
-- `docs/no-mcp-variant.md`: the long-lived no-MCP branch behavior and
-  ref-managed entries.
-
-Regenerate them with `plugins/scripts/generate-docs`; `plugins/scripts/check-all`
-uses `plugins/scripts/generate-docs --check` to fail on stale generated docs.
-When generated docs are stale, the check prints the regeneration command and a
-bounded diff preview.
+- **Workflow automation:** `vibin`, `superpowers`, `lavra`,
+  `pr-review-toolkit`, `code-simplifier`.
+- **Testing:** `testing`, `webwright`, `agent-browser`,
+  `chrome-devtools-mcp`.
+- **Homelab and services:** `agent-os`, `adguard`, `bytestash`, `dozzle`,
+  `immich`, `linkding`, `memos`, `navidrome`, `paperless-ngx`, `qdrant`,
+  `neo4j`, `scrutiny`, `swag`.
+- **MCP development:** `mcp-server-dev`, `plugin-dev`, `rtemplate`, `acp`.
+- **Knowledge and search:** `axon`, `lumen`, `notebooklm`,
+  `upstream-skills`.
 
 ## Inventory
 
@@ -147,20 +111,20 @@ bounded diff preview.
 - 25 local plugin directories
 - 76 Claude marketplace entries
 - 76 Codex/OpenAI marketplace entries
-- 64 skills
-- 64 OpenAI agent companion files
+- 66 skills
+- 66 OpenAI agent companion files
 - 25 Gemini extension manifests
-- 0 MCP config files, defining 0 MCP servers
+- 6 MCP config files, defining 5 MCP servers
 - 3 command docs
 
 | Plugin | Description | Skills | MCP servers | OpenAI agents | Commands |
 |---|---|---|---|---:|---|
 | `acp` | Rust implementation patterns for ACP, rmcp-derived MCP servers, and Lab runtime work. | rust | none | 1 | none |
 | `adguard` | Skill for operating adguard via the lab MCP server / CLI. | adguard | none | 1 | none |
-| `agent-os` | Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | agent-os | none | 1 | agent-os.md |
+| `agent-os` | Drive the agent-os Windows 11 sandbox VM through an MCP gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | agent-os | windows-mcp | 1 | agent-os.md |
 | `broadcastr` | Helper assets for Broadcastr plugin tooling. | none | none | 0 | none |
 | `bytestash` | Skills for operating a ByteStash snippet manager. | bytestash | none | 1 | none |
-| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | dozzle | none | 1 | none |
+| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | dozzle | dozzle | 1 | none |
 | `immich` | Skill for operating immich via the lab MCP server / CLI. | immich | none | 1 | none |
 | `linkding` | Skills for operating a Linkding bookmark manager. | linkding | none | 1 | none |
 | `loggifly` | Skill for operating loggifly via the lab MCP server / CLI. | loggifly | none | 1 | none |
@@ -173,13 +137,13 @@ bounded diff preview.
 | `radicale` | CalDAV and CardDAV workflow skills for Radicale. | radicale | none | 1 | none |
 | `scripts` | Shared Dendrite plugin maintenance scripts. | none | none | 0 | none |
 | `scrutiny` | Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API. | scrutiny | none | 1 | none |
-| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | swag | none | 1 | none |
+| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | swag | swag-mcp, swag-mcp-remote | 1 | none |
 | `tei` | Inspect and query a Text Embeddings Inference server through its HTTP API. | tei | none | 1 | none |
 | `testing` | App-testing and MCP-tooling skills: live QA of web, Android, and desktop apps; MCP server smoke-testing (mcporter); MCP-UI / Apps validation (mcpjam); and claude-in-mobile device automation. | android-app-testing, claude-in-mobile, desktop-app-testing, mcpjam-ui-testing, mcporter, web-app-testing | none | 6 | none |
 | `upstream-skills` | Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills. | acpx, agent-transcript, autoreview, chatgpt-apps, define-goal, gog, handoff, meme-maker, openai-docs, session-viewer, yeet | none | 11 | none |
 | `uptime-kuma` | Read-only monitoring of a self-hosted Uptime Kuma instance via direct HTTP — Prometheus /metrics (API-key auth) and public status-page JSON. No monitor management (that requires Uptime Kuma's socket.io API). | uptime-kuma | none | 1 | none |
-| `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | check-skill-clis, chrome, claude-android-ninja, clipboard, compose-skill, create-swag-config, fastmcp-client-cli, gh-fix-ci, gh-pr, hand-off, homelab-map, jetpack-compose-expert, monolith-check, nircmd, paperless-ngx, quick-push, rclone, refresh-docs, repo-status, save-to-md, screenshots, sysinternals, using-rmcp, validate-skill, work-it, worktree-setup | none | 26 | scaffold-claude-plugin.md |
-| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | none | 1 | none |
+| `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | check-skill-clis, chrome, claude-android-ninja, clipboard, compose-skill, create-swag-config, fastmcp-client-cli, gh-fix-ci, gh-pr, hand-off, homelab-map, jetpack-compose-expert, merge-status, monolith-check, nircmd, paperless-ngx, quick-push, rclone, refresh-docs, repo-status, review-pr, save-to-md, screenshots, sysinternals, using-rmcp, validate-skill, work-it, worktree-setup | none | 28 | scaffold-claude-plugin.md |
+| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | zsnoop | 1 | none |
 
 <!-- END GENERATED README INVENTORY -->
 
@@ -241,15 +205,18 @@ plugin source directories in this repo.
 | `ytdl-mcp` | `github:jmagar/ytdl-mcp` | Download audio/video from any yt-dlp-supported site, embed metadata and cover art, organize by artist, and rsync to an SSH remote with separate audio/video destinations. |
 | `labby` | `https://github.com/jmagar/lab.git`, `plugins/labby` | Skills and MCP configuration for the Lab homelab control plane. |
 
-## Layout Rules
+## User Docs
 
-- Keep portable marketplace plugins in `plugins/<name>/`.
-- Keep Lab's own control-plane plugin in `jmagar/lab/plugins/labby` and reference
-  it from the marketplace as a GitHub subdirectory source.
-- Every skill at `plugins/*/skills/*/SKILL.md` must have
-  `agents/openai.yaml` next to it.
-- Every plugin directory at `plugins/*` must have a `gemini-extension.json`
-  manifest. Run `plugins/scripts/generate-gemini-extensions` after changing
-  plugin metadata, user config, or MCP server snippets.
-- Prefer updating marketplace manifests and plugin manifests together so Claude
-  Code and Codex stay aligned.
+- [Installation](docs/installation.md) — runtime-specific install commands.
+- [Configuration](docs/configuration.md) — plugin configuration notes.
+- [Plugin Matrix](docs/plugin-matrix.md) — generated local plugin inventory.
+- [Configuration Matrix](docs/configuration-matrix.md) — generated config and
+  MCP manifest inventory.
+- [Marketplace Sources](docs/marketplace-sources.md) — generated source list for
+  local and curated marketplace entries.
+- [No-MCP Variant](docs/no-mcp-variant.md) — how the no-MCP catalog differs from
+  the default marketplace.
+
+Development and marketplace-operation docs live in
+[CONTRIBUTING.md](CONTRIBUTING.md) and
+[docs/marketplace-operations.md](docs/marketplace-operations.md).

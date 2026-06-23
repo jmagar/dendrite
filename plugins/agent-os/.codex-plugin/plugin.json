@@ -1,6 +1,6 @@
 {
   "name": "agent-os",
-  "description": "Drive the agent-os Windows 11 sandbox VM through the Labby gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check.",
+  "description": "Drive the agent-os Windows 11 sandbox VM through an MCP gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"

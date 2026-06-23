@@ -1,7 +1,8 @@
 # Vibin
 
 Workflow and operator skills for committing, pushing, saving session
-documentation, addressing GitHub PR comments, debugging CI, driving Windows
+documentation, checking merge readiness, addressing GitHub PR comments,
+running comprehensive PR review toolkit sweeps, debugging CI, driving Windows
 helper tools, testing screenshots/clipboard flows, using the Lab MCP gateway,
 managing Paperless, applying Jetpack Compose guidance, and scaffolding SWAG
 reverse-proxy configs.

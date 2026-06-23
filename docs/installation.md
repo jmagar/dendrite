@@ -3,23 +3,22 @@
 Dendrite publishes the default/full marketplace from `main`. Use this when the
 agent runtime should install plugin-provided MCP server registrations.
 
-Jacob's personal no-MCP variant is published from `marketplace-no-mcp`. Use that
-only in environments where the same MCP servers are already connected through an
-external gateway, such as Labby, and duplicate plugin MCP registrations would be
-noise.
+The no-MCP variant is published from `marketplace-no-mcp`. Use it when you want
+the skills and plugin metadata without automatically adding MCP servers to the
+agent runtime.
 
 ## Claude Code
 
 Full/default marketplace:
 
 ```bash
-claude plugin marketplace add jmagar/dendrite --sparse .claude-plugin plugins
+claude plugin marketplace add jmagar/dendrite
 ```
 
 No-MCP variant:
 
 ```bash
-claude plugin marketplace add 'jmagar/dendrite#marketplace-no-mcp' --sparse .claude-plugin plugins
+claude plugin marketplace add 'jmagar/dendrite#marketplace-no-mcp'
 ```
 
 Claude accepts `owner/repo#ref`, `https://...`, and local paths. Do not use the
@@ -30,13 +29,13 @@ unsupported `github:jmagar/dendrite#marketplace-no-mcp` form.
 Full/default marketplace:
 
 ```bash
-codex plugin marketplace add jmagar/dendrite --sparse .agents/plugins --sparse plugins
+codex plugin marketplace add jmagar/dendrite
 ```
 
 No-MCP variant:
 
 ```bash
-codex plugin marketplace add jmagar/dendrite --ref marketplace-no-mcp --sparse .agents/plugins --sparse plugins
+codex plugin marketplace add jmagar/dendrite --ref marketplace-no-mcp
 ```
 
 Install a plugin after adding the marketplace:
@@ -56,6 +55,20 @@ gemini extensions install plugins/acp --consent --skip-settings
 gemini extensions link plugins/acp
 gemini extensions validate plugins/acp
 ```
+
+For the no-MCP variant, check out the `marketplace-no-mcp` ref first, then
+install or link the plugin directory:
+
+```bash
+git clone --branch marketplace-no-mcp --depth 1 --filter=blob:none --sparse https://github.com/jmagar/dendrite.git dendrite-no-mcp
+cd dendrite-no-mcp
+git sparse-checkout set plugins/acp
+gemini extensions install plugins/acp --consent --skip-settings
+```
+
+Gemini accepts `--ref` for whole-repository extensions, but Dendrite's Gemini
+extensions live below `plugins/<name>/`, so installing from a local checkout is
+the reliable path.
 
 ## Smoke Test
 

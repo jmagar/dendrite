@@ -491,13 +491,13 @@ def no_mcp_variant_doc() -> GeneratedDoc:
     lines = doc_header("No-MCP Marketplace Variant")
     lines.extend(
         [
-            "`marketplace-no-mcp` is a long-lived alternate branch for installs where MCP servers are already registered through the Labby gateway.",
+            "`marketplace-no-mcp` is a long-lived alternate branch for installs that do not want bundled MCP server registrations.",
             "",
-            "`main` is the full/default marketplace for normal users. The no-MCP branch exists for Jacob's gateway-oriented setup and similar environments that already have those MCP servers registered elsewhere.",
+            "`main` is the full/default marketplace. The no-MCP branch keeps the same plugin and skill catalog while removing MCP server registrations for users who rely on a separate gateway, prefer CLI-only usage, or want skills to use their fallback paths.",
             "",
             "The branch keeps plugin and skill entries available while removing bundled MCP server registrations from local plugin assets and Gemini extension manifests. It also points selected remote plugin sources at their own `marketplace-no-mcp` refs.",
             "",
-            "Do not merge, delete, or retire this branch unless Jacob explicitly asks for that. Update `NO_MCP_REF_NAMES` in `plugins/scripts/apply-no-mcp-marketplace` when a new remote MCP-backed marketplace entry needs the alternate ref.",
+            "Do not merge, delete, or retire this branch unless intentionally retiring the no-MCP release variant. Update `NO_MCP_REF_NAMES` in `plugins/scripts/apply-no-mcp-marketplace` when a new remote MCP-backed marketplace entry needs the alternate ref.",
             "",
             "The branch is synchronized by `.github/workflows/sync-marketplace-no-mcp.yml` after pushes to `main` and on a daily schedule. Drift is checked by `.github/workflows/check-no-mcp-drift.yml` and can be checked locally with `plugins/scripts/check-no-mcp-drift --compare-ref`.",
             "",
