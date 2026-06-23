@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Split the `agent-os` skill's recipes, troubleshooting, and Tailscale maintenance into `references/` and removed duplicated connection/repair guidance.
+
 ## 0.1.0 — 2026-05-31
 
 Initial release as a standalone plugin (extracted from `vibin`).

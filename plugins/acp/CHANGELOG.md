@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Tightened the `rust` skill's scope to the rmcp/Lab repo family and split build/release conventions and per-repo deltas into `references/` for progressive disclosure.
+
 ## [1.0.0] — 2026-06
 
 Initial release of the ACP plugin.
