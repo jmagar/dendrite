@@ -59,6 +59,7 @@
 | `redis-development` | git-subdir | https://github.com/redis/agent-skills.git:plugins/redis-development | ref=`main`, sha=`5ca2e1a2d82a768221e8f71a02e3ca095a37d38e` | git-subdir | https://github.com/redis/agent-skills.git:plugins/redis-development | ref=`main`, sha=`5ca2e1a2d82a768221e8f71a02e3ca095a37d38e` | no |
 | `rtemplate` | git-subdir | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | none | git-subdir | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | none | yes |
 | `rust-analyzer-lsp` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/rust-analyzer-lsp | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/rust-analyzer-lsp | none | no |
+| `rustarr` | git-subdir | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | none | git-subdir | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | none | yes |
 | `scrutiny` | local | ./plugins/scrutiny | none | local | ./plugins/scrutiny | none | no |
 | `security-guidance` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/security-guidance | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/security-guidance | none | no |
 | `serena` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:external_plugins/serena | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:external_plugins/serena | none | no |

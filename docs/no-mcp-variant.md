@@ -25,4 +25,5 @@ Marketplace install smoke tests live in `plugins/scripts/smoke-marketplace-insta
 | `lumen` | https://github.com/jmagar/lumen.git | ref=`marketplace-no-mcp` | https://github.com/jmagar/lumen.git | ref=`marketplace-no-mcp` |
 | `rarcane` | https://github.com/jmagar/rarcane.git:plugins/rarcane | ref=`marketplace-no-mcp` | https://github.com/jmagar/rarcane.git:plugins/rarcane | ref=`marketplace-no-mcp` |
 | `rtemplate` | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | ref=`marketplace-no-mcp` | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | ref=`marketplace-no-mcp` |
+| `rustarr` | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | ref=`marketplace-no-mcp` | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | ref=`marketplace-no-mcp` |
 | `ytdl-mcp` | https://github.com/jmagar/ytdl-mcp.git | ref=`marketplace-no-mcp` | https://github.com/jmagar/ytdl-mcp.git | ref=`marketplace-no-mcp` |

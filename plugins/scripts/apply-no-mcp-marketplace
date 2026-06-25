@@ -28,6 +28,7 @@ NO_MCP_REF_NAMES = {
     "lumen",
     "rarcane",
     "rtemplate",
+    "rustarr",
     "ytdl-mcp",
 }
 
