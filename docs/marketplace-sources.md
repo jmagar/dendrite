@@ -11,7 +11,7 @@
 | `agent-sdk-dev` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/agent-sdk-dev | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/agent-sdk-dev | none | no |
 | `apprise` | git-subdir | https://github.com/jmagar/apprise-mcp.git:plugins/apprise | none | git-subdir | https://github.com/jmagar/apprise-mcp.git:plugins/apprise | none | no |
 | `aurora` | git-subdir | https://github.com/jmagar/aurora-design-system.git:plugin | none | git-subdir | https://github.com/jmagar/aurora-design-system.git:plugin | none | no |
-| `axon` | git-subdir | https://github.com/jmagar/axon.git:plugins/axon | ref=`marketplace-no-mcp` | git-subdir | https://github.com/jmagar/axon.git:plugins/axon | ref=`marketplace-no-mcp` | yes |
+| `axon` | git-subdir | https://github.com/jmagar/axon.git:plugins/axon | none | git-subdir | https://github.com/jmagar/axon.git:plugins/axon | none | yes |
 | `beads` | git-subdir | https://github.com/gastownhall/beads.git:plugins/beads | none | git-subdir | https://github.com/gastownhall/beads.git:plugins/beads | none | no |
 | `bytestash` | local | ./plugins/bytestash | none | local | ./plugins/bytestash | none | no |
 | `chrome-devtools-mcp` | url | https://github.com/ChromeDevTools/chrome-devtools-mcp.git | sha=`c2d8009ff75f76bce1ec4cf79c2467b50d81725e` | url | https://github.com/ChromeDevTools/chrome-devtools-mcp.git | sha=`c2d8009ff75f76bce1ec4cf79c2467b50d81725e` | no |
@@ -32,11 +32,11 @@
 | `gotify` | git-subdir | https://github.com/jmagar/rustify.git:plugins/gotify | none | git-subdir | https://github.com/jmagar/rustify.git:plugins/gotify | none | no |
 | `immich` | local | ./plugins/immich | none | local | ./plugins/immich | none | no |
 | `kotlin-lsp` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/kotlin-lsp | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/kotlin-lsp | none | no |
-| `labby` | git-subdir | https://github.com/jmagar/lab.git:plugins/labby | ref=`marketplace-no-mcp` | git-subdir | https://github.com/jmagar/lab.git:plugins/labby | ref=`marketplace-no-mcp` | yes |
+| `labby` | git-subdir | https://github.com/jmagar/lab.git:plugins/labby | none | git-subdir | https://github.com/jmagar/lab.git:plugins/labby | none | yes |
 | `lavra` | git-subdir | https://github.com/roberto-mello/lavra.git:plugins/lavra | none | git-subdir | https://github.com/roberto-mello/lavra.git:plugins/lavra | none | no |
 | `linkding` | local | ./plugins/linkding | none | local | ./plugins/linkding | none | no |
 | `loggifly` | local | ./plugins/loggifly | none | local | ./plugins/loggifly | none | no |
-| `lumen` | github | https://github.com/jmagar/lumen.git | ref=`marketplace-no-mcp` | url | https://github.com/jmagar/lumen.git | ref=`marketplace-no-mcp` | yes |
+| `lumen` | github | https://github.com/jmagar/lumen.git | none | url | https://github.com/jmagar/lumen.git | none | yes |
 | `mcp-apps` | git-subdir | https://github.com/modelcontextprotocol/ext-apps.git:plugins/mcp-apps | ref=`main`, sha=`ca1d29894fabbd1558885a9ec8620dcb01d7457e` | git-subdir | https://github.com/modelcontextprotocol/ext-apps.git:plugins/mcp-apps | ref=`main`, sha=`ca1d29894fabbd1558885a9ec8620dcb01d7457e` | no |
 | `mcp-server-dev` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/mcp-server-dev | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/mcp-server-dev | none | no |
 | `mcp-tunnels` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/mcp-tunnels | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/mcp-tunnels | none | no |
@@ -55,11 +55,11 @@
 | `qdrant-skills` | url | https://github.com/qdrant/skills.git | sha=`cace39df5cc46f7f0c192ced7391d767749142a0` | url | https://github.com/qdrant/skills.git | sha=`cace39df5cc46f7f0c192ced7391d767749142a0` | no |
 | `radicale` | local | ./plugins/radicale | none | local | ./plugins/radicale | none | no |
 | `ralph-loop` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/ralph-loop | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/ralph-loop | none | no |
-| `rarcane` | git-subdir | https://github.com/jmagar/rarcane.git:plugins/rarcane | ref=`marketplace-no-mcp` | git-subdir | https://github.com/jmagar/rarcane.git:plugins/rarcane | ref=`marketplace-no-mcp` | yes |
+| `rarcane` | git-subdir | https://github.com/jmagar/rarcane.git:plugins/rarcane | none | git-subdir | https://github.com/jmagar/rarcane.git:plugins/rarcane | none | yes |
 | `redis-development` | git-subdir | https://github.com/redis/agent-skills.git:plugins/redis-development | ref=`main`, sha=`5ca2e1a2d82a768221e8f71a02e3ca095a37d38e` | git-subdir | https://github.com/redis/agent-skills.git:plugins/redis-development | ref=`main`, sha=`5ca2e1a2d82a768221e8f71a02e3ca095a37d38e` | no |
-| `rtemplate` | git-subdir | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | ref=`marketplace-no-mcp` | git-subdir | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | ref=`marketplace-no-mcp` | yes |
+| `rtemplate` | git-subdir | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | none | git-subdir | https://github.com/jmagar/rtemplate-mcp.git:plugins/rtemplate | none | yes |
 | `rust-analyzer-lsp` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/rust-analyzer-lsp | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/rust-analyzer-lsp | none | no |
-| `rustarr` | git-subdir | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | ref=`marketplace-no-mcp` | git-subdir | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | ref=`marketplace-no-mcp` | yes |
+| `rustarr` | git-subdir | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | none | git-subdir | https://github.com/jmagar/servarr-rmcp.git:plugins/rustarr | none | yes |
 | `scrutiny` | local | ./plugins/scrutiny | none | local | ./plugins/scrutiny | none | no |
 | `security-guidance` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/security-guidance | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:plugins/security-guidance | none | no |
 | `serena` | git-subdir | https://github.com/anthropics/claude-plugins-official.git:external_plugins/serena | none | git-subdir | https://github.com/anthropics/claude-plugins-official.git:external_plugins/serena | none | no |
@@ -78,6 +78,6 @@
 | `uptime-kuma` | local | ./plugins/uptime-kuma | none | local | ./plugins/uptime-kuma | none | no |
 | `vibin` | local | ./plugins/vibin | none | local | ./plugins/vibin | none | no |
 | `webwright` | url | https://github.com/microsoft/Webwright.git | sha=`4a46f282ec37f27d6003cc498a977939d62d9015` | url | https://github.com/microsoft/Webwright.git | sha=`4a46f282ec37f27d6003cc498a977939d62d9015` | no |
-| `ytdl-mcp` | github | https://github.com/jmagar/ytdl-mcp.git | ref=`marketplace-no-mcp` | url | https://github.com/jmagar/ytdl-mcp.git | ref=`marketplace-no-mcp` | yes |
+| `ytdl-mcp` | github | https://github.com/jmagar/ytdl-mcp.git | none | url | https://github.com/jmagar/ytdl-mcp.git | none | yes |
 | `zsh-tool` | github | https://github.com/ArkTechNWA/zsh-tool.git | none | url | https://github.com/ArkTechNWA/zsh-tool.git | none | no |
 | `zsnoop-mcp` | local | ./plugins/zsnoop-mcp | none | local | ./plugins/zsnoop-mcp | none | no |

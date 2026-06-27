@@ -7,25 +7,28 @@ helpers, Gemini extension manifests, and OpenAI companion metadata in one place.
 Use it when you want a single marketplace that can install the same practical
 agent capabilities across multiple runtimes.
 
-## What You Get
+## Why Install It
 
-A Dendrite plugin can ship one or more of these pieces:
+Dendrite is useful when you want an agent to do more than edit files:
 
-- **Skills** — reusable operating guides that teach an agent how to do a
-  specific job, such as testing a web app, preparing a worktree, managing
-  Paperless, or querying Qdrant.
-- **MCP server registrations** — runtime config for tools that expose actions to
-  the agent. The default marketplace includes these when the plugin owns or
-  bootstraps the server configuration.
-- **Commands and hooks** — Claude Code command docs and automation hooks where
-  that runtime supports them.
-- **OpenAI companion files** — `agents/openai.yaml` metadata so Codex can list
-  and invoke the same skills cleanly.
-- **Gemini extension manifests** — `gemini-extension.json` files for installing
-  individual plugins into Gemini CLI.
+- Run full development loops with `vibin`: prepare safe worktrees, commit and
+  push, review PRs, check merge readiness, debug CI, save session logs, and
+  drive helper tools.
+- Test real apps with `testing`, `webwright`, `agent-browser`, and browser /
+  device automation skills.
+- Work with homelab and service APIs through focused skills for Paperless,
+  Qdrant, Neo4j, Linkding, AdGuard, Dozzle, Scrutiny, SWAG, Navidrome, and
+  related tools.
+- Build and maintain MCP servers and plugins with `mcp-server-dev`,
+  `plugin-dev`, `rtemplate`, and `acp`.
+- Add stronger review and coding workflows through curated plugins such as
+  `superpowers`, `lavra`, `pr-review-toolkit`, `code-simplifier`, and
+  `feature-dev`.
+- Bring in search, RAG, and research helpers such as `lumen`, `axon`, and
+  `notebooklm`.
 
-Some plugins are local to this repo. Others are curated marketplace entries
-that point at external repositories or subdirectories.
+The generated inventory below shows which plugins are carried locally and which
+ones are installed by reference from upstream repositories.
 
 ## Marketplace Installation
 
@@ -75,21 +78,7 @@ The no-MCP variant is useful when:
 
 ## Choosing Plugins
 
-Start with the generated inventory below. The local plugin table tells you what
-ships directly in this repo:
-
-- **Skills** lists the skill names installed by that plugin.
-- **MCP servers** lists bundled MCP registrations, or `none` when the plugin is
-  skill-only / CLI-only / direct-HTTP.
-- **OpenAI agents** is the number of Codex companion metadata files included for
-  those skills.
-- **Commands** lists Claude command docs when a plugin includes them.
-
-The curated marketplace table lists entries installed by reference from other
-repositories. Those entries may bring their own skills, agents, commands, hooks,
-or MCP config from their source repo.
-
-Useful starting points:
+Useful starting points in the catalog:
 
 - **Workflow automation:** `vibin`, `superpowers`, `lavra`,
   `pr-review-toolkit`, `code-simplifier`.
@@ -114,17 +103,17 @@ Useful starting points:
 - 66 skills
 - 66 OpenAI agent companion files
 - 25 Gemini extension manifests
-- 0 MCP config files, defining 0 MCP servers
+- 6 MCP config files, defining 5 MCP servers
 - 3 command docs
 
 | Plugin | Description | Skills | MCP servers | OpenAI agents | Commands |
 |---|---|---|---|---:|---|
 | `acp` | Rust implementation patterns for ACP, rmcp-derived MCP servers, and Lab runtime work. | rust | none | 1 | none |
 | `adguard` | Skill for operating adguard via the lab MCP server / CLI. | adguard | none | 1 | none |
-| `agent-os` | Drive the agent-os Windows 11 sandbox VM through an MCP gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | agent-os | none | 1 | agent-os.md |
+| `agent-os` | Drive the agent-os Windows 11 sandbox VM through an MCP gateway or an already-configured Windows-MCP endpoint. Ships the agent-os skill, a /agent-os status command, and a SessionStart health check. | agent-os | windows-mcp | 1 | agent-os.md |
 | `broadcastr` | Helper assets for Broadcastr plugin tooling. | none | none | 0 | none |
 | `bytestash` | Skills for operating a ByteStash snippet manager. | bytestash | none | 1 | none |
-| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | dozzle | none | 1 | none |
+| `dozzle` | Skill for operating Dozzle through direct HTTP API checks, auth guidance, and MCP setup notes. | dozzle | dozzle | 1 | none |
 | `immich` | Skill for operating immich via the lab MCP server / CLI. | immich | none | 1 | none |
 | `linkding` | Skills for operating a Linkding bookmark manager. | linkding | none | 1 | none |
 | `loggifly` | Skill for operating loggifly via the lab MCP server / CLI. | loggifly | none | 1 | none |
@@ -137,13 +126,13 @@ Useful starting points:
 | `radicale` | CalDAV and CardDAV workflow skills for Radicale. | radicale | none | 1 | none |
 | `scripts` | Shared Dendrite plugin maintenance scripts. | none | none | 0 | none |
 | `scrutiny` | Inspect Scrutiny disk health and SMART status through Scrutiny's HTTP API. | scrutiny | none | 1 | none |
-| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | swag | none | 1 | none |
+| `swag` | SWAG reverse proxy configuration management via MCP. Create, edit, view, and manage nginx proxy configurations with auth integration. | swag | swag-mcp, swag-mcp-remote | 1 | none |
 | `tei` | Inspect and query a Text Embeddings Inference server through its HTTP API. | tei | none | 1 | none |
 | `testing` | App-testing and MCP-tooling skills: live QA of web, Android, and desktop apps; MCP server smoke-testing (mcporter); MCP-UI / Apps validation (mcpjam); and claude-in-mobile device automation. | android-app-testing, claude-in-mobile, desktop-app-testing, mcpjam-ui-testing, mcporter, web-app-testing | none | 6 | none |
 | `upstream-skills` | Skills vendored verbatim from upstream repos (openclaw + openai), kept in sync via sync-upstream-skills. | acpx, agent-transcript, autoreview, chatgpt-apps, define-goal, gog, handoff, meme-maker, openai-docs, session-viewer, yeet | none | 11 | none |
 | `uptime-kuma` | Read-only monitoring of a self-hosted Uptime Kuma instance via direct HTTP — Prometheus /metrics (API-key auth) and public status-page JSON. No monitor management (that requires Uptime Kuma's socket.io API). | uptime-kuma | none | 1 | none |
 | `vibin` | Workflow, repo, GitHub, Windows, Paperless, MCP gateway, Jetpack Compose, and SWAG utility skills. | check-skill-clis, chrome, claude-android-ninja, clipboard, compose-skill, create-swag-config, fastmcp-client-cli, gh-fix-ci, gh-pr, hand-off, homelab-map, jetpack-compose-expert, merge-status, monolith-check, nircmd, paperless-ngx, quick-push, rclone, refresh-docs, repo-status, review-pr, save-to-md, screenshots, sysinternals, using-rmcp, validate-skill, work-it, worktree-setup | none | 28 | scaffold-claude-plugin.md |
-| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | none | 1 | none |
+| `zsnoop-mcp` | ZFS snapshot exploration and recovery over SSH through the zsnoop-mcp server. | zsnoop-mcp | zsnoop | 1 | none |
 
 <!-- END GENERATED README INVENTORY -->
 
