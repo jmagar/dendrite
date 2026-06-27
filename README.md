@@ -7,25 +7,28 @@ helpers, Gemini extension manifests, and OpenAI companion metadata in one place.
 Use it when you want a single marketplace that can install the same practical
 agent capabilities across multiple runtimes.
 
-## What You Get
+## Why Install It
 
-A Dendrite plugin can ship one or more of these pieces:
+Dendrite is useful when you want an agent to do more than edit files:
 
-- **Skills** — reusable operating guides that teach an agent how to do a
-  specific job, such as testing a web app, preparing a worktree, managing
-  Paperless, or querying Qdrant.
-- **MCP server registrations** — runtime config for tools that expose actions to
-  the agent. The default marketplace includes these when the plugin owns or
-  bootstraps the server configuration.
-- **Commands and hooks** — Claude Code command docs and automation hooks where
-  that runtime supports them.
-- **OpenAI companion files** — `agents/openai.yaml` metadata so Codex can list
-  and invoke the same skills cleanly.
-- **Gemini extension manifests** — `gemini-extension.json` files for installing
-  individual plugins into Gemini CLI.
+- Run full development loops with `vibin`: prepare safe worktrees, commit and
+  push, review PRs, check merge readiness, debug CI, save session logs, and
+  drive helper tools.
+- Test real apps with `testing`, `webwright`, `agent-browser`, and browser /
+  device automation skills.
+- Work with homelab and service APIs through focused skills for Paperless,
+  Qdrant, Neo4j, Linkding, AdGuard, Dozzle, Scrutiny, SWAG, Navidrome, and
+  related tools.
+- Build and maintain MCP servers and plugins with `mcp-server-dev`,
+  `plugin-dev`, `rtemplate`, and `acp`.
+- Add stronger review and coding workflows through curated plugins such as
+  `superpowers`, `lavra`, `pr-review-toolkit`, `code-simplifier`, and
+  `feature-dev`.
+- Bring in search, RAG, and research helpers such as `lumen`, `axon`, and
+  `notebooklm`.
 
-Some plugins are local to this repo. Others are curated marketplace entries
-that point at external repositories or subdirectories.
+The generated inventory below shows which plugins are carried locally and which
+ones are installed by reference from upstream repositories.
 
 ## Marketplace Installation
 
@@ -75,21 +78,7 @@ The no-MCP variant is useful when:
 
 ## Choosing Plugins
 
-Start with the generated inventory below. The local plugin table tells you what
-ships directly in this repo:
-
-- **Skills** lists the skill names installed by that plugin.
-- **MCP servers** lists bundled MCP registrations, or `none` when the plugin is
-  skill-only / CLI-only / direct-HTTP.
-- **OpenAI agents** is the number of Codex companion metadata files included for
-  those skills.
-- **Commands** lists Claude command docs when a plugin includes them.
-
-The curated marketplace table lists entries installed by reference from other
-repositories. Those entries may bring their own skills, agents, commands, hooks,
-or MCP config from their source repo.
-
-Useful starting points:
+Useful starting points in the catalog:
 
 - **Workflow automation:** `vibin`, `superpowers`, `lavra`,
   `pr-review-toolkit`, `code-simplifier`.
