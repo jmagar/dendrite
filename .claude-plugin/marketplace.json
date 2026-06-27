@@ -130,6 +130,15 @@
       "description": "Reference rmcp template/example MCP server \u2014 scaffold for building new Rust MCP servers."
     },
     {
+      "name": "rustarr",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/jmagar/servarr-rmcp.git",
+        "path": "plugins/rustarr"
+      },
+      "description": "Media automation MCP server and skills for Sonarr, Radarr, Prowlarr, Plex, Jellyfin, qBittorrent, and more."
+    },
+    {
       "name": "tailscale",
       "source": {
         "source": "git-subdir",

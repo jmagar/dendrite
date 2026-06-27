@@ -1108,6 +1108,37 @@
       }
     },
     {
+      "name": "rustarr",
+      "description": "Media automation MCP server and skills for Sonarr, Radarr, Prowlarr, Plex, Jellyfin, qBittorrent, and more.",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/jmagar/servarr-rmcp.git",
+        "path": "plugins/rustarr"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Media",
+      "interface": {
+        "displayName": "Rustarr",
+        "shortDescription": "Operate the Sonarr, Radarr, Prowlarr, Plex, Jellyfin, and downloader stack.",
+        "longDescription": "Rustarr provides one MCP and CLI surface over a media-automation fleet: Sonarr, Radarr, Prowlarr, Overseerr, SABnzbd, qBittorrent, Plex, Jellyfin, Tautulli, Tracearr, and related services.",
+        "developerName": "Jacob Magar",
+        "category": "Media",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "defaultPrompt": [
+          "Use Rustarr to check the media stack.",
+          "Find stalled downloads across the Arr stack.",
+          "Search for a movie and prepare a Radarr add request."
+        ],
+        "brandColor": "#F59E0B"
+      }
+    },
+    {
       "name": "tailscale",
       "description": "Tailscale network management via the rustscale MCP server \u2014 query devices, ACL, DNS, users, and API keys.",
       "source": {
