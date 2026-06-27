@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "dendrite",
+  "name": "dendrite-no-mcp",
   "owner": {
     "name": "jmagar",
     "email": "jmagar@users.noreply.github.com"
@@ -11,7 +11,8 @@
       "name": "lumen",
       "source": {
         "source": "github",
-        "repo": "jmagar/lumen"
+        "repo": "jmagar/lumen",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Precise local semantic code search via MCP. Indexes your codebase with Go AST parsing and vector embeddings \u2014 Ollama, LM Studio, or HuggingFace TEI."
     },
@@ -89,7 +90,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/axon.git",
-        "path": "plugins/axon"
+        "path": "plugins/axon",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Skills and gateway-oriented guidance for the Axon crawl, ingest, embed, query, and RAG engine."
     },
@@ -116,7 +118,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rarcane.git",
-        "path": "plugins/rarcane"
+        "path": "plugins/rarcane",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Arcane Docker management via the rarcane MCP server (Rust port of arcane-mcp)."
     },
@@ -125,7 +128,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/rtemplate-mcp.git",
-        "path": "plugins/rtemplate"
+        "path": "plugins/rtemplate",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Reference rmcp template/example MCP server \u2014 scaffold for building new Rust MCP servers."
     },
@@ -134,7 +138,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/servarr-rmcp.git",
-        "path": "plugins/rustarr"
+        "path": "plugins/rustarr",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Media automation MCP server and skills for Sonarr, Radarr, Prowlarr, Plex, Jellyfin, qBittorrent, and more."
     },
@@ -554,7 +559,8 @@
       "name": "ytdl-mcp",
       "source": {
         "source": "github",
-        "repo": "jmagar/ytdl-mcp"
+        "repo": "jmagar/ytdl-mcp",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Download audio/video from any yt-dlp-supported site, embed metadata and cover art, organize by artist, and rsync to an SSH remote with separate audio/video destinations."
     },
@@ -563,7 +569,8 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/jmagar/lab.git",
-        "path": "plugins/labby"
+        "path": "plugins/labby",
+        "ref": "marketplace-no-mcp"
       },
       "description": "Skills and gateway-oriented guidance for the Lab homelab control plane."
     },
